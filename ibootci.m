@@ -583,17 +583,21 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
   % Calculate bias correction z0
   z0 = norminv(sum(T1<T0)/B);
 
-  % Get Jackknife statistics
-  [SE, T] = jack(x,func);
-
-  % Calculate acceleration (including weights)
-  Tori = sum(weights.*T);
-  U = ((m-1)*(Tori-T));
-  a = (1/6)*(sum(weights.*U.^3)/sum(weights.*U.^2)^(3/2)/sqrt(m));
-
+  % Calculate acceleration constant a
+  try
+    % Get Jackknife statistics
+    [SE, T] = jack(x,func);
+    % Calculate acceleration (including weights)
+    Tori = sum(weights.*T);
+    U = ((m-1)*(Tori-T));
+    a = (1/6)*(sum(weights.*U.^3)/sum(weights.*U.^2)^(3/2)/sqrt(m));
+  catch
+    a = nan;
+  end
+  
   % Check if calculation of acceleration using the jackknife was successful
   if isnan(a)
-    % Directly calculate from the skewness of the bootstrap statistics
+    % If not, directly calculate from the skewness of the bootstrap statistics
     a = (1/6)*skewness(T1,1);
   end
   
