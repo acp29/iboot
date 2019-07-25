@@ -118,7 +118,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.8.3.0 (25/07/2019)
+%  ibootci v1.8.4.0 (25/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -591,6 +591,12 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
   U = ((m-1)*(Tori-T));
   a = (1/6)*(sum(weights.*U.^3)/sum(weights.*U.^2)^(3/2)/sqrt(m));
 
+  % Check if calculation of acceleration using the jackknife was successful
+  if isnan(a)
+    % Directly calculate from the skewness of the bootstrap statistics
+    a = (1/6)*skewness(T1,1);
+  end
+  
   % Calculate confidence limits
   z1 = norminv(0.5*(1+alpha));
   m1 = normcdf(z0+((z0+z1)/(1-a*(z0+z1))));
