@@ -27,7 +27,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.4.0.0 (25/07/2019)
+%  ibootp v1.4.1.0 (25/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -96,13 +96,13 @@ function [F,x] = empcdf (y,c)
   if size(y,2)>1
     y = y.';
   end
-  
+
   % Create empirical CDF
   x = sort(y);
   N = sum(~isnan(y));
   [x,F] = unique(x,'rows','last');
   F = F/(N+1);
-  
+
   % Apply option to complete the CDF
   if c > 0
     x = [x(1);x;x(end)];
