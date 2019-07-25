@@ -27,7 +27,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.3.0.0 (24/07/2019)
+%  ibootp v1.4.0.0 (25/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -62,10 +62,9 @@ function p = ibootp(M,bootstat,S,calcurve)
   if nargin > 3
     C = S.nboot(2);
     if C > 0
+      calcurve(1,:)=[];calcurve(end,:)=[];
       if (1/min(p,1-p)) < (0.5*C)
-        [~,index] = unique(calcurve(:,1));
-        calcurve = calcurve(index,:);
-        p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear','extrap');
+        p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
       else
         warning(['P value is too small for calibration so the result will be unreliable.\n'...
                 'Try increasing the number of second bootstrap replicate samples in ibootci.']);
