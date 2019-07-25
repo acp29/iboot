@@ -2,11 +2,11 @@
 %
 %  Bootstrap P-value: One sample test
 %
-%   p = ibootp(M,bootstat,S,calcurve)
+%   p = ibootp(m,bootstat,S,calcurve)
 %
 %  Performs a two-tailed bootstrap test for the hypothesis that
 %  the data used to generate the bootstrap statistics bootstat
-%  comes from a distribution with mean M. M must be a scalar.
+%  comes from a distribution with statistic m. m must be a scalar.
 %
 %  Requires the output bootstrap replicate statistics (bootstat)
 %  and the output structure (S) from ibootci. Provision of the
@@ -27,12 +27,12 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.4.1.0 (25/07/2019)
+%  ibootp v1.4.2.0 (25/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
 
-function p = ibootp(M,bootstat,S,calcurve)
+function p = ibootp(m,bootstat,S,calcurve)
 
   if nargin < 3
     error('ibootp requires atleast 3 input arguments')
@@ -43,7 +43,7 @@ function p = ibootp(M,bootstat,S,calcurve)
 
   % Find P-value from the cdf of the bootstrap distribution by linear interpolation
   [cdf,t1] = empcdf(bootstat,0);
-  p = 1-interp1(t1,cdf,M,'linear','extrap');
+  p = 1-interp1(t1,cdf,m,'linear','extrap');
 
   % BCa correction to P-value if applicable
   z1 = norminv(p);
