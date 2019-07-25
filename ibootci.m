@@ -118,7 +118,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.8.2.0 (24/07/2019)
+%  ibootci v1.8.3.0 (25/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -396,19 +396,19 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       [m1, m2, S] = BCa(B, bootfun, data, T1, T0, alpha, weights, S);
   end
 
-  % Check the confidence interval limits
-  if (m2 == 0) || (m1 == 1)
-    warning('ibootci:intervalHitEnd',...
-            ['The confidence interval has hit the end(s) of the bootstrap distribution \n',...
-             'and may be unreliable. Try increasing the number of replicate samples in the second \n',...
-             'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
-  end
-
   % Linear interpolation of the bootstat cdf for interval construction
   [cdf,t1] = empcdf(T1,1);
   UL = interp1(cdf,t1,m1,'linear','extrap');
   LL = interp1(cdf,t1,m2,'linear','extrap');
   ci = [LL;UL];
+  
+  % Check the confidence interval limits
+  if (m2 < cdf(2)) || (m1 > cdf(end-1))
+    warning('ibootci:intervalHitEnd',...
+            ['The confidence interval has hit the end(s) of the bootstrap distribution \n',...
+             'and may be unreliable. Try increasing the number of replicate samples in the second \n',...
+             'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
+  end
 
   % Complete output structure
   S.stat = T0;
