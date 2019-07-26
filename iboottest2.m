@@ -48,23 +48,21 @@ function [p,ci] = iboottest2(varargin)
   bootfun = argin{2}{1};
   argin(1:2) = [];
 
-  % Center the data and calculate vector of pooled residuals
+  % Center x and y and calculate vector of pooled residuals
   fx = feval(bootfun,x);
   fy = feval(bootfun,y);
   residuals = cat(1,x-fx,y-fy);
 
-  % Calculate sample statistic using bootfun
+  % Calculate the sample statistic using bootfun
   T0 = fx-fy;
 
-  % Scale the residuals
-  residuals = residuals * 2;
+  % Scale and offset the residuals
+  residuals = T0 + residuals * 2;
 
   % Calculate confidence interval using ibootci
   [ci,bootstat,S,calcurve] = ibootci(nboot,{bootfun,residuals},argin{:});
-  ci = flipud(T0-ci);
 
   % Calculate p-value using ibootp
-  p = ibootp(T0,bootstat,S,calcurve);
-
+  p = ibootp(0,bootstat,S,calcurve);
 
 end
