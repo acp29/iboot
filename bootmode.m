@@ -115,7 +115,7 @@ function [H, P, h] = bootmode (x, m, B, kernel)
   h = criticalBandwidth;
 
   % Random resampling with replacement from a smooth estimate of the distribution
-  idx = 1+fix(rand(n,B)*n);
+  idx = randi(n,n,B);
   Y = x(idx);
   xvar = var(x,1); % calculate sample variance
   Ymean = ones(n,1) * mean(Y);
