@@ -521,6 +521,8 @@ function [U] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
       I = (T2>T0);
       if any(I)
         t2(2) = min(T2(I));
+      else
+        t2(2) = max(T2);
       end
       U = ((t2(2)-T0)*U + (T0-t2(1))*(U+1)) /...
                 (t2(2) - t2(1));
