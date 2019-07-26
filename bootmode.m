@@ -25,6 +25,8 @@
 % h is the critical bandwidth (i.e. the smallest bandwidth achievable to
 % obtain a kernel density estimate with m modes)
 %
+% Bootstrap iteration is not implemented for this test.
+%
 %    Bibliography:
 %    [1] Efron and Tibshirani. Chapter 16 Hypothesis testing with the
 %         bootstrap in An introduction to the bootstrap (CRC Press, 1994)
