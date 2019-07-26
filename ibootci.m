@@ -118,7 +118,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.8.4.0 (25/07/2019)
+%  ibootci v1.8.5.0 (26/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -514,8 +514,14 @@ function [U] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
     else
       % Quick linear interpolation to approximate asymptotic calibration
       t2 = zeros(1,2);
-      t2(1) = max(T2(T2<=T0));
-      t2(2) = min(T2(T2>T0));
+      I = (T2<=T0);
+      if any(I)
+        t2(1) = max(T2(I));
+      end
+      I = (T2>T0);
+      if any(I)
+        t2(2) = min(T2(I));
+      end
       U = ((t2(2)-T0)*U + (T0-t2(1))*(U+1)) /...
                 (t2(2) - t2(1));
     end
