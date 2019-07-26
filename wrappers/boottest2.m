@@ -2,12 +2,13 @@
 %
 %  Two-sample bootstrap test
 %
-%   p = iboottest(nboot,bootfun,x,y)
+%   p = boottest2(nboot,bootfun,x,y)
 %
 %  Two sample bootstrap test for unpaired univariate data. The null
 %  hypothesis is that x and y are sampled from the same population.
 %  The test is two-tailed and is essentially a bootstrap version of
-%  a permutation test.
+%  a permutation test. Bootstrap iteration is not necessary for this 
+%  test.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
