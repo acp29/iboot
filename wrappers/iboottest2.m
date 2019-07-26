@@ -2,9 +2,9 @@
 %
 %  Two-sample bootstrap test for a location parameter
 %
-%   p = iboottest(nboot,{bootfun,x,y})
-%   p = iboottest(nboot,{bootfun,x,y},Name,Value)
-%   [p,ci] = iboottest(...)
+%   p = iboottest2(nboot,{bootfun,x,y})
+%   p = iboottest2(nboot,{bootfun,x,y},Name,Value)
+%   [p,ci] = iboottest2(...)
 %
 %  Two sample bootstrap test for univariate data. The null hypothesis
 %  is that the difference between the bootfun statistic calculated
