@@ -547,7 +547,7 @@ end
 
 function [SE, T, U] = jack (x, func)
 
-  % Jackknife
+  % Ordinary Jackknife
 
   if nargin < 2
     error('Invalid number of input arguments');
@@ -557,7 +557,7 @@ function [SE, T, U] = jack (x, func)
     error('Invalid number of output arguments');
   end
 
-  % Perform 'leave one out' procedure and calculate the variance(s) 
+  % Perform 'leave one out' procedure and calculate the variance(s)
   % of the test statistic.
   nvar = size(x,2);
   m = size(x{1},1);
