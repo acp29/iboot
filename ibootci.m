@@ -411,8 +411,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
   % Complete output structure
   S.stat = T0;                     % Sample test statistic
-  S.bias = bias;                   % Bias of the test statistic
-  S.bc_stat = T0-bias;             % Bias-corrected test statistic
+  if any(diff(weights))
+    S.bias = NaN;                  % Bias not available for weighted bootstrap
+    S.bc_stat = NaN;               % Bias correction not available for weighted bootstrap
+  else
+    S.bias = bias;                 % Bias of the test statistic
+    S.bc_stat = T0-bias;           % Bias-corrected test statistic
+  end
   S.SE = std(bootstat,0);          % Bootstrap standard error of the test statistic
   S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
   if min(weights) ~= max(weights)
