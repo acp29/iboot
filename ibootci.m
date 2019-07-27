@@ -519,6 +519,8 @@ function [U] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
       I = (T2<=T0);
       if any(I)
         t2(1) = max(T2(I));
+      else
+        t2(1) = min(T2);
       end
       I = (T2>T0);
       if any(I)
@@ -526,8 +528,12 @@ function [U] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
       else
         t2(2) = max(T2);
       end
-      U = ((t2(2)-T0)*U + (T0-t2(1))*(U+1)) /...
+      if (t2(2)-t2(1) == 0)
+        U = t2(1);
+      else
+        U = ((t2(2)-T0)*U + (T0-t2(1))*(U+1)) /...
                 (t2(2) - t2(1));
+      end
     end
 
 end
@@ -536,7 +542,7 @@ end
 
 function [SE, T, U] = jack (x, func)
 
-  % Ordinary Jackknife
+  % Jackknife
 
   if nargin < 2
     error('Invalid number of input arguments');
@@ -546,8 +552,8 @@ function [SE, T, U] = jack (x, func)
     error('Invalid number of output arguments');
   end
 
-  % Perform 'leave one out' procedure and calculate the variance(s) of the
-  % functional parameter.
+  % Perform 'leave one out' procedure and calculate the variance(s) 
+  % of the test statistic.
   nvar = size(x,2);
   m = size(x{1},1);
   ridx = diag(ones(m,1));
