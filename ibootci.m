@@ -362,7 +362,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   % Calculate statistics for the first bootstrap sample set
   bootstat = T1.';
   bias = mean(bootstat)-T0;
-  S.bias = bias;
 
   % Calibrate central two-sided coverage
   if C>0
@@ -401,7 +400,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   UL = interp1(cdf,t1,m1,'linear','extrap');
   LL = interp1(cdf,t1,m2,'linear','extrap');
   ci = [LL;UL];
-  
+
   % Check the confidence interval limits
   if (m2 < cdf(2)) || (m1 > cdf(end-1))
     warning('ibootci:intervalHitEnd',...
@@ -411,8 +410,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Complete output structure
-  S.stat = T0;
-  S.ci = ci;
+  S.stat = T0;                     % Sample test statistic
+  S.bias = bias;                   % Bias of the test statistic
+  S.bc_stat = T0-bias;             % Bias-corrected test statistic
+  S.SE = std(bootstat,0);          % Bootstrap standard error of the test statistic
+  S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
   if min(weights) ~= max(weights)
     S.weights = weights;
   else
@@ -602,13 +604,13 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
   catch
     a = nan;
   end
-  
+
   % Check if calculation of acceleration using the jackknife was successful
   if isnan(a)
     % If not, directly calculate from the skewness of the bootstrap statistics
     a = (1/6)*skewness(T1,1);
   end
-  
+
   % Calculate confidence limits
   z1 = norminv(0.5*(1+alpha));
   m1 = normcdf(z0+((z0+z1)/(1-a*(z0+z1))));
@@ -641,13 +643,13 @@ function [F,x] = empcdf (y,c)
   if size(y,2)>1
     y = y.';
   end
-  
+
   % Create empirical CDF
   x = sort(y);
   N = sum(~isnan(y));
   [x,F] = unique(x,'rows','last');
   F = F/(N+1);
-  
+
   % Apply option to complete the CDF
   if c > 0
     x = [x(1);x;x(end)];
