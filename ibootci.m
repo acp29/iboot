@@ -114,6 +114,11 @@
 %    >> y = randn(20,1);
 %    >> ci = ibootci([5000 200],@smoothmedian,y);
 %
+%  Example 6: 95% confidence interval for the 25% trimmed (or interquartile) mean
+%    >> y = randn(20,1);
+%    >> func = @(x) trimmean(x,50)
+%    >> ci = ibootci([5000 200],func,y);
+%
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
