@@ -186,14 +186,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isempty(bootidx)
       try
         idx = options{bootidx};
-        if size(data{1},1) ~= size(idx,1)
-          error('Dimensions of data and bootidx are inconsistent')
-        end
-        % Set nboot(1) according to the size of bootidx
-        nboot(1) = size(idx,2);
       catch
         error('Could not find bootidx')
       end
+      if size(data{1},1) ~= size(idx,1)
+        error('Dimensions of data and bootidx are inconsistent')
+      end
+      % Set nboot(1) according to the size of bootidx
+      nboot(1) = size(idx,2);
     else
       idx = [];
     end
