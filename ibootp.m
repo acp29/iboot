@@ -27,7 +27,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.4.2.0 (25/07/2019)
+%  ibootp v1.4.3.0 (29/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -39,6 +39,9 @@ function p = ibootp(m,bootstat,S,calcurve)
   end
 
   % Calculate number of bootstrap replicates
+  if iscell(bootstat)
+    bootstat = bootstat{1};
+  end
   B = numel(bootstat);
 
   % Find P-value from the cdf of the bootstrap distribution by linear interpolation
