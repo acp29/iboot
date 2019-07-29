@@ -362,6 +362,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           T1(i) = feval(bootfun,x1{:});
         end
     end
+    % Perform second bootstrap if applicable
+    if C>0
+      U = zeros(1,B);
+      for h = 1:B
+        U(h) = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+      end
+      U = U/C;
+    end
   end
 
   % Calculate statistics for the first bootstrap sample set
