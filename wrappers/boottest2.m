@@ -7,8 +7,8 @@
 %  Two sample bootstrap test for unpaired univariate data. The null
 %  hypothesis is that x and y are sampled from the same population.
 %  The test is two-tailed and is essentially a bootstrap version of
-%  a permutation test. Bootstrap iteration is not implemented for 
-%  this test.
+%  a permutation test. This test performs well without bootstrap
+%  iteration and so iteration is not implemented.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
@@ -29,7 +29,7 @@ function p = boottest2(nboot,bootfun,x,y)
   z = cat(1,x,y);
   n = numel(x);
   func = @(z) null(bootfun,z,n);
-  [ci,bootstat,S,calcurve] = ibootci(nboot,{func,z},'type','per');
+  [ci,bootstat,S,calcurve] = ibootci(nboot(1),{func,z},'type','per');
 
   % Calculate p-value using ibootp
   stat = func(z);
