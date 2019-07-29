@@ -6,11 +6,12 @@
 %   p = iboottest(nboot,{bootfun,x,y},Name,Value)
 %   p = iboottest(m,nboot,{bootfun,x},...)
 %   [p,ci] = iboottest(...)
+%   [p,ci,S] = iboottest(...)
 %
 %  One-sample or paired-sample bootstrap test for univariate data.
 %  The null hypothesis for the paired-sample test is that the
 %  bootfun statistic calculated for the difference between x and
-%  y is equal to zero. The null hypothesis for the one-sample  
+%  y is equal to zero. The null hypothesis for the one-sample
 %  test is that the bootfun statistic calculated for x is equal
 %  to zero. All tests are two-tailed.
 %
@@ -21,11 +22,11 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest v1.0.0.0 (25/07/2019)
+%  iboottest v1.1.0.0 (25/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
-function [p,ci] = iboottest(arg1,varargin)
+function [p,ci,S] = iboottest(arg1,varargin)
 
   % Check and process iboottest input arguments
   if isa(varargin{1},'cell')
