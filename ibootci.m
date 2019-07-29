@@ -7,6 +7,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
+%  ci = ibootci(bootstat, S)
 %  [ci,bootstat] = ibootci(...)
 %  [ci,bootstat,S] = ibootci(...)
 %  [ci,bootstat,S,calcurve] = ibootci(...)
@@ -56,6 +57,10 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
+%
+%  ci = ibootci(bootstat, S) produces calibrated confidence intervals
+%  for the bootstrap replicate sample set statistics provided in bootstat.
+%  This usage also requires a complete settings structure.
 %
 %  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
 %  computed for each of the nboot first bootstrap replicate samples.
@@ -123,7 +128,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.8.5.0 (26/07/2019)
+%  ibootci v1.9.0.0 (29/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -131,15 +136,52 @@
 function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
   % Evaluate the number of function arguments
-  if nargin<2 || (nargin<3 && ~iscell(argin2))
+  if nargin<2
     error('Too few input arguments');
   end
-  if nargout>5
+  if nargout>6
    error('Too many output arguments');
   end
 
   % Assign input arguments to function variables
-  if ~iscell(argin2)
+  if isstruct(argin2)
+    % Special usage provides bootstrap replicate sample set statistics
+    bootstat = argin1;
+    if iscell(bootstat)
+      T1 = bootstat{1};
+      T2 = bootstat{2};
+      B = numel(T1);
+      C = size(T2,1);
+      nboot = [B,C];
+    else
+      T1 = bootstat;
+      B = numel(T1);
+      C = 0;
+      nboot = [B,C];
+    end
+    S = argin2;
+    nboot = [B,C];
+    if ~all(nboot==S.nboot)
+      error('the dimensions of bootstat are inconsistent with S.nboot')
+    end
+    bootfun = S.bootfun;
+    data = [];
+    x = [];
+    T0 = S.stat;
+    weights = S.weights;
+    type = S.type;
+    alpha = 1-S.alpha;   % convert alpha to coverage
+    bias = mean(T1)-T0;  % calculate bias
+    if C>0
+      U = zeros(size(T1));
+      for h = 1:B
+        U(h) = interp_boot2(T2(:,h),T0,C);
+      end
+      U = U/C;
+    end
+
+  elseif ~iscell(argin2)
+    % Normal usage without options
     nboot = argin1;
     bootfun = argin2;
     data = varargin;
@@ -147,7 +189,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     idx = [];
     weights = [];
     type = 'per';
+    T1 = [];  % Initialize bootstat variable
+
   else
+    % Normal usage with options
     nboot = argin1;
     bootfun = argin2{1};
     data = {argin2{2:end}};
@@ -197,184 +242,199 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       idx = [];
     end
+    T1 = [];  % Initialize bootstat variable
   end
-  if ischar(bootfun)
-    % Convert character string of a function name to a function handle
-    bootfun = str2func(bootfun);
-  end
-  iter = numel(nboot);
-  nvar = size(data,2);
 
-  % Evaluate function variables
-  if iter > 2
-    error('Size of nboot exceeds maximum number of iterations supported by ibootci')
-  end
-  if ~isa(nboot,'numeric')
-    error('nboot must be numeric');
-  end
-  if any(nboot~=abs(fix(nboot)))
-    error('nboot must contain positive integers')
-  end
-  if ~isa(alpha,'numeric') || numel(alpha)~=1
-    error('The alpha value must be a numeric scalar value');
-  end
-  if (alpha <= 0) || (alpha >= 1)
-    error('The alpha value must be a value between 0 and 1');
-  end
-  if ~any(strcmpi(type,{'per','percentile'})) && ~strcmpi(type,'bca')
-    error('The type of bootstrap must be either per or bca');
-  end
-  varclass = zeros(1,nvar);
-  rows = zeros(1,nvar);
-  cols = zeros(1,nvar);
-  for v = 1:nvar
-    varclass(v) = isa(data{v},'double');
-    if all(size(data{v})>1)
-      error('The data must be provided as vectors')
+  if isempty(T1)
+    if ischar(bootfun)
+      % Convert character string of a function name to a function handle
+      bootfun = str2func(bootfun);
     end
-    rows(v) = size(data{v},1);
-    cols(v) = size(data{v},2);
-  end
-  if ~all(varclass)
-    error('Data variables must be double precision')
-  end
-  if any(rows~=rows(1)) || any(cols~=cols(1))
-    error('The dimensions of the data are not consistent');
-  end
-  rows = rows(1);
-  cols = cols(1);
-  if max(rows,cols) == 1
-    error('Cannot bootstrap scalar values');
-  elseif cols>1
-    % Transpose row vector data
-    n = cols;
+    iter = numel(nboot);
+    nvar = size(data,2);
+
+    % Evaluate function variables
+    if iter > 2
+      error('Size of nboot exceeds maximum number of iterations supported by ibootci')
+    end
+    if ~isa(nboot,'numeric')
+      error('nboot must be numeric');
+    end
+    if any(nboot~=abs(fix(nboot)))
+      error('nboot must contain positive integers')
+    end
+    if ~isa(alpha,'numeric') || numel(alpha)~=1
+      error('The alpha value must be a numeric scalar value');
+    end
+    if (alpha <= 0) || (alpha >= 1)
+      error('The alpha value must be a value between 0 and 1');
+    end
+    if ~any(strcmpi(type,{'per','percentile'})) && ~strcmpi(type,'bca')
+      error('The type of bootstrap must be either per or bca');
+    end
+    varclass = zeros(1,nvar);
+    rows = zeros(1,nvar);
+    cols = zeros(1,nvar);
     for v = 1:nvar
-      data{v} = data{v}';
-    end
-  else
-    n = rows;
-  end
-  if isempty(weights)
-    weights = ones(n,1);
-  else
-    if ~all(size(weights) == [rows,cols])
-      error('The weights vector is not the same dimensions as the data');
-    end
-    if cols>1
-      % Transpose row vector weights
-      weights = weights';
-    end
-  end
-  if any(weights<0)
-    error('weights must be a vector of non-negative numbers')
-  end
-
-  % Evaluate bootfun
-  if ~isa(bootfun,'function_handle')
-    error('bootfun must be a function name or function handle');
-  end
-  try
-    T0 = feval(bootfun,data{:});
-  catch
-    error('An error occurred while trying to evaluate bootfun with the input data');
-  end
-  if isinf(T0) | isnan(T0)
-    error('bootfun returns a NaN or Inf')
-  end
-  if max(size(T0))>1
-    error('Column vector inputs to bootfun must return a scalar');
-  end
-  M = cell(1,nvar);
-  for v = 1:nvar
-    x = data{v};
-    % Minimal simulation to evaluate bootfun with matrix input arguments
-    if v == 1
-      simidx = randi(n,n,2);
-    end
-    M{v} = x(simidx);
-  end
-  try
-    sim = feval(bootfun,M{:});
-    if size(sim,1)>1
-      error('Invoke catch statement');
-    end
-    runmode = 'fast';
-  catch
-    warning('ibootci:slowMode',...
-            'Slow mode. Faster if matrix input arguments to bootfun return a row vector.')
-    runmode = 'slow';
-  end
-
-  % Set the bootstrap sample sizes
-  S = struct;
-  if iter==0
-    B = 5000;
-    C = 200;
-    nboot = [B C];
-  elseif iter==1
-    B = nboot;
-    C = 0;
-    nboot = [B C];
-  elseif iter==2
-    B = nboot(1);
-    C = nboot(2);
-  end
-  if C>0
-    if (1/min(alpha,1-alpha)) > (0.5 * C)
-      error('ibootci:extremeAlpha',...
-           ['The calibrated alpha is too extreme for calibration so the result will be unreliable. \n',...
-            'Try increasing the number of replicate samples in the second bootstrap.\n',...
-            'If the problem persists, the original sample size may be inadequate.\n']);
-    end
-    if any(diff(weights))
-      error('Weights are not implemented for iterated bootstrap.');
-    end
-  end
-  S.bootfun = bootfun;
-  S.nboot = nboot;
-  S.type = type;
-
-  % Convert alpha to coverage level (decimal format)
-  S.alpha = alpha;
-  S.coverage = 1-alpha;
-  alpha = 1-alpha;
-
-  % Perform bootstrap
-  % Bootstrap resampling
-  if isempty(idx)
-    if nargout < 4
-      [T1, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
-    else
-      [T1, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
-    end
-  else
-    X1 = cell(1,nvar);
-    for v = 1:nvar
-      X1{v} = data{v}(idx);
-    end
-    switch lower(runmode)
-      case {'fast'}
-        T1 = feval(bootfun,X1{:})';
-      case {'slow'}
-        T1 = zeros(1,nboot(1));
-        for i=1:nboot(1)
-          x1 = cellfun(@(X1)X1(:,i),X1,'UniformOutput',false);
-          T1(i) = feval(bootfun,x1{:});
-        end
-    end
-    % Perform second bootstrap if applicable
-    if C>0
-      U = zeros(1,B);
-      for h = 1:B
-        U(h) = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+      varclass(v) = isa(data{v},'double');
+      if all(size(data{v})>1)
+        error('The data must be provided as vectors')
       end
-      U = U/C;
+      rows(v) = size(data{v},1);
+      cols(v) = size(data{v},2);
     end
-  end
+    if ~all(varclass)
+      error('Data variables must be double precision')
+    end
+    if any(rows~=rows(1)) || any(cols~=cols(1))
+      error('The dimensions of the data are not consistent');
+    end
+    rows = rows(1);
+    cols = cols(1);
+    if max(rows,cols) == 1
+      error('Cannot bootstrap scalar values');
+    elseif cols>1
+      % Transpose row vector data
+      n = cols;
+      for v = 1:nvar
+        data{v} = data{v}';
+      end
+    else
+      n = rows;
+    end
+    if isempty(weights)
+      weights = ones(n,1);
+    else
+      if ~all(size(weights) == [rows,cols])
+        error('The weights vector is not the same dimensions as the data');
+      end
+      if cols>1
+        % Transpose row vector weights
+        weights = weights';
+      end
+    end
+    if any(weights<0)
+      error('weights must be a vector of non-negative numbers')
+    end
 
-  % Calculate statistics for the first bootstrap sample set
-  bootstat = T1.';
-  bias = mean(bootstat)-T0;
+    % Evaluate bootfun
+    if ~isa(bootfun,'function_handle')
+      error('bootfun must be a function name or function handle');
+    end
+    try
+      T0 = feval(bootfun,data{:});
+    catch
+      error('An error occurred while trying to evaluate bootfun with the input data');
+    end
+    if isinf(T0) | isnan(T0)
+      error('bootfun returns a NaN or Inf')
+    end
+    if max(size(T0))>1
+      error('Column vector inputs to bootfun must return a scalar');
+    end
+    M = cell(1,nvar);
+    for v = 1:nvar
+      x = data{v};
+      % Minimal simulation to evaluate bootfun with matrix input arguments
+      if v == 1
+        simidx = randi(n,n,2);
+      end
+      M{v} = x(simidx);
+    end
+    try
+      sim = feval(bootfun,M{:});
+      if size(sim,1)>1
+        error('Invoke catch statement');
+      end
+      runmode = 'fast';
+    catch
+      warning('ibootci:slowMode',...
+              'Slow mode. Faster if matrix input arguments to bootfun return a row vector.')
+      runmode = 'slow';
+    end
+
+    % Set the bootstrap sample sizes
+    S = struct;
+    if iter==0
+      B = 5000;
+      C = 200;
+      nboot = [B C];
+    elseif iter==1
+      B = nboot;
+      C = 0;
+      nboot = [B C];
+    elseif iter==2
+      B = nboot(1);
+      C = nboot(2);
+    end
+    if C>0
+      if (1/min(alpha,1-alpha)) > (0.5 * C)
+        error('ibootci:extremeAlpha',...
+             ['The calibrated alpha is too extreme for calibration so the result will be unreliable. \n',...
+              'Try increasing the number of replicate samples in the second bootstrap.\n',...
+              'If the problem persists, the original sample size may be inadequate.\n']);
+      end
+      if any(diff(weights))
+        error('Weights are not implemented for iterated bootstrap.');
+      end
+    end
+    S.bootfun = bootfun;
+    S.nboot = nboot;
+    S.type = type;
+
+    % Convert alpha to coverage level (decimal format)
+    S.alpha = alpha;
+    S.coverage = 1-alpha;
+    alpha = 1-alpha;
+
+
+    % Perform bootstrap
+    % Bootstrap resampling
+    if isempty(idx)
+      if nargout < 4
+        [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
+      else
+        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
+      end
+    else
+      X1 = cell(1,nvar);
+      for v = 1:nvar
+        X1{v} = data{v}(idx);
+      end
+      switch lower(runmode)
+        case {'fast'}
+          T1 = feval(bootfun,X1{:})';
+        case {'slow'}
+          T1 = zeros(1,nboot(1));
+          for i=1:nboot(1)
+            x1 = cellfun(@(X1)X1(:,i),X1,'UniformOutput',false);
+            T1(i) = feval(bootfun,x1{:});
+          end
+      end
+      % Perform second bootstrap if applicable
+      if C>0
+        T2 = zeros(C,B);
+        U = zeros(1,B);
+        for h = 1:B
+          [U(h) T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+        end
+        U = U/C;
+      else
+        T2 = [];
+      end
+    end
+
+    % Calculate statistics for the first bootstrap sample set
+    if isempty(T2)
+      bootstat = T1;
+    else
+      bootstat = cell(2,1);
+      bootstat{1} = T1;
+      bootstat{2} = T2;
+    end
+    bias = mean(T1)-T0;
+
+  end
 
   % Calibrate central two-sided coverage
   if C>0
@@ -431,7 +491,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.bias = bias;                 % Bias of the test statistic
     S.bc_stat = T0-bias;           % Bias-corrected test statistic
   end
-  S.SE = std(bootstat,0);          % Bootstrap standard error of the test statistic
+  S.SE = std(T1,0);                % Bootstrap standard error of the test statistic
   S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
   if min(weights) ~= max(weights)
     S.weights = weights;
@@ -443,13 +503,18 @@ end
 
 %--------------------------------------------------------------------------
 
-function [T1, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runmode)
+function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runmode)
 
     % Initialize
     B = nboot(1);
     C = nboot(2);
     N = n*B;
     T1 = zeros(1,B);
+    if C>0
+      T2 = zeros(C,B);
+    else
+      T2 = [];
+    end
     U = zeros(1,B);
     X1 = cell(1,nvar);
     if nargout < 3
@@ -490,7 +555,7 @@ function [T1, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runmode)
       % Since second bootstrap is usually much smaller, perform rapid
       % balanced resampling by a permutation algorithm
       if C>0
-        U(h) = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+        [U(h) T2(:,h)]= boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
       end
     end
     U = U/C;
@@ -499,7 +564,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [U] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
+function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
 
@@ -526,6 +591,14 @@ function [U] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
           T2(i) = feval(bootfun,x2{:});
         end
     end
+    U = interp_boot2(T2,T0,C);
+
+end
+
+%--------------------------------------------------------------------------
+
+function  U = interp_boot2(T2,T0,C)
+
     U = sum(T2<=T0);
     if U < 1
       U = 0;
@@ -606,30 +679,37 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
 
   % Note that alpha input argument is nominal coverage
 
-  % Prepare weights
-  m = size(x{1},1);
-  if any(diff(weights))
-    weights = weights./sum(weights);
-  else
-    weights = ones(m,1)/m;
-  end
-
   % Calculate bias correction z0
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  try
-    % Get Jackknife statistics
-    [SE, T] = jack(x,func);
-    % Calculate acceleration (including weights)
-    Tori = sum(weights.*T);
-    U = ((m-1)*(Tori-T));
-    a = (1/6)*(sum(weights.*U.^3)/sum(weights.*U.^2)^(3/2)/sqrt(m));
-  catch
+  if ~isempty(x)
+    try
+
+      % Prepare weights
+      m = size(x{1},1);
+      if any(diff(weights))
+        weights = weights./sum(weights);
+      else
+        weights = ones(m,1)/m;
+      end
+
+      % Get Jackknife statistics
+      [SE, T] = jack(x,func);
+      % Calculate acceleration (including weights)
+      Tori = sum(weights.*T);
+      U = ((m-1)*(Tori-T));
+      a = (1/6)*(sum(weights.*U.^3)/sum(weights.*U.^2)^(3/2)/sqrt(m));
+
+    catch
+      a = nan;
+    end
+
+  else
     a = nan;
   end
 
-  % Check if calculation of acceleration using the jackknife was successful
+  % Check if calculation of acceleration using the jackknife was possible and successful
   if isnan(a)
     % If not, directly calculate from the skewness of the bootstrap statistics
     a = (1/6)*skewness(T1,1);
