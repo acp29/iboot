@@ -22,34 +22,36 @@
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
-function [p,ci,S] = iboottest2(varargin)
+function [p,ci,S] = iboottest2(argin1,argin2,varargin)
 
   % Check and process iboottest2 input arguments
+  nboot = argin1;
+  bootfun = argin2{1};
   argin = varargin;
-  x = argin{2}{2};
+  x = argin2{2};
   if all(size(x)>1)
     error('data must be a vector')
   end
   if size(x,2)>1
     x = x.';
   end
-  y = argin{2}{3};
+  y = argin2{3};
   if all(size(y)>1)
     error('data must be a vector')
   end
   if size(y,2)>1
     y = y.';
   end
-  if numel(argin{2})>3
+  if numel(argin2)>3
     error('too many data variables provided')
   end
-  nboot = argin{1};
-  bootfun = argin{2}{1};
-  argin(1:2) = [];
 
   % Perform independent resampling from x and y
+  state = warning;
+  warning off;
   [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},argin{:});
   [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},argin{:});
+  warning(state);
 
   % Calculate differences between bootfun evaluated for bootstrap
   % sample sets derived from x and y
