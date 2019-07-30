@@ -22,7 +22,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest v1.1.0.0 (25/07/2019)
+%  iboottest v1.1.0.0 (30/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
