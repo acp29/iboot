@@ -9,7 +9,7 @@
 %  The test is two-tailed and is essentially a bootstrap version of
 %  a permutation test. This test performs well without bootstrap
 %  iteration and so iteration is not implemented but it can only
-%  compute a P value (not confidence intervals).
+%  compute a P value (not a confidence interval).
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
