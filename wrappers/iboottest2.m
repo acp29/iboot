@@ -9,7 +9,8 @@
 %
 %  Two sample bootstrap test for univariate data. The null hypothesis
 %  is that the difference between the bootfun statistic calculated
-%  for x and y is equal to zero. The test is two-tailed.
+%  for independent samples x and y is equal to zero. The test is 
+%  two-tailed.
 %
 %  See ibootci documentation for input argument definitions and
 %  for Name-Value pairs
