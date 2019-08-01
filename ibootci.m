@@ -86,7 +86,7 @@
 %  [3] Efron, B. (1981) Censored data and the bootstrap. JASA
 %       76(374): 312-319
 %  [4] Davison et al. (1986) Efficient Bootstrap Simulation.
-%       Biometrika, 73: 555–66
+%       Biometrika, 73: 555â66
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -128,7 +128,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.9.0.0 (29/07/2019)
+%  ibootci v1.9.1.0 (29/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -297,7 +297,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Transpose row vector data
       n = cols;
       for v = 1:nvar
-        data{v} = data{v}';
+        data{v} = data{v}.';
       end
     else
       n = rows;
@@ -416,7 +416,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         T2 = zeros(C,B);
         U = zeros(1,B);
         for h = 1:B
-          [U(h) T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
         end
         U = U/C;
       else
@@ -432,8 +432,16 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       bootstat{1} = T1;
       bootstat{2} = T2;
     end
-    bias = mean(T1)-T0;
-
+    if C>0
+      % Double bootstrap bias estimation     
+      % See Davison and Hinkley (1997) pg 103-107
+      b = mean(T1)-T0;
+      c = mean(T2(:))-2*mean(T1)+T0;
+      bias = b-c;                    
+    else
+      % Single bootstrap bias estimation
+      bias = mean(T1)-T0;             
+    end
   end
 
   % Calibrate central two-sided coverage
@@ -555,7 +563,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
       % Since second bootstrap is usually much smaller, perform rapid
       % balanced resampling by a permutation algorithm
       if C>0
-        [U(h) T2(:,h)]= boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+        [U(h), T2(:,h)]= boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
       end
     end
     U = U/C;
