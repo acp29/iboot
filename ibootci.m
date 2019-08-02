@@ -128,7 +128,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.9.1.0 (29/07/2019)
+%  ibootci v1.9.0.0 (29/07/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -391,7 +391,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
-      if nargout < 4
+      if nargout < 5
         [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
       else
         [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
@@ -525,7 +525,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
     end
     U = zeros(1,B);
     X1 = cell(1,nvar);
-    if nargout < 3
+    if nargout < 5
       idx = zeros(n,1);
     else
       idx = zeros(n,B);
@@ -545,7 +545,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
     for h = 1:B
       for i = 1:n
         j = sum((rand(1) >= cumsum(c./sum(c))))+1;
-        if nargout < 3
+        if nargout < 5
           idx(i,1) = j;
         else
           idx(i,h) = j;
@@ -553,7 +553,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
         c(j) = c(j)-1;
       end
       for v = 1:nvar
-        if nargout < 3
+        if nargout < 5
           X1{v} = x{v}(idx);
         else
           X1{v} = x{v}(idx(:,h));
