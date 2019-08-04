@@ -68,7 +68,8 @@
 %  one replicate sample from the first bootstrap.
 %
 %  [ci,bootstat,S] = ibootci(...) also returns a structure containing
-%  the settings used in the bootstrap and the resulting statistics.
+%  the settings used in the bootstrap and the resulting statistics 
+%  including the (double) bootstrap bias and standard error.
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
 %  curve for central coverage. The first column is nominal coverage and
@@ -128,7 +129,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.9.0.0 (29/07/2019)
+%  ibootci v1.9.0.0 (04/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -171,13 +172,24 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = S.weights;
     type = S.type;
     alpha = 1-S.alpha;   % convert alpha to coverage
-    bias = mean(T1)-T0;  % calculate bias
     if C>0
       U = zeros(size(T1));
       for h = 1:B
         U(h) = interp_boot2(T2(:,h),T0,C);
       end
       U = U/C;
+      % Double bootstrap bias estimation   
+      % See Davison and Hinkley (1997) pg 103-107
+      b = mean(T1)-T0;
+      c = mean(mean(T2))-2*mean(T1)+T0;
+      bias = b-c;     
+      % Double bootstrap multiplicative correction of the variance
+      SE = sqrt(var(T1,0)^2 / mean(var(T2,0)));
+    else
+      % Single bootstrap bias estimation
+      bias = mean(T1)-T0;   
+      % Single bootstrap variance estimation
+      SE = std(T1,0);      
     end
 
   elseif ~iscell(argin2)
@@ -436,11 +448,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Double bootstrap bias estimation     
       % See Davison and Hinkley (1997) pg 103-107
       b = mean(T1)-T0;
-      c = mean(T2(:))-2*mean(T1)+T0;
-      bias = b-c;                    
+      c = mean(mean(T2))-2*mean(T1)+T0;
+      bias = b-c;     
+      % Double bootstrap multiplicative correction of the variance
+      SE = sqrt(var(T1,0)^2 / mean(var(T2,0)));
     else
       % Single bootstrap bias estimation
-      bias = mean(T1)-T0;             
+      bias = mean(T1)-T0;   
+      % Single bootstrap variance estimation
+      SE = std(T1,0);
     end
   end
 
@@ -499,7 +515,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.bias = bias;                 % Bias of the test statistic
     S.bc_stat = T0-bias;           % Bias-corrected test statistic
   end
-  S.SE = std(T1,0);                % Bootstrap standard error of the test statistic
+  S.SE = SE;                       % Bootstrap standard error of the test statistic
   S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
   if min(weights) ~= max(weights)
     S.weights = weights;
