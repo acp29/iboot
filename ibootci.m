@@ -536,7 +536,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
     end
     U = zeros(1,B);
     X1 = cell(1,nvar);
-    if nargout < 5
+    if nargout < 4
       idx = zeros(n,1);
     else
       idx = zeros(n,B);
@@ -556,7 +556,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
     for h = 1:B
       for i = 1:n
         j = sum((rand(1) >= cumsum(c./sum(c))))+1;
-        if nargout < 5
+        if nargout < 4
           idx(i,1) = j;
         else
           idx(i,h) = j;
@@ -564,7 +564,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
         c(j) = c(j)-1;
       end
       for v = 1:nvar
-        if nargout < 5
+        if nargout < 4
           X1{v} = x{v}(idx);
         else
           X1{v} = x{v}(idx(:,h));
