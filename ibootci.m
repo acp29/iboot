@@ -318,7 +318,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       weights = ones(n,1);
     else
       if ~all(size(weights) == [rows,cols])
-        error('The weights vector is not the same dimensions as the data');
+        error('the weights vector is not the same dimensions as the data');
       end
       if cols>1
         % Transpose row vector weights
