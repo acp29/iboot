@@ -734,7 +734,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
     a = (1/6)*skewness(T1,1);
   end
 
-  % Calculate confidence limits
+  % Calculate BCa percentiles
   z1 = norminv(0.5*(1+alpha));
   m1 = normcdf(z0+((z0+z1)/(1-a*(z0+z1))));
   z2 = norminv(0.5*(1-alpha));
