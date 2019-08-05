@@ -63,9 +63,15 @@
 %  This usage also requires a complete settings structure.
 %
 %  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
-%  computed for each of the nboot first bootstrap replicate samples.
-%  Each row of bootstat contains the results of applying bootfun to
-%  one replicate sample from the first bootstrap.
+%  computed for each of the bootstrap replicate samples sets. If only
+%  a single bootstrap is requested, bootstat will return a vector: each 
+%  column of bootstat contains the result of applying bootfun to one 
+%  replicate sample from the first bootstrap. If bootstrap iteration 
+%  is requested, bootstat will return a cell array containing the 
+%  statistics computed by bootfun in the first and second bootstrap.
+%  For the second boostrap, each column of bootstat contains the 
+%  results of applying bootfun to each replicate sample from the second
+%  bootstrap for one replicate sample from the first bootstrap.
 %
 %  [ci,bootstat,S] = ibootci(...) also returns a structure containing
 %  the settings used in the bootstrap and the resulting statistics 
