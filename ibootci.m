@@ -179,23 +179,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     type = S.type;
     alpha = 1-S.alpha;   % convert alpha to coverage
     if C>0
-      U = zeros(size(T1));
+      U = zeros(1,B);
       for h = 1:B
         U(h) = interp_boot2(T2(:,h),T0,C);
       end
-      U = U/C;
-      % Double bootstrap bias estimation   
-      % See Davison and Hinkley (1997) pg 103-107
-      b = mean(T1)-T0;
-      c = mean(mean(T2))-2*mean(T1)+T0;
-      bias = b-c;     
-      % Double bootstrap multiplicative correction of the variance
-      SE = sqrt(var(T1,0)^2 / mean(var(T2,0)));
-    else
-      % Single bootstrap bias estimation
-      bias = mean(T1)-T0;   
-      % Single bootstrap variance estimation
-      SE = std(T1,0);      
+      U = U/C;   
     end
 
   elseif ~iscell(argin2)
@@ -441,8 +429,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         T2 = [];
       end
     end
-
-    % Calculate statistics for the first bootstrap sample set
+    % Assign data to bootstat
     if isempty(T2)
       bootstat = T1;
     else
@@ -450,20 +437,22 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       bootstat{1} = T1;
       bootstat{2} = T2;
     end
-    if C>0
-      % Double bootstrap bias estimation     
-      % See Davison and Hinkley (1997) pg 103-107
-      b = mean(T1)-T0;
-      c = mean(mean(T2))-2*mean(T1)+T0;
-      bias = b-c;     
-      % Double bootstrap multiplicative correction of the variance
-      SE = sqrt(var(T1,0)^2 / mean(var(T2,0)));
-    else
-      % Single bootstrap bias estimation
-      bias = mean(T1)-T0;   
-      % Single bootstrap variance estimation
-      SE = std(T1,0);
-    end
+  end
+  
+  % Calculate statistics for the first bootstrap sample set
+  if C>0
+    % Double bootstrap bias estimation     
+    % See Davison and Hinkley (1997) pg 103-107
+    b = mean(T1)-T0;
+    c = mean(mean(T2))-2*mean(T1)+T0;
+    bias = b-c;     
+    % Double bootstrap multiplicative correction of the variance
+    SE = sqrt(var(T1,0)^2 / mean(var(T2,0)));
+  else
+    % Single bootstrap bias estimation
+    bias = mean(T1)-T0;   
+    % Single bootstrap variance estimation
+    SE = std(T1,0);
   end
 
   % Calibrate central two-sided coverage
