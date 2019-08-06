@@ -69,7 +69,7 @@
 %
 %  ci = ibootci(bootstat, S) produces calibrated confidence intervals
 %  for the bootstrap replicate sample set statistics provided in bootstat.
-%  This usage also requires a complete settings structure.
+%  This usage also requires a complete settings structure (see below).
 %
 %  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets. If only
