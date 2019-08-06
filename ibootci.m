@@ -210,7 +210,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = S.weights;
     strata = S.strata;
     type = S.type;
-    alpha = 1-S.alpha;   % convert alpha to coverage
+    S.coverage = 1-S.alpha;
+    alpha = S.coverage;       % convert alpha to coverage
     if C>0
       U = zeros(1,B);
       for h = 1:B
