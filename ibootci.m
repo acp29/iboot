@@ -6,6 +6,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
+%  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(bootstat, S)
 %  [ci,bootstat] = ibootci(...)
@@ -54,6 +55,14 @@
 %  the calibrated alpha in a weighted bootstrap without iteration
 %  (see example 4 below).
 %
+%  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata) specifies a 
+%  vector containing numeric identifiers of strata. The dimensions of 
+%  strata must be equal to that of the non-scalar input arguments to 
+%  bootfun. Bootstrap resampling is stratified so that every stratum is 
+%  represented in each bootstrap test statistic [5]. If weights are also 
+%  provided then they are within-stratum weights; the weighting of 
+%  individual stratum depends on their respective sample size. 
+%
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
@@ -77,6 +86,26 @@
 %  the settings used in the bootstrap and the resulting statistics 
 %  including the (double) bootstrap bias and standard error.
 %
+%  The structure S contains the following fields:
+%    bootfun: Function name or handle used to calculate the test statistic
+%    nboot: The number of first (and second) bootstrap replicate samples
+%    type: Type of confidence interval (bca or per)
+%    alpha: Desired alpha level
+%    coverage: Central coverage of the confidence interval
+%    cal: Nominal alpha level from calibration
+%    z0: Bias used to construct BCa intervals (0 if type is per)
+%    a: Acceleration used to construct BCa intervals (0 if type is per)
+%    stat: Test statistic of the sample
+%    bias: Bias of the test statistic
+%    bc_stat: Bias-corrected test statistic
+%    SE: Bootstrap standard error of the test statistic
+%    ci: Bootstrap confidence interval
+%    SSb: Between strata sum-of-squared residuals (only if strata supplied)
+%    SSw: Within strata sum-of-squared residuals (only if strata supplied)
+%    ISC: Intra-strata correlation coefficient(only if strata supplied)
+%    strata: argument supplied to 'Strata' (empty if none provided)
+%    weights: argument supplied to 'Weights' (empty if none provided)
+%
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
 %  curve for central coverage. The first column is nominal coverage and
 %  the second column is actual coverage.
@@ -85,15 +114,17 @@
 %  a matrix of indices from the first bootstrap.
 %
 %  Bibliography:
-%  [1] Efron, B. and Tibshirani, R.J. (1993) An Introduction to the
+%  [1] Efron, and Tibshirani (1993) An Introduction to the
 %       Bootstrap. New York, NY: Chapman & Hall
 %  [2] Hall, Lee and Young (2000) Importance of interpolation when
 %       constructing double-bootstrap confidence intervals. Journal
 %       of the Royal Statistical Society. Series B. 62(3): 479-491
-%  [3] Efron, B. (1981) Censored data and the bootstrap. JASA
+%  [3] Efron (1981) Censored data and the bootstrap. JASA
 %       76(374): 312-319
 %  [4] Davison et al. (1986) Efficient Bootstrap Simulation.
-%       Biometrika, 73: 555â66
+%       Biometrika, 73: 555-66
+%  [5] Davison and Hinkley (1997) Bootstrap Methods and their application.
+%       Chapter 3: pg 97-100
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -135,7 +166,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v1.9.0.0 (04/08/2019)
+%  ibootci v2.0.0.0 (04/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -146,7 +177,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if nargin<2
     error('Too few input arguments');
   end
-  if nargout>6
+  if nargout>5
    error('Too many output arguments');
   end
 
@@ -194,6 +225,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     alpha = 0.05;
     idx = [];
     weights = [];
+    strata = [];
     type = 'per';
     T1 = [];  % Initialize bootstat variable
 
@@ -206,6 +238,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     alpha = 1+find(strcmpi('alpha',options));
     type = 1+find(strcmpi('type',options));
     weights = 1+find(strcmpi('Weights',options));
+    strata = 1+find(strcmpi('Strata',options));
     bootidx = 1+find(strcmpi('bootidx',options));
     if ~isempty(alpha)
       try
@@ -233,6 +266,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else
       weights = [];
+    end
+    if ~isempty(strata)
+      try
+        strata = options{strata};
+      catch
+        strata = [];
+      end
+    else
+      strata = [];
     end
     if ~isempty(bootidx)
       try
@@ -320,7 +362,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     end
     if any(weights<0)
-      error('weights must be a vector of non-negative numbers')
+      error('Weights must be a vector of non-negative numbers')
+    end
+    if ~isempty(strata)
+      strata = strata(:);
+      if ~all(size(strata) == size(data{1}))
+        error('strata must be cell array or vector the same size as the data') 
+      end
+      % Sort strata and data vactors so that strata components are grouped
+      [strata,I] = sort(strata);
+      for i=1:nvar
+        data{v} = data{v}(I);
+      end
     end
 
     % Evaluate bootfun
@@ -393,14 +446,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.coverage = 1-alpha;
     alpha = 1-alpha;
 
-
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
       if nargout < 5
-        [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
+        [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, strata, runmode);
       else
-        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, runmode);
+        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, strata, runmode);
       end
     else
       X1 = cell(1,nvar);
@@ -450,7 +502,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     SE = sqrt(var(T1,0)^2 / mean(var(T2,0)));
   else
     % Single bootstrap bias estimation
-    bias = mean(T1)-T0;   
+    bias = mean(T1)-T0;  
     % Single bootstrap variance estimation
     SE = std(T1,0);
   end
@@ -503,26 +555,35 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
   % Complete output structure
   S.stat = T0;                     % Sample test statistic
-  if any(diff(weights))
-    S.bias = NaN;                  % Bias not available for weighted bootstrap
-    S.bc_stat = NaN;               % Bias correction not available for weighted bootstrap
-  else
-    S.bias = bias;                 % Bias of the test statistic
-    S.bc_stat = T0-bias;           % Bias-corrected test statistic
-  end
+  S.bias = bias;                   % Bias of the test statistic
+  S.bc_stat = T0-bias;             % Bias-corrected test statistic
   S.SE = SE;                       % Bootstrap standard error of the test statistic
   S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
+  % Output structure fields if strata provided
+  if ~isempty(strata) 
+    % Calculate variance components of strata
+    [SSb, SSw] = var_calc (data, strata, nvar);
+    S.SSb = SSb;                   % Sum-of-squared residuals between strata
+    S.SSw = SSw;                   % Sum-of-squared residuals within strata
+    S.ISC = SSb/(SSw+SSb);         % Intra-stratum correlation coefficient
+    % Resort bootidx to match input data
+    if ~isempty(idx)
+      [~,J] = sort(I);
+      idx = idx(J,:);
+    end
+  end
+  S.strata = strata;
   if min(weights) ~= max(weights)
     S.weights = weights;
   else
     S.weights = [];
   end
-
+  
 end
 
 %--------------------------------------------------------------------------
 
-function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runmode)
+function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, strata, runmode)
 
     % Initialize
     B = nboot(1);
@@ -541,11 +602,43 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
     else
       idx = zeros(n,B);
     end
-
+ 
+    % If applicable, prepare for stratified resampling
+    if ~isempty(strata)
+      % Get strata IDs
+      gid = unique(strata);  % strata ID
+      K = numel(gid);        % number of strata
+      % Create strata matrix
+      for k = 1:K
+        g(:,k) = (strata == gid(k));
+      end
+      % Get strata sample and bootstrap sample set dimensions
+      nk = sum(g).';   % strata sample sizes
+      ck = cumsum(nk); % cumulative sum of strata sample sizes 
+      ik = [1;ck];     % strata boundaries
+      Nk = nk*B;       % size of strata bootstrap sample set
+      Ck = cumsum(Nk); % cumulative sum of strata bootstrap sample set sizes 
+    else
+      ck = n;
+      g = ones(n,1);
+    end
+    
     % Prepare weights for resampling
     if any(diff(weights))
-      c = cumsum(round(N * weights./sum(weights)));
-      c(end) = N;
+      if ~isempty(strata)
+        % Calculate within-stratum weights
+        c = zeros(n,1);
+        k = 1;
+        for k = 1:K
+          c = c + round(Nk(k) * g(:,k).*weights./sum(g(:,k).*weights));
+          c(ik(k):ik(k+1),1) = cumsum(c(ik(k):ik(k+1),1));
+          c(ik(k+1)) = Ck(k);
+        end
+      else
+        % Calculate weights (no groups)
+        c = cumsum(round(N * weights./sum(weights)));
+        c(end) = N;
+      end
       c = [c(1);diff(c)];
     else
       c = ones(n,1)*B;
@@ -553,9 +646,12 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
 
     % Since first bootstrap is large, use a memory
     % efficient balanced resampling algorithm
+    % If strata is provided, resampling is stratified  
     for h = 1:B
+      k = 1;
       for i = 1:n
-        j = sum((rand(1) >= cumsum(c./sum(c))))+1;
+        k = sum(i>ck)+1;
+        j = sum((rand(1) >= cumsum((g(:,k).*c)./sum(g(:,k).*c))))+1;
         if nargout < 4
           idx(i,1) = j;
         else
@@ -574,7 +670,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, runm
       % Since second bootstrap is usually much smaller, perform rapid
       % balanced resampling by a permutation algorithm
       if C>0
-        [U(h), T2(:,h)]= boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+        [U(h), T2(:,h)]= boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode);
       end
     end
     U = U/C;
@@ -583,17 +679,29 @@ end
 
 %--------------------------------------------------------------------------
 
-function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode)
+function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
 
     % Initialize
     C = nboot(2);
-    N = n*C;
+    
+    % If applicable, prepare for stratified resampling
+    K = size(g,2);    % number of strata
+    nk = sum(g).';    % strata sample sizes
+    ck = cumsum(nk);  % cumulative sum of strata sample sizes
+    ik = [1;ck+1];    % strata boundaries (different definition to boot1)
+    Nk = nk*C;        % size of strata bootstrap sample set
 
     % Rapid balanced resampling by permutation
-    idx = (1:n)'*ones(1,C);
-    idx = idx(reshape(randperm(N,N),n,C));
+    % If strata is provided, resampling is stratified  
+    idx = zeros(n,C);
+    for k = 1:K
+      tmp = (1:nk(k))'*ones(1,C);
+      tmp = tmp(reshape(randperm(Nk(k),Nk(k)),nk(k),C));
+      tmp = tmp + ik(k) - 1; 
+      idx(ik(k): ik(k+1)-1,:) = tmp;
+    end
     X2 = cell(1,nvar);
     for v = 1:nvar
       X2{v} = X1{v}(idx);
@@ -744,6 +852,37 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
 
 end
 
+%--------------------------------------------------------------------------
+
+function [SSb, SSw] = var_calc (x, strata, nvar)
+
+  % Calculate variance components of strata
+  
+  % Initialize
+  gid = unique(strata);  % strata ID
+  K = numel(gid);        % number of strata
+  n = numel(x{1});
+  g = zeros(n,K);
+  bSQ = zeros(K,nvar);
+  wSQ = zeros(n,nvar);
+  center = zeros(K,nvar);
+  % Calculate within and between strata variances
+  for k = 1:K
+    % Create strata matrix 
+    g(:,k) = (strata == gid(k));
+    for v = 1:nvar
+      center(k,v) = sum(g(:,k) .* x{v}) / sum(g(:,k));
+      wSQ(:,v) = wSQ(:,v) + g(:,k).*(x{v}-center(k,v)).^2;
+    end
+  end
+  for v = 1:nvar
+    bSQ = (center(:,v) - mean(center(:,v))).^2;
+  end
+  SSb = sum(bSQ);         % Between-strata SSE 
+  SSw = sum(sum(wSQ,2));  % Within-strata SSE
+      
+end
+      
 %--------------------------------------------------------------------------
 
 function [F,x] = empcdf (y,c)
