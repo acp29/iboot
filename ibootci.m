@@ -48,11 +48,11 @@
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The dimensions of weights must be equal to that of the non-scalar input
 %  arguments to bootfun. The weights are used as bootstrap sampling
-%  probabilities. Note that weights are not implemented for bootstrap
-%  iteration. To improve on standard percentile intervals from a single
-%  bootstrap when using weights, we suggest calibrating the nominal
-%  alpha level using iterated bootstrap without weights, then using
-%  the calibrated alpha in a weighted bootstrap without iteration
+%  probabilities. Note that weights are not implemented for BCa intervals
+%  or for bootstrap iteration. To improve on standard percentile intervals
+%  from a single bootstrap when using weights, we suggest calibrating the
+%  nominal alpha level using iterated bootstrap without weights, then
+%  using the calibrated alpha in a weighted bootstrap without iteration
 %  (see example 4 below).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata) specifies a
@@ -166,7 +166,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.0.2.0 (06/08/2019)
+%  ibootci v2.0.3.0 (06/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -377,6 +377,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       for i=1:nvar
         data{v} = data{v}(I);
       end
+    end
+    if any(diff(weights)) && strcmpi(type,'bca')
+      warning('Weights are not implemented for BCa intervals. Using percentile intervals instead.');
+      type = 'per';
     end
 
     % Evaluate bootfun
@@ -819,22 +823,9 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
   % Calculate acceleration constant a
   if ~isempty(x)
     try
-
-      % Prepare weights
-      m = size(x{1},1);
-      if any(diff(weights))
-        weights = weights./sum(weights);
-      else
-        weights = ones(m,1)/m;
-      end
-
-      % Get Jackknife statistics
-      [SE, T] = jack(x,func);
-      % Calculate acceleration (including weights)
-      Tori = sum(weights.*T);
-      U = ((m-1)*(Tori-T));
-      a = (1/6)*(sum(weights.*U.^3)/sum(weights.*U.^2)^(3/2)/sqrt(m));
-
+      % Use the Jackknife to calculate acceleration
+      [SE, T, U] = jack(x,func);
+      a = (1/6)*(sum(U.^3)/sum(U.^2)^(3/2));
     catch
       a = nan;
     end
