@@ -102,7 +102,7 @@
 %    ci: Bootstrap confidence interval
 %    SSb: Between strata sum-of-squared residuals (only if strata supplied)
 %    SSw: Within strata sum-of-squared residuals (only if strata supplied)
-%    ISC: Intra-strata correlation coefficient(only if strata supplied)
+%    ISC: Intra-strata correlation coefficient (only if strata supplied)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
 %
