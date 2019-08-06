@@ -59,6 +59,9 @@ function p = ibootp(m,bootstat,S,calcurve)
   if (1/min(p,1-p)) > (0.5*B) || isnan(p)
     warning(['P value too small for this bootstrap distribution. \n'...
             'Try increasing the number of first bootstrap replicate samples in ibootci.']);
+    if isnan(p)
+      p = 0;
+    end
   end
 
   % Calibration of P-value if applicable
