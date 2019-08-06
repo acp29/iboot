@@ -166,7 +166,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.0.1.0 (06/08/2019)
+%  ibootci v2.0.2.0 (06/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -205,6 +205,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     bootfun = S.bootfun;
     data = [];
     x = [];
+    idx = [];
     T0 = S.stat;
     weights = S.weights;
     strata = S.strata;
@@ -562,11 +563,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
   % Output structure fields if strata provided
   if ~isempty(strata)
-    % Calculate variance components of strata
-    [SSb, SSw] = var_calc (data, strata, nvar);
-    S.SSb = SSb;                   % Sum-of-squared residuals between strata
-    S.SSw = SSw;                   % Sum-of-squared residuals within strata
-    S.ISC = SSb/(SSw+SSb);         % Intra-stratum correlation coefficient
+    if ~isempty(data)
+      % Calculate variance components of strata
+      [SSb, SSw] = var_calc (data, strata, nvar);
+      S.SSb = SSb;                   % Sum-of-squared residuals between strata
+      S.SSw = SSw;                   % Sum-of-squared residuals within strata
+      S.ISC = SSb/(SSw+SSb);         % Intra-stratum correlation coefficient
+    else
+      % Cannot calculate variance components of the strata if data is not provided
+    end
     % Resort bootidx to match input data
     if ~isempty(idx)
       [~,J] = sort(I);
