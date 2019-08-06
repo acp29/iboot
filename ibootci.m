@@ -123,8 +123,8 @@
 %       76(374): 312-319
 %  [4] Davison et al. (1986) Efficient Bootstrap Simulation.
 %       Biometrika, 73: 555-66
-%  [5] Davison and Hinkley (1997) Bootstrap Methods and their application.
-%       Chapter 3: pg 97-100
+%  [5] Davison and Hinkley (1997) Bootstrap Methods and their
+%       application. Chapter 3: pg 97-100
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
