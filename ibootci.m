@@ -190,12 +190,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       T2 = bootstat{2};
       B = numel(T1);
       C = size(T2,1);
-      nboot = [B,C];
     else
       T1 = bootstat;
       B = numel(T1);
       C = 0;
-      nboot = [B,C];
     end
     S = argin2;
     nboot = [B,C];
@@ -204,7 +202,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     bootfun = S.bootfun;
     data = [];
-    x = [];
     idx = [];
     T0 = S.stat;
     weights = S.weights;
@@ -391,7 +388,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     catch
       error('An error occurred while trying to evaluate bootfun with the input data');
     end
-    if isinf(T0) | isnan(T0)
+    if isinf(T0) || isnan(T0)
       error('bootfun returns a NaN or Inf')
     end
     if max(size(T0))>1
@@ -467,7 +464,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       switch lower(runmode)
         case {'fast'}
-          T1 = feval(bootfun,X1{:})';
+          T1 = feval(bootfun,X1{:});
         case {'slow'}
           T1 = zeros(1,nboot(1));
           for i=1:nboot(1)
@@ -542,7 +539,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1, m2, S] = BCa(B, bootfun, data, T1, T0, alpha, weights, S);
+      [m1, m2, S] = BCa(B, bootfun, data, T1, T0, alpha, S);
   end
 
   % Linear interpolation of the bootstat cdf for interval construction
@@ -619,6 +616,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, stra
       gid = unique(strata);  % strata ID
       K = numel(gid);        % number of strata
       % Create strata matrix
+      g = zeros(n,K);
       for k = 1:K
         g(:,k) = (strata == gid(k));
       end
@@ -638,7 +636,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, stra
       if ~isempty(strata)
         % Calculate within-stratum weights
         c = zeros(n,1);
-        k = 1;
         for k = 1:K
           c = c + round(Nk(k) * g(:,k).*weights./sum(g(:,k).*weights));
           c(ik(k):ik(k+1),1) = cumsum(c(ik(k):ik(k+1),1));
@@ -658,7 +655,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, stra
     % efficient balanced resampling algorithm
     % If strata is provided, resampling is stratified
     for h = 1:B
-      k = 1;
       for i = 1:n
         k = sum(i>ck)+1;
         j = sum((rand(1) >= cumsum((g(:,k).*c)./sum(g(:,k).*c))))+1;
@@ -812,7 +808,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S)
 
   % Note that alpha input argument is nominal coverage
 
@@ -823,7 +819,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, weights, S)
   if ~isempty(x)
     try
       % Use the Jackknife to calculate acceleration
-      [SE, T, U] = jack(x,func);
+      [~, ~, U] = jack(x,func);
       a = (1/6)*(sum(U.^3)/sum(U.^2)^(3/2));
     catch
       a = nan;
