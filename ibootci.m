@@ -166,7 +166,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.0.4.0 (06/08/2019)
+%  ibootci v2.0.5.0 (06/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -566,7 +566,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if ~isempty(strata)
     if ~isempty(data)
       % Calculate variance components of strata
-      [SSb, SSw] = var_calc (data, strata, nvar);
+      [SSb, SSw] = sse_calc (data, strata, nvar);
       S.SSb = SSb;                   % Sum-of-squared residuals between strata
       S.SSw = SSw;                   % Sum-of-squared residuals within strata
       S.ISC = SSb/(SSw+SSb);         % Intra-stratum correlation coefficient
@@ -847,9 +847,9 @@ end
 
 %--------------------------------------------------------------------------
 
-function [SSb, SSw] = var_calc (x, strata, nvar)
+function [SSb, SSw] = sse_calc (x, strata, nvar)
 
-  % Calculate variance components of strata
+  % Calculate error components of strata
 
   % Initialize
   gid = unique(strata);  % strata ID
