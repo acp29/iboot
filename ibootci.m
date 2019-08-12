@@ -166,7 +166,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.0.5.0 (06/08/2019)
+%  ibootci v2.0.6.0 (12/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -317,7 +317,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if (alpha <= 0) || (alpha >= 1)
       error('The alpha value must be a value between 0 and 1');
     end
-    if ~any(strcmpi(type,{'per','percentile'})) && ~strcmpi(type,'bca')
+    if ~any(strcmpi(type,{'per','percentile','bca'}))
       error('The type of bootstrap must be either per or bca');
     end
     varclass = zeros(1,nvar);
