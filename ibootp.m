@@ -57,8 +57,8 @@ function p = ibootp(m,bootstat,S,calcurve)
 
   % Check if first bootstrap replicate sample set is large enough
   if (1/min(p,1-p)) > (0.5*B) || isnan(p)
-    warning(['P value too small for this bootstrap distribution. \n'...
-            'Try increasing the number of first bootstrap replicate samples in ibootci.']);
+    warning(sprintf(['P value too small for this bootstrap distribution. \n'...
+            'Try increasing the number of first bootstrap replicate samples in ibootci.']));
     if isnan(p)
       p = 0;
     end
@@ -72,8 +72,8 @@ function p = ibootp(m,bootstat,S,calcurve)
       if (1/min(p,1-p)) < (0.5*C)
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
       else
-        warning(['P value is too small for calibration so the result will be unreliable.\n'...
-                'Try increasing the number of second bootstrap replicate samples in ibootci.']);
+        warning(sprintf(['P value is too small for calibration so the result will be unreliable.\n'...
+                'Try increasing the number of second bootstrap replicate samples in ibootci.']));
       end
     end
   end
