@@ -57,6 +57,7 @@ function p = bootperm(nboot,bootfun,x,m)
   warning(state);
 
   % Apply bootstrapped signs to data vector x and calculate bootfun
+  Z = z(bootidx);
   bootstat = feval(bootfun,bsxfun(@times,x,Z));
 
   % Calculate p-value using ibootp
