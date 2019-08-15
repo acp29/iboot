@@ -26,7 +26,7 @@ function p = bootperm2(nboot,bootfun,x,y)
     error('bootperm2 is not compatible with bootstrap iteration')
   end
 
-  % Calculate confidence interval using ibootci
+  % Use ibootci to create bootstrap statistics
   z = cat(1,x,y);
   n = numel(x);
   func = @(z) null(bootfun,z,n);
