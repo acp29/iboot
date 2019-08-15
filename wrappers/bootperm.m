@@ -6,8 +6,8 @@
 %
 %  One sample bootstrap test for univariate data. The null hypothesis
 %  is that x is sampled from a population with location m calculated
-%  by bootfun. This test performs well without bootstrap iteration 
-%  and so iteration is not implemented but it can only compute a P 
+%  by bootfun. This test performs well without bootstrap iteration
+%  and so iteration is not implemented but it can only compute a P
 %  value (not a confidence interval).
 %
 %  The test is two-tailed and is essentially a bootstrap version of
@@ -53,11 +53,11 @@ function p = bootperm(nboot,bootfun,x,m)
   % Use ibootci to create bootstrap indices
   state = warning;
   warning off;
-  [ci,bootstat,S,calcurve,bootidx] = ibootci(nboot(1),{bootfun,z},'type','per','Weights',w);
+  [ci,bootstat,S,calcurve,bootidx] = ibootci(nboot,{bootfun,z},'type','per','Weights',w);
   warning(state);
 
   % Apply bootstrapped signs to data vector x and calculate bootfun
-  bootstat = feval(bootfun,bsxfun(@times,x,z(bootidx)));
+  bootstat = feval(bootfun,bsxfun(@times,x,Z));
 
   % Calculate p-value using ibootp
   stat = bootfun(x);
