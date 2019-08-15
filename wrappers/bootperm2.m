@@ -26,12 +26,17 @@ function p = bootperm2(nboot,bootfun,x,y)
     error('bootperm2 is not compatible with bootstrap iteration')
   end
 
-  % Use ibootci to create bootstrap statistics
+  % Prepare joint distribution and define function to test the null hypothesis
   z = cat(1,x,y);
   n = numel(x);
   func = @(z) null(bootfun,z,n);
+  
+  % Use ibootci to create bootstrap statistics
+  state = warning;
+  warning off;
   [ci,bootstat,S,calcurve] = ibootci(nboot(1),{func,z},'type','per');
-
+  warning(state);
+  
   % Calculate p-value using ibootp
   stat = func(z);
   p = ibootp(stat,bootstat,S,calcurve);
