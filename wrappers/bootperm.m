@@ -1,8 +1,8 @@
-%  Function File: bootperm
+%  Function File: bootperm2
 %
 %  Two-sample bootstrap (permutation) test
 %
-%   p = boottest2(nboot,bootfun,x,y)
+%   p = bootperm2(nboot,bootfun,x,y)
 %
 %  Two sample bootstrap test for unpaired univariate data. The null
 %  hypothesis is that x and y are sampled from the same population.
@@ -15,15 +15,15 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm v1.0.0.0 (30/07/2019)
+%  bootperm2 v1.0.1.0 (15/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
-function p = bootperm(nboot,bootfun,x,y)
+function p = bootperm2(nboot,bootfun,x,y)
 
-  % Check and process iboottest2 input arguments
+  % Check and process ibootperm2 input arguments
   if any(size(nboot)>1)
-    error('boottest2 is not compatible with bootstrap iteration')
+    error('bootperm2 is not compatible with bootstrap iteration')
   end
 
   % Calculate confidence interval using ibootci
