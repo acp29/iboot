@@ -34,8 +34,13 @@
 
 function p = ibootp(m,bootstat,S,calcurve)
 
-  if nargin < 3
+  % Check input arguments
+  if nargin < 2
     error('ibootp requires atleast 3 input arguments')
+  end
+  if nargin < 3
+    S.z0 = 0;
+    S.a = 0;
   end
 
   % Calculate number of bootstrap replicates
