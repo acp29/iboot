@@ -6,9 +6,9 @@
 %
 %  One sample bootstrap test for univariate data. The null hypothesis
 %  is that x is sampled from a population with location m calculated
-%  by bootfun. This test performs well without bootstrap iteration and
-%  so iteration is not implemented but it can only compute a P value
-%  (not a confidence interval).
+%  by bootfun. This test performs well without bootstrap iteration 
+%  and so iteration is not implemented but it can only compute a P 
+%  value (not a confidence interval).
 %
 %  The test is two-tailed and is essentially a bootstrap version of
 %  a one-sample permutation test.
@@ -42,7 +42,7 @@ function p = bootperm(nboot,bootfun,x,m)
   k = fix(n/2);
   z(1:k) = -1;
 
-  % If n is odd create weights to sample signs equally
+  % If n is odd, create weights to sample signs equally
   isodd = sum(z);
   w = ones(n,1);
   if isodd
