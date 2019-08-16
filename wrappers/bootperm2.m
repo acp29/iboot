@@ -30,16 +30,16 @@ function p = bootperm2(nboot,bootfun,x,y)
   z = cat(1,x,y);
   n = numel(x);
   func = @(z) null(bootfun,z,n);
-  
+
   % Use ibootci to create bootstrap statistics
   state = warning;
   warning off;
-  [ci,bootstat,S,calcurve] = ibootci(nboot(1),{func,z},'type','per');
+  [ci,bootstat,S,calcurve] = ibootci(nboot,{func,z});
   warning(state);
-  
+
   % Calculate p-value using ibootp
   stat = func(z);
-  p = ibootp(stat,bootstat,S,calcurve);
+  p = ibootp(stat,bootstat);
 
 end
 
