@@ -8,26 +8,24 @@
 %  the data used to generate the bootstrap statistics bootstat
 %  comes from a distribution with statistic m. m must be a scalar.
 %
-%  Requires the output bootstrap replicate statistics (bootstat)
-%  and the output structure (S) from ibootci. Provision of the
-%  calibration curve (calcurve) is optional but recommended for
-%  accurate P-values.
+%  This functon requires the output bootstrap replicate statistics
+%  (bootstat) and the output structure (S) from ibootci. Provision
+%  of the calibration curve (calcurve) is optional but highly
+%  recommended for accurate P-values.
 %
-%  Unlike for confidence intervals, large numbers of bootstrap
-%  replicate samples for both the first and second bootstrap
-%  replicate sets are required to generate calibrated bootstrap
-%  P-values. The smaller the P-value, the greater the required
-%  replicate sample sizes. Warnings are provided when ibootci
-%  needs to be run again with larger replicate sample sets.
+%  P-values obtained from ibootp are consistent with the confidence
+%  intervals calculated with ibootci.
 %
-%  P-values obtained from ibootp are consistent with the
-%  confidence intervals obtained with ibootci.
+%  When the p-value is too small to calibrate by double bootstrap,
+%  this function automatically resorts to calculating the p-value
+%  using the Studentized bootstrap (bootstrap-t) with an additive
+%  correction factor to stabilize the variance.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.4.3.0 (29/07/2019)
+%  ibootp v1.5.0.0 (16/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -36,7 +34,7 @@ function p = ibootp(m,bootstat,S,calcurve)
 
   % Check input arguments
   if nargin < 2
-    error('ibootp requires atleast 3 input arguments')
+    error('ibootp requires atleast 2 input arguments')
   end
   if nargin < 3
     S.z0 = 0;
@@ -45,12 +43,14 @@ function p = ibootp(m,bootstat,S,calcurve)
 
   % Calculate number of bootstrap replicates
   if iscell(bootstat)
-    bootstat = bootstat{1};
+    T1 = bootstat{1};
+  else
+    T1 = bootstat;
   end
-  B = numel(bootstat);
+  B = numel(T1);
 
   % Find P-value from the cdf of the bootstrap distribution by linear interpolation
-  [cdf,t1] = empcdf(bootstat,0);
+  [cdf,t1] = empcdf(T1,0);
   p = 1-interp1(t1,cdf,m,'linear','extrap');
 
   % BCa correction to P-value if applicable
@@ -73,12 +73,29 @@ function p = ibootp(m,bootstat,S,calcurve)
   if nargin > 3
     C = S.nboot(2);
     if C > 0
-      calcurve(1,:)=[];calcurve(end,:)=[];
       if (1/min(p,1-p)) < (0.5*C)
+
+        % Use same calibration for p value as used for confidence intervals
+        calcurve(1,:)=[];calcurve(end,:)=[];
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
+
       else
-        warning(sprintf(['P value is too small for calibration so the result will be unreliable.\n'...
-                'Try increasing the number of second bootstrap replicate samples in ibootci.']));
+
+        % Variance stabilization for small samples
+        % Polansky (2000) Can J Stat. 28(3):501-516
+        se = std(bootstat{1});
+        a = S.n^(-3/2)*se;
+
+        % Calculate Studentized statistics
+        T = (bootstat{1} - S.stat)./(a + std(bootstat{2}));
+        t = (S.stat - m)/(a + se);
+
+        % Calculate p value from empirical distribution of the
+        % Studentized bootstrap statistics
+        [cdf,T] = empcdf(T,0);
+        p = 1-interp1(T,cdf,t,'linear','extrap');
+        p = 2*min(p,1-p);
+
       end
     end
   end
