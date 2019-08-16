@@ -45,8 +45,8 @@
 %    'per' or 'percentile' - Percentile method. (Default)
 %    'bca' - Bias corrected and accelerated percentile method.
 %    'stud' or 'student' - Studentized confidence interval (Bootstrap-t).
-%   The bootstrap-t method includes an additive correction to stabilize
-%   the variance when the small samples size is small [6].
+%    The bootstrap-t method includes an additive correction to stabilize
+%    the variance when the small samples size is small [6].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
