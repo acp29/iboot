@@ -442,6 +442,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     S.bootfun = bootfun;
     S.nboot = nboot;
+    S.n = n;
     S.type = type;
 
     % Convert alpha to coverage level (decimal format)
