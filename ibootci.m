@@ -5,7 +5,7 @@
 %  ci = ibootci(nboot,bootfun,...)
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
-%  ci = ibootci(nboot,{bootfun,...},...,'type','student','nbootstd',nbootstd)
+%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
@@ -47,6 +47,13 @@
 %    'stud' or 'student' - Studentized confidence interval (Bootstrap-t).
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the small samples size is small [6].
+%    
+%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd) 
+%    computes the studentized bootstrap confidence interval of the 
+%    statistic defined by the function bootfun. The standard error of 
+%    the bootstrap statistics is estimated using bootstrap, with nbootstd 
+%    bootstrap data samples. nbootstd is a positive integer value. The 
+%    default value of nbootstd is 200.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
