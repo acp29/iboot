@@ -44,12 +44,12 @@
 %  type is the confidence interval type, chosen from among the following:
 %    'per' or 'percentile' - Percentile method. (Default)
 %    'bca' - Bias corrected and accelerated percentile method.
-%    'stud' or 'student' - Studentized confidence interval (Bootstrap-t).
+%    'stud' or 'student' - Studentized confidence interval. (Bootstrap-t)
 %    The bootstrap-t method includes an additive correction to stabilize
-%    the variance when the small samples size is small [6].
+%    the variance when the sample size is small [6].
 %    
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd) 
-%    computes the studentized bootstrap confidence interval of the 
+%    computes the Studentized bootstrap confidence interval of the 
 %    statistic defined by the function bootfun. The standard error of 
 %    the bootstrap statistics is estimated using bootstrap, with nbootstd 
 %    bootstrap data samples. nbootstd is a positive integer value. The 
