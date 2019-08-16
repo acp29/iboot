@@ -81,10 +81,10 @@ function p = ibootp(m,bootstat,S,calcurve)
 
       else
 
-        % Variance stabilization for small samples
+        % Use bootstrap-t method with variance stabilization for small samples
         % Polansky (2000) Can J Stat. 28(3):501-516
         se = std(bootstat{1});
-        a = S.n^(-3/2)*se;
+        a = S.n^(-3/2)*se;  % additive correction factor
 
         % Calculate Studentized statistics
         T = (bootstat{1} - S.stat)./(a + std(bootstat{2}));
