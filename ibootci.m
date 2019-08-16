@@ -100,6 +100,7 @@
 %  The structure S contains the following fields:
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
+%    n: Size of the original sample(s)
 %    type: Type of confidence interval (bca or per)
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
@@ -179,7 +180,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.1.0.1 (16/08/2019)
+%  ibootci v2.1.1.0 (16/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
