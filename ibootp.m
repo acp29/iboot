@@ -11,7 +11,8 @@
 %  This functon requires the output bootstrap replicate statistics
 %  (bootstat) and the output structure (S) from ibootci. Provision
 %  of the calibration curve (calcurve) is optional but highly
-%  recommended for accurate P-values.
+%  recommended for accurate P-values is the bootstrap method used
+%  was the percentile or BCa method.
 %
 %  P-values obtained from ibootp are consistent with the confidence
 %  intervals calculated with ibootci.
@@ -39,6 +40,7 @@ function p = ibootp(m,bootstat,S,calcurve)
   if nargin < 3
     S.z0 = 0;
     S.a = 0;
+    S.type = 'per';
   end
 
   % Calculate number of bootstrap replicates
@@ -49,13 +51,22 @@ function p = ibootp(m,bootstat,S,calcurve)
   end
   B = numel(T1);
 
-  % Find P-value from the cdf of the bootstrap distribution by linear interpolation
-  [cdf,t1] = empcdf(T1,0);
-  p = 1-interp1(t1,cdf,m,'linear','extrap');
+  % Calculate one-sided P value
+  switch lower(S.type)
+    case {'per','percentile','bca'}
+      % Find P-value from the cdf of the bootstrap distribution by linear interpolation
+      [cdf,t1] = empcdf(T1,0);
+      p = 1-interp1(t1,cdf,m,'linear');
 
-  % BCa correction to P-value if applicable
-  z1 = norminv(p);
-  p = normcdf(S.z0+((S.z0+z1)/(1-S.a*(S.z0+z1))));
+      % BCa correction to P-value if applicable
+      z1 = norminv(p);
+      p = normcdf(S.z0+((S.z0+z1)/(1-S.a*(S.z0+z1))));
+
+    case {'stud','student'}
+      % Use bootstrap-t method
+      p = bootstud(m,bootstat,S);
+
+  end
 
   % Convert to equal-sided two-tailed test
   p = 2*min(p,1-p);
@@ -70,35 +81,40 @@ function p = ibootp(m,bootstat,S,calcurve)
   end
 
   % Calibration of P-value if applicable
-  if nargin > 3
+  if nargin > 3 && any(strcmpi(S.type,{'per','percentile','bca'}))
     C = S.nboot(2);
     if C > 0
       if (1/min(p,1-p)) < (0.5*C)
-
-        % Use same calibration of p value as used for confidence intervals
+        % Use same calibration of p-value as used for confidence intervals
         calcurve(1,:)=[];calcurve(end,:)=[];
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
-
       else
-
-        % Use bootstrap-t method with variance stabilization for small samples
-        % Polansky (2000) Can J Stat. 28(3):501-516
-        se = std(bootstat{1});
-        a = S.n^(-3/2)*se;  % additive correction factor
-
-        % Calculate Studentized statistics
-        T = (bootstat{1} - S.stat)./(a + std(bootstat{2}));
-        t = (S.stat - m)/(a + se);
-
-        % Calculate p value from empirical distribution of the
-        % Studentized bootstrap statistics
-        [cdf,T] = empcdf(T,0);
-        p = 1-interp1(T,cdf,t,'linear','extrap');
+        % Use bootstrap-t method when p-value is small
+        p = bootstud(m,bootstat,S);
         p = 2*min(p,1-p);
-
       end
     end
   end
+
+end
+
+%--------------------------------------------------------------------------
+
+function  p = bootstud(m,bootstat,S)
+
+  % Use bootstrap-t method with variance stabilization for small samples
+  % Polansky (2000) Can J Stat. 28(3):501-516
+  se = std(bootstat{1},0);
+  SE1 = std(bootstat{2},0);
+  a = S.n^(-3/2) * se;  % additive correction factor
+
+  % Calculate Studentized statistics
+  T = (bootstat{1} - S.stat)./(SE1 + a);
+  t = (S.stat - m)/se;
+
+  % Calculate p value from empirical distribution of the Studentized bootstrap statistics
+  [cdf,T] = empcdf(T,0);
+  p = 1-interp1(T,cdf,t,'linear');
 
 end
 
