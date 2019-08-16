@@ -75,7 +75,7 @@ function p = ibootp(m,bootstat,S,calcurve)
     if C > 0
       if (1/min(p,1-p)) < (0.5*C)
 
-        % Use same calibration for p value as used for confidence intervals
+        % Use same calibration of p value as used for confidence intervals
         calcurve(1,:)=[];calcurve(end,:)=[];
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
 
