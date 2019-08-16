@@ -5,6 +5,7 @@
 %  ci = ibootci(nboot,bootfun,...)
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
+%  ci = ibootci(nboot,{bootfun,...},...,'type','student','nbootstd',nbootstd)
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
@@ -43,6 +44,9 @@
 %  type is the confidence interval type, chosen from among the following:
 %    'per' or 'percentile' - Percentile method. (Default)
 %    'bca' - Bias corrected and accelerated percentile method.
+%    'stud' or 'student' - Studentized confidence interval (Bootstrap-t).
+%   The bootstrap-t method includes an additive correction to stabilize
+%   the variance when the small samples size is small [6].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
@@ -125,6 +129,8 @@
 %       Biometrika, 73: 555-66
 %  [5] Davison and Hinkley (1997) Bootstrap Methods and their
 %       application. Chapter 3: pg 97-100
+%  [6] Polansky (2000) Stabilizing bootstrap-t confidence intervals
+%       for small samplesCan J Stat. 28(3):501-516
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -166,7 +172,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.0.6.0 (12/08/2019)
+%  ibootci v2.1.0.0 (16/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -202,6 +208,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     bootfun = S.bootfun;
     data = [];
+    n = S.n;
     idx = [];
     T0 = S.stat;
     weights = S.weights;
@@ -237,6 +244,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     options = varargin;
     alpha = 1+find(strcmpi('alpha',options));
     type = 1+find(strcmpi('type',options));
+    nbootstd = 1+find(strcmpi('nbootstd',options));
     weights = 1+find(strcmpi('Weights',options));
     strata = 1+find(strcmpi('Strata',options));
     bootidx = 1+find(strcmpi('bootidx',options));
@@ -257,6 +265,20 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else
       type = 'per';
+    end
+    if any(strcmpi(type,{'stud','student'}))
+      if ~isempty(nbootstd)
+        try
+          nbootstd = options{nbootstd};
+          nboot = [nboot(1) nbootstd];
+        catch
+          nbootstd = 200;
+          nboot = [nboot(1) nbootstd];
+        end
+      else
+        nbootstd = 200;
+        nboot = [nboot(1) nbootstd];
+      end
     end
     if ~isempty(weights)
       try
@@ -317,8 +339,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if (alpha <= 0) || (alpha >= 1)
       error('The alpha value must be a value between 0 and 1');
     end
-    if ~any(strcmpi(type,{'per','percentile','bca'}))
-      error('The type of bootstrap must be either per or bca');
+    if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
+      error('The type of bootstrap must be either per, bca or stud');
     end
     varclass = zeros(1,nvar);
     rows = zeros(1,nvar);
@@ -439,6 +461,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if any(diff(weights))
         error('Weights are not implemented for iterated bootstrap.');
       end
+    else
+      if any(strcmpi(type,{'stud','student'}))
+        error('Bootstrap-t requires double bootstrap to calculate standard errors.');
+      end
     end
     S.bootfun = bootfun;
     S.nboot = nboot;
@@ -512,7 +538,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Calibrate central two-sided coverage
-  if C>0
+  if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
     % Create a calibration curve
     V = abs(2*U-1);
     [calcurve(:,2),calcurve(:,1)] = empcdf(V,1);
@@ -541,13 +567,41 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     case 'bca'
       % Bias correction and acceleration (BCa)
       [m1, m2, S] = BCa(B, bootfun, data, T1, T0, alpha, S);
+    case {'stud','student'}
+      % Bootstrap-t
+      m1 = 0.5*(1-alpha);
+      m2 = 0.5*(1+alpha);
+      S.z0 = 0;
+      S.a = 0;
   end
 
-  % Linear interpolation of the bootstat cdf for interval construction
-  [cdf,t1] = empcdf(T1,1);
-  UL = interp1(cdf,t1,m1,'linear','extrap');
-  LL = interp1(cdf,t1,m2,'linear','extrap');
-  ci = [LL;UL];
+  % Linear interpolation for interval construction
+  if any(strcmpi(type,{'stud','student'}))
+
+    % Use bootstrap-t method with variance stabilization for small samples
+    % Polansky (2000) Can J Stat. 28(3):501-516
+    se = std(T1,0);
+    SE1 = std(T2,0);
+    a = n^(-3/2) * se;
+
+    % Calculate Studentized statistics
+    T = (T1-T0)./(SE1+a);
+    [cdf,T] = empcdf(T,1);
+
+    % Calculate intervals from empirical distribution of the Studentized bootstrap statistics
+    UL = T0 - se * interp1(cdf,T,m1,'linear','extrap');
+    LL = T0 - se * interp1(cdf,T,m2,'linear','extrap');
+    ci = [LL;UL];
+
+  else
+
+    % Calculate interval for percentile or BCa method
+    [cdf,t1] = empcdf(T1,1);
+    UL = interp1(cdf,t1,m1,'linear','extrap');
+    LL = interp1(cdf,t1,m2,'linear','extrap');
+    ci = [LL;UL];
+
+  end
 
   % Check the confidence interval limits
   if (m2 < cdf(2)) || (m1 > cdf(end-1))
