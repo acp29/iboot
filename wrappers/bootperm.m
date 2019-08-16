@@ -53,7 +53,7 @@ function p = bootperm(nboot,bootfun,x,m)
   % Use ibootci to create bootstrap indices
   state = warning;
   warning off;
-  [ci,bootstat,S,calcurve,bootidx] = ibootci(nboot,{bootfun,z},'type','per','Weights',w);
+  [ci,bootstat,S,calcurve,bootidx] = ibootci(nboot,{bootfun,z},'Weights',w);
   warning(state);
 
   % Apply bootstrapped signs to data vector x and calculate bootfun
