@@ -1,156 +1,166 @@
-%  Function File: ibootp
+%  Function File: iboottest2
 %
-%  Bootstrap P-value: One sample test
+%  Two-sample bootstrap test
 %
-%   p = ibootp(m,bootstat,S,calcurve)
+%   p = iboottest2(nboot,{bootfun,x,y})
+%   p = iboottest2(nboot,{bootfun,x,y},Name,Value)
+%   [p,ci] = iboottest2(...)
+%   [p,ci,S] = iboottest2(...)
 %
-%  Performs a two-tailed bootstrap test for the hypothesis that
-%  the data used to generate the bootstrap statistics bootstat
-%  comes from a distribution with statistic m. m must be a scalar.
+%  Two sample bootstrap test for univariate data. The null hypothesis
+%  is that the difference between the bootfun statistic calculated
+%  for independent samples x and y is equal to zero. The test is
+%  two-tailed.
 %
-%  This functon requires the output bootstrap replicate statistics
-%  (bootstat) and the output structure (S) from ibootci. Provision
-%  of the calibration curve (calcurve) is optional but highly
-%  recommended for accurate P-values is the bootstrap method used
-%  was the percentile or BCa method.
+%  See ibootci documentation for input argument definitions and
+%  for Name-Value pairs. The following two input arguments differ
+%  in their format:
 %
-%  P-values obtained from ibootp are consistent with the confidence
-%  intervals calculated with ibootci.
+%  'Weights': The 'Weights' option must be provided as a cell array:
+%  the first cell should contain weights for x and the second cell
+%  weights should contain weights for y. An empty cell signifies
+%  that no weights will be used in the bootstrap for that sample.
 %
-%  When the p-value is too small to calibrate by double bootstrap,
-%  this function automatically resorts to calculating the p-value
-%  using the Studentized bootstrap (bootstrap-t) with an additive
-%  correction factor to stabilize the variance.
+%  'Strata': The same format as for weights.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.0.0 (16/08/2019)
+%  iboottest2 v1.2.0.0 (06/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
+function [p,ci,S] = iboottest2(argin1,argin2,varargin)
 
-function p = ibootp(m,bootstat,S,calcurve)
-
-  % Check input arguments
-  if nargin < 2
-    error('ibootp requires atleast 2 input arguments')
+  % Check and process iboottest2 input arguments
+  nboot = argin1;
+  bootfun = argin2{1};
+  x = argin2{2};
+  if all(size(x)>1)
+    error('data must be a vector')
   end
-  if nargin < 3
-    S.z0 = 0;
-    S.a = 0;
-    S.type = 'per';
+  if size(x,2)>1
+    x = x.';
   end
-
-  % Calculate number of bootstrap replicates
-  if iscell(bootstat)
-    T1 = bootstat{1};
-  else
-    T1 = bootstat;
-  end
-  B = numel(T1);
-
-  % Calculate one-sided P value
-  switch lower(S.type)
-    case {'per','percentile','bca'}
-      % Find P-value from the cdf of the bootstrap distribution by linear interpolation
-      [cdf,t1] = empcdf(T1,0);
-      p = 1-interp1(t1,cdf,m,'linear');
-
-      % BCa correction to P-value if applicable
-      z1 = norminv(p);
-      p = normcdf(S.z0+((S.z0+z1)/(1-S.a*(S.z0+z1))));
-
-    case {'stud','student'}
-      % Use bootstrap-t method
-      p = bootstud(m,bootstat,S);
-
-  end
-
-  % Convert to equal-sided two-tailed test
-  p = 2*min(p,1-p);
-
-  % Check if first bootstrap replicate sample set is large enough
-  if (1/min(p,1-p)) > (0.5*B) || isnan(p)
-    warning(sprintf(['P value too small for this bootstrap distribution. \n'...
-            'Try increasing the number of first bootstrap replicate samples in ibootci.']));
-    if isnan(p)
-      p = 0;
-    end
-  end
-
-  % Calibration of P-value if applicable
-  if nargin > 3 && any(strcmpi(S.type,{'per','percentile','bca'}))
-    C = S.nboot(2);
-    if C > 0
-      if (1/min(p,1-p)) < (0.5*C)
-        % Use same calibration of p-value as used for confidence intervals
-        calcurve(1,:)=[];calcurve(end,:)=[];
-        p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
-      else
-        % Use bootstrap-t method when p-value is small
-        p = bootstud(m,bootstat,S);
-        p = 2*min(p,1-p);
-      end
-    end
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function  p = bootstud(m,bootstat,S)
-
-  % Use bootstrap-t method with variance stabilization for small samples
-  % Polansky (2000) Can J Stat. 28(3):501-516
-  se = std(bootstat{1},0);
-  SE1 = std(bootstat{2},0);
-  a = S.n^(-3/2) * se;  % additive correction factor
-
-  % Calculate Studentized statistics
-  T = (bootstat{1} - S.stat)./(SE1 + a);
-  t = (S.stat - m)/se;
-
-  % Calculate p value from empirical distribution of the Studentized bootstrap statistics
-  [cdf,T] = empcdf(T,0);
-  p = 1-interp1(T,cdf,t,'linear');
-
-end
-
-%--------------------------------------------------------------------------
-
-function [F,x] = empcdf (y,c)
-
-  % Calculate empirical cumulative distribution function of y
-  %
-  % Set c to:
-  %  1 to have a complete distribution with F ranging from 0 to 1
-  %  0 to avoid duplicate values in x
-  %
-  % Unlike ecdf, empcdf uses a denominator of N+1
-
-  % Check input argument
-  if ~isa(y,'numeric')
-    error('y must be numeric')
-  end
+  y = argin2{3};
   if all(size(y)>1)
-    error('y must be a vector')
+    error('data must be a vector')
   end
   if size(y,2)>1
     y = y.';
   end
-
-  % Create empirical CDF
-  x = sort(y);
-  N = sum(~isnan(y));
-  [x,F] = unique(x,'rows','last');
-  F = F/(N+1);
-
-  % Apply option to complete the CDF
-  if c > 0
-    x = [x(1);x;x(end)];
-    F = [0;F;1];
+  if numel(argin2)>3
+    error('too many data variables provided')
   end
+  iter = numel(nboot);
+  if iter > 2
+    error('Size of nboot exceeds maximum number of iterations supported by ibootci')
+  end
+  if iter==0
+    B = 5000;
+    C = 200;
+    nboot = [B C];
+  elseif iter==1
+    B = nboot;
+    C = 0;
+    nboot = [B C];
+  elseif iter==2
+    B = nboot(1);
+    C = nboot(2);
+  end
+
+  % Retireve some ibootci options
+  options = varargin;
+  alpha = 1+find(strcmpi('alpha',options));
+  weights = 1+find(strcmpi('Weights',options));
+  strata = 1+find(strcmpi('Strata',options));
+  cellref = [];
+  if ~isempty(alpha)
+    try
+      cellref = cat(2,cellref,[alpha-1,alpha]);
+      alpha = options{alpha};
+    catch
+      alpha = 0.05;
+      cellref(end-1:end)=[];
+    end
+  else
+    alpha = 0.05;
+  end
+  if ~isa(alpha,'numeric') || numel(alpha)~=1
+    error('The alpha value must be a numeric scalar value');
+  end
+  if (alpha <= 0) || (alpha >= 1)
+    error('The alpha value must be a value between 0 and 1');
+  end
+  if ~isempty(weights)
+    try
+      cellref = cat(2,cellref,[weights-1,weights]);
+      weights = options{weights};
+    catch
+      weights = {[],[]};
+      cellref(end-1:end)=[];
+    end
+  else
+    weights = {[],[]};
+  end
+  if ~isempty(strata)
+    try
+      cellref = cat(2,cellref,[strata-1,strata]);
+      strata = options{strata};
+    catch
+      strata = {[],[]};
+      cellref(end-1:end)=[];
+    end
+  else
+    strata = {[],[]};
+  end
+  options(cellref)=[];   % remove these evaluated options from the options array
+
+  % Perform independent resampling from x and y
+  state = warning;
+  warning off;
+  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Strata',strata{1},options{:});
+  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Strata',strata{2},options{:});
+  if C>0
+    if ~isempty(weights{1})
+      [~,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},options{:});
+    end
+    if ~isempty(weights{2})
+      [~,bootstatY{1}] = ibootci(B,{bootfun,y},'alpha',SY.cal,'Weights',weights{2},'Strata',strata{2},options{:});
+    end
+  end
+  warning(state);
+
+  % Calculate differences between bootfun evaluated for bootstrap
+  % sample sets derived from x and y
+  if iscell(bootstatX)
+    bootstatZ = cell(2,1);
+    bootstatZ{1} = bootstatX{1} - bootstatY{1};
+    bootstatZ{2} = bootstatX{2} - bootstatY{2};
+  else
+    bootstatZ = bootstatX - bootstatY;
+  end
+
+  % Create template settings structure and calculate the sample test statistic
+  S = SX;
+  T0 = SX.stat - SY.stat;
+  S.stat = T0;      % assign correct sample test statistic in S
+  S.alpha = alpha;  % reset alpha in S
+  S.nboot = nboot;  % reset nboot in S
+
+  % Calculate confidence interval using ibootci
+  [ci,bootstat,S,calcurve] = ibootci(bootstatZ, S);
+
+  % If applicable, remove strata information from the output structure
+  if ~isempty(strata{1})
+    S = rmfield(S,{'SSb','SSw','ISC'});
+  end
+  S.strata = strata;
+  S.weights = weights;
+  S.n = SX.n + SY.n;
+
+  % Calculate p-value using ibootp
+  p = ibootp(0,bootstat,S,calcurve);assignin('base','bootstat',bootstat)
 
 end
