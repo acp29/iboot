@@ -161,6 +161,6 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   S.n = SX.n + SY.n;
 
   % Calculate p-value using ibootp
-  p = ibootp(0,bootstat,S,calcurve);assignin('base','bootstat',bootstat)
+  p = ibootp(0,bootstat,S,calcurve);
 
 end
