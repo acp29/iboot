@@ -11,7 +11,7 @@
 %  This functon requires the output bootstrap replicate statistics
 %  (bootstat) and the output structure (S) from ibootci. Provision
 %  of the calibration curve (calcurve) is optional but highly
-%  recommended for accurate P-values is the bootstrap method used
+%  recommended for accurate P-values if the bootstrap method used
 %  was the percentile or BCa method.
 %
 %  P-values obtained from ibootp are consistent with the confidence
