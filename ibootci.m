@@ -105,8 +105,8 @@
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
 %    cal: Nominal alpha level from calibration
-%    z0: Bias used to construct BCa intervals (0 if type is per)
-%    a: Acceleration used to construct BCa intervals (0 if type is per)
+%    z0: Bias used to construct BCa intervals (0 if type is not bca)
+%    a: Acceleration used to construct BCa intervals (0 if type is not bca)
 %    stat: Test statistic of the sample
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
