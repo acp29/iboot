@@ -107,7 +107,7 @@
 %    cal: Nominal alpha level from calibration
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
-%    stat: Test statistic of the sample
+%    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
@@ -138,7 +138,7 @@
 %  [5] Davison and Hinkley (1997) Bootstrap Methods and their
 %       application. Chapter 3: pg 97-100
 %  [6] Polansky (2000) Stabilizing bootstrap-t confidence intervals
-%       for small samplesCan J Stat. 28(3):501-516
+%       for small samples. Can J Stat. 28(3):501-516
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
