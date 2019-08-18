@@ -44,7 +44,7 @@
 %  type is the confidence interval type, chosen from among the following:
 %    'per' or 'percentile': Percentile method. 
 %    'bca': Bias corrected and accelerated percentile method. (Default)
-%    'stud' or 'student': Studentized confidence interval. (Bootstrap-t)
+%    'stud' or 'student': Studentized (bootstrap-t) confidence interval. 
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
 %    
