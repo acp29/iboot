@@ -42,17 +42,17 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type) computes the bootstrap
 %  confidence interval of the statistic defined by the function bootfun.
 %  type is the confidence interval type, chosen from among the following:
-%    'per' or 'percentile': Percentile method. 
+%    'per' or 'percentile': Percentile method.
 %    'bca': Bias corrected and accelerated percentile method. (Default)
-%    'stud' or 'student': Studentized (bootstrap-t) confidence interval. 
+%    'stud' or 'student': Studentized (bootstrap-t) confidence interval.
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
-%    
-%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd) 
-%    computes the Studentized bootstrap confidence interval of the 
-%    statistic defined by the function bootfun. The standard error of 
-%    the bootstrap statistics is estimated using bootstrap, with nbootstd 
-%    bootstrap data samples. nbootstd is a positive integer value. The 
+%
+%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
+%    computes the Studentized bootstrap confidence interval of the
+%    statistic defined by the function bootfun. The standard error of
+%    the bootstrap statistics is estimated using bootstrap, with nbootstd
+%    bootstrap data samples. nbootstd is a positive integer value. The
 %    default value of nbootstd is 200.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
@@ -180,7 +180,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.2.0.0 (18/08/2019)
+%  ibootci v2.2.1.0 (18/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -629,18 +629,21 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if ~isempty(strata)
     if ~isempty(data)
       % Calculate variance components of strata
-      [SSb, SSw] = sse_calc (data, strata, nvar);
-      S.SSb = SSb;                   % Sum-of-squared residuals between strata
-      S.SSw = SSw;                   % Sum-of-squared residuals within strata
-      S.ISC = SSb/(SSw+SSb);         % Intra-stratum correlation coefficient
+      [SSb, SSw, K] = sse_calc (data, strata, nvar);
+      S.df = n - K;                % Degrees of freedom for (stratified) random sample
+      S.SSb = SSb;                 % Sum-of-squared residuals between strata
+      S.SSw = SSw;                 % Sum-of-squared residuals within strata
+      S.ISC = SSb/(SSw+SSb);       % Intra-stratum correlation coefficient
     else
       % Cannot calculate variance components of the strata if data is not provided
     end
-    % Resort bootidx to match input data
+    % Re-sort bootidx to match input data
     if ~isempty(idx)
       [~,J] = sort(I);
       idx = idx(J,:);
     end
+  else
+    S.df = n - 1;                  % Degrees of freedom for random sample
   end
   S.strata = strata;
   if min(weights) ~= max(weights)
@@ -910,7 +913,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [SSb, SSw] = sse_calc (x, strata, nvar)
+function [SSb, SSw, K] = sse_calc (x, strata, nvar)
 
   % Calculate error components of strata
 
