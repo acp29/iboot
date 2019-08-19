@@ -180,7 +180,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.2.1.0 (18/08/2019)
+%  ibootci v2.2.2.0 (19/08/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
@@ -633,7 +633,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.df = n - K;                % Degrees of freedom for (stratified) random sample
       S.SSb = SSb;                 % Sum-of-squared residuals between strata
       S.SSw = SSw;                 % Sum-of-squared residuals within strata
-      S.ISC = SSb/(SSw+SSb);       % Intra-stratum correlation coefficient
+      S.ISC = SSb./(SSw+SSb);       % Intra-stratum correlation coefficient
     else
       % Cannot calculate variance components of the strata if data is not provided
     end
@@ -935,10 +935,10 @@ function [SSb, SSw, K] = sse_calc (x, strata, nvar)
     end
   end
   for v = 1:nvar
-    bSQ = (center(:,v) - mean(center(:,v))).^2;
+    bSQ(:,v) = (center(:,v) - mean(center(:,v))).^2;
   end
   SSb = sum(bSQ);         % Between-strata SSE
-  SSw = sum(sum(wSQ,2));  % Within-strata SSE
+  SSw = sum(wSQ);         % Within-strata SSE
 
 end
 
