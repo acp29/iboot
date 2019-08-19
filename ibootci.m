@@ -97,7 +97,7 @@
 %  the settings used in the bootstrap and the resulting statistics
 %  including the (double) bootstrap bias and standard error.
 %
-%  The structure S contains the following fields:
+%  The output structure S contains the following fields:
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
 %    n: Size of the original sample(s)
