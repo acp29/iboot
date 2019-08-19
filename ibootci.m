@@ -112,6 +112,7 @@
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval
+%    df: Degrees of freedom for (stratified) random sample
 %    SSb: Between strata sum-of-squared residuals (only if strata supplied)
 %    SSw: Within strata sum-of-squared residuals (only if strata supplied)
 %    ISC: Intra-strata correlation coefficient (only if strata supplied)
@@ -633,7 +634,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.df = n - K;                % Degrees of freedom for (stratified) random sample
       S.SSb = SSb;                 % Sum-of-squared residuals between strata
       S.SSw = SSw;                 % Sum-of-squared residuals within strata
-      S.ISC = SSb./(SSw+SSb);       % Intra-stratum correlation coefficient
+      S.ISC = SSb./(SSw+SSb);      % Intra-stratum correlation coefficient
     else
       % Cannot calculate variance components of the strata if data is not provided
     end
