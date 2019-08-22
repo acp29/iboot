@@ -85,15 +85,6 @@ function p = ibootp(m,bootstat,S,calcurve)
   % Convert to equal-sided two-tailed test
   p = 2*min(p,1-p);
 
-  % Check if first bootstrap replicate sample set is large enough
-  if 1/p > B/2 || isnan(p)
-    warning(sprintf(['P value too small for this bootstrap distribution. \n'...
-            'Try increasing the number of first bootstrap replicate samples in ibootci.']));
-    if isnan(p)
-      p = 0;
-    end
-  end
-
   % Calibration of P-value if applicable
   if nargin > 3 && any(strcmpi(S.type,{'per','percentile','bca'}))
     C = S.nboot(2);
@@ -107,6 +98,15 @@ function p = ibootp(m,bootstat,S,calcurve)
         p = bootstud(m,bootstat,S);
         p = 2*min(p,1-p);
       end
+    end
+  end
+
+  % Check if first bootstrap replicate sample set is large enough
+  if 1/p > B/2 || isnan(p)
+    warning(sprintf(['P value too small for this bootstrap distribution. \n'...
+            'Try increasing the number of first bootstrap replicate samples in ibootci.']));
+    if isnan(p)
+      p = 0;
     end
   end
 
