@@ -171,7 +171,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
 
   % If applicable, remove strata information from the output structure
   if ~isempty(strata{1})
-    S = rmfield(S,{'SSb','SSw','ISC'});
+    S = rmfield(S,{'SSb','SSw','ICC'});
   end
   S.strata = strata;
   S.weights = weights;
