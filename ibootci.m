@@ -115,7 +115,7 @@
 %    df: Degrees of freedom for (stratified) random sample
 %    SSb: Between strata sum-of-squared residuals (only if strata supplied)
 %    SSw: Within strata sum-of-squared residuals (only if strata supplied)
-%    ISC: Intra-strata correlation coefficient (only if strata supplied)
+%    ICC: Intraclass correlation coefficient (only if strata supplied)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
 %
@@ -648,7 +648,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.df = n - K;                % Degrees of freedom for (stratified) random sample
       S.SSb = SSb;                 % Sum-of-squared residuals between strata
       S.SSw = SSw;                 % Sum-of-squared residuals within strata
-      S.ISC = SSb./(SSw+SSb);      % Intra-stratum correlation coefficient
+      S.ICC = SSb./(SSw+SSb);      % Intraclass correlation coefficient
     else
       % Cannot calculate variance components of the strata if data is not provided
     end
