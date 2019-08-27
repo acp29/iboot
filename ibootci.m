@@ -928,7 +928,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [SSb, SSw, K] = sse_calc (x, strata, nvar)
+function [SSb, SSw, K, g] = sse_calc (x, strata, nvar)
 
   % Calculate error components of strata
 
@@ -954,6 +954,7 @@ function [SSb, SSw, K] = sse_calc (x, strata, nvar)
   end
   SSb = sum(bSQ);         % Between-strata SSE
   SSw = sum(wSQ);         % Within-strata SSE
+  g = logical(g);         % Logical array defining strata    
 
 end
 
