@@ -975,7 +975,7 @@ end
 
 function [SSb, SSw, K, g] = sse_calc (x, groups, nvar)
 
-  % Calculate error components of strata
+  % Calculate error components of groups
 
   % Initialize
   gid = unique(groups);  % group ID
@@ -997,9 +997,9 @@ function [SSb, SSw, K, g] = sse_calc (x, groups, nvar)
   for v = 1:nvar
     bSQ(:,v) = (center(:,v) - mean(center(:,v))).^2;
   end
-  SSb = sum(bSQ);         % Between-strata SSE
-  SSw = sum(wSQ);         % Within-strata SSE
-  g = logical(g);         % Logical array defining strata
+  SSb = sum(bSQ);         % Between-group SSE
+  SSw = sum(wSQ);         % Within-group SSE
+  g = logical(g);         % Logical array defining groups
 
 end
 
