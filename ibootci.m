@@ -79,8 +79,8 @@
 %  a vector containing numeric identifiers for clusters. Whereas Strata
 %  are treated as fixed factors, clusters are effectively treated as 
 %  random factors. This is achieved by two-stage bootstrap resampling
-%  with shrinkage correction [5]. Incompatible with bootstrap iteration
-%  and bootstrap-t intervals.
+%  with shrinkage correction [5]. Not compatible with bootstrap-t or 
+%  bootstrap iteration.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
