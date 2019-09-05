@@ -8,6 +8,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
+%  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(bootstat, S)
 %  [ci,bootstat] = ibootci(...)
@@ -73,6 +74,13 @@
 %  represented in each bootstrap test statistic [5]. If weights are also
 %  provided then they are within-stratum weights; the weighting of
 %  individual strata depends on their respective sample size.
+%
+%  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies
+%  a vector containing numeric identifiers for clusters. Whereas Strata
+%  are treated as fixed factors, clusters are effectively treated as 
+%  random factors. This is achieved by two-stage bootstrap resampling
+%  with shrinkage correction [5]. Incompatible with bootstrap iteration
+%  and bootstrap-t intervals.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -181,7 +189,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.2.3.0 (19/08/2019)
+%  ibootci v2.3.0.0 (04/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -236,6 +244,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     T0 = S.stat;
     weights = S.weights;
     strata = S.strata;
+    clusters = S.clusters;
+    if isempty(S.clusters)
+      clustflag = 0;
+    else
+      clustflag = 1;
+    end
     type = S.type;
     S.coverage = 1-S.alpha;
     alpha = S.coverage;       % convert alpha to coverage
@@ -256,6 +270,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     idx = [];
     weights = [];
     strata = [];
+    clusters = [];
+    clustflag = 0;
     type = 'bca';
     T1 = [];  % Initialize bootstat variable
 
@@ -270,6 +286,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     nbootstd = 1+find(strcmpi('nbootstd',options));
     weights = 1+find(strcmpi('Weights',options));
     strata = 1+find(strcmpi('Strata',options));
+    clusters = 1+find(strcmpi('Clusters',options));
     bootidx = 1+find(strcmpi('bootidx',options));
     if ~isempty(alpha)
       try
@@ -320,6 +337,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else
       strata = [];
+    end
+    if ~isempty(clusters)
+      try
+        clusters = options{clusters};
+      catch
+        clusters = [];
+      end
+    else 
+      clusters = [];
     end
     if ~isempty(bootidx)
       try
@@ -474,6 +500,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       B = nboot(1);
       C = nboot(2);
     end
+    if ~isempty(clusters)
+      C = 0;
+      nboot = [B C];
+      if any(strcmpi(type,{'stud','student'}))
+        error('Bootstrapping clustered data is incompatible with bootstrap-t intervals')
+      end
+    end
     if C>0
       if (1/min(alpha,1-alpha)) > (0.5 * C)
         error('ibootci:extremeAlpha',...
@@ -498,14 +531,22 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.alpha = alpha;
     S.coverage = 1-alpha;
     alpha = 1-alpha;
+    
+    % Prepare for cluster resampling
+    if ~isempty(clusters)  
+      [mu,K,g] = clustmean(data,clusters,nvar);
+      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
+    end
 
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
       if nargout < 5
-        [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, strata, runmode);
+        [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
+                             strata, runmode);
       else
-        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights, strata, runmode);
+        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0,...
+                                  weights, strata, runmode);
       end
     else
       X1 = cell(1,nvar);
@@ -563,14 +604,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   % Calibrate central two-sided coverage
   if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
     % Create a calibration curve
-    V = abs(2*U-1);
+    V = abs(2*U-1); 
     [calcurve(:,2),calcurve(:,1)] = empcdf(V,1);
-    alpha = interp1(calcurve(:,2),calcurve(:,1),alpha,'linear','extrap');
+    alpha = interp1(calcurve(:,2),calcurve(:,1),alpha);
   else
     calcurve = [];
   end
   S.cal = 1-alpha;
-
+  
   % Check the nominal central coverage
   if (S.cal == 0)
     warning('ibootci:calibrationHitEnd',...
@@ -589,7 +630,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1, m2, S] = BCa(B, bootfun, data, T1, T0, alpha, S);
+      [m1, m2, S] = BCa(B, bootfun, data, T1, T0, alpha, S, clusters);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
@@ -661,6 +702,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.df = n - 1;                  % Degrees of freedom for random sample
   end
   S.strata = strata;
+  S.clusters = clusters;
   if min(weights) ~= max(weights)
     S.weights = weights;
   else
@@ -671,7 +713,8 @@ end
 
 %--------------------------------------------------------------------------
 
-function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, strata, runmode)
+function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
+                            weights, strata, runmode)
 
     % Initialize
     B = nboot(1);
@@ -711,6 +754,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, stra
       ck = n;
       g = ones(n,1);
     end
+    g = logical(g);
 
     % Prepare weights for resampling
     if any(diff(weights))
@@ -757,7 +801,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights, stra
       % Since second bootstrap is usually much smaller, perform rapid
       % balanced resampling by a permutation algorithm
       if C>0
-        [U(h), T2(:,h)]= boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode);
+        [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
+                                 runmode);
       end
     end
     U = U/C;
@@ -889,7 +934,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, clusters)
 
   % Note that alpha input argument is nominal coverage
 
@@ -897,7 +942,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S)
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x)
+  if ~isempty(x) && isempty(clusters)
     try
       % Use the Jackknife to calculate acceleration
       [~, ~, U] = jack(x,func);
@@ -954,7 +999,113 @@ function [SSb, SSw, K, g] = sse_calc (x, strata, nvar)
   end
   SSb = sum(bSQ);         % Between-strata SSE
   SSw = sum(wSQ);         % Within-strata SSE
-  g = logical(g);         % Logical array defining strata    
+  g = logical(g);         % Logical array defining strata
+
+end
+
+%--------------------------------------------------------------------------
+
+function [mu, K, g] = clustmean (x, clusters, nvar)
+
+  % Calculates shrunken cluster means for cluster bootstrap
+  % See bootclust function below
+  
+  % Calculate sum-of-squared error components
+  [SSb, SSw, K, g] = sse_calc (x, clusters, nvar);
+  SSb = sum(SSb);
+  SSw = sum(SSw);
+  
+  % Calculate cluster means in the original sample 
+  for v = 1:nvar
+    for k = 1:K
+      mu{v}(k,:) = mean(x{v}(g(:,k),:));
+    end
+  end
+  
+  % Calculate shrunken cluster means from the original sample
+  nk = mean(sum(g));
+  c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(nk.*(nk-1).*SSb))));
+  for v = 1:nvar
+    for k = 1:K
+      mu{v}(k,:) = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v}(k,:));
+    end
+  end
+  
+end
+  
+%--------------------------------------------------------------------------
+
+function T = bootclust(bootfun,K,g,runmode,mu,varargin)
+
+  % Two-stage nonparametric bootstrap sampling with shrinkage 
+  % correction for clustered data [1].
+  %
+  % By resampling residuals, this bootstrap method can be used when 
+  % cluster sizes are unequal. However, cluster samples are assumed
+  % to be taken from populations with equal variance. Not compatible 
+  % with bootstrap-t or bootstrap iteration.
+  % 
+  % Reference:
+  %  [1] Davison and Hinkley (1997) Bootstrap Methods and their
+  %       application. Chapter 3: pg 97-100 
+  %  [2] Ng, Grieve and Carpenter (2013) The Stata Journal. 
+  %       13(1): 141-164
+  %  [3] Gomes et al. (2012) Medical Decision Making. 
+  %       Mar-Apr: 350-361
+ 
+  % Calculate data dimensions
+  X = varargin{1};
+  nvar = numel(X);
+  [n,reps] = size(X{1});
+  
+  % Preallocate arrays 
+  bootmu = cell(1,nvar);
+  Z1 = cell(1,nvar);
+  X1 = cell(1,nvar);
+  for v = 1:nvar
+    X1{v} = zeros(n,reps);
+    Z1{v} = zeros(n,reps);
+  end
+  
+  % Calculate residuals from the cluster means and the stratified
+  % bootstrap sample replicates
+  for v = 1:nvar
+    for k = 1:K
+      Z1{v}(g(:,k),:) = bsxfun(@minus, X{v}(g(:,k),:), mu{v}(k,:));
+      Z1{v}(g(:,k),:) = Z1{v}(g(:,k),:) ./ sqrt(1-sum(g(:,K))^-1);
+    end
+  end
+
+  % Create cluster bootstrap samples
+  % Ordinary resampling with replacement
+  if reps > 1
+    idx = randi(K,K,reps);
+    idx = bsxfun(@plus,idx,(0:K:K*reps-1));
+  else
+    idx = randi(K,K,1);
+  end
+  for v = 1:nvar
+    bootmu{v} = mu{v}(idx);
+  end
+  
+  % Combine residuals with resampled cluster means
+  for v = 1:nvar
+    for k = 1:K 
+      X1{v}(g(:,k),:) = bsxfun(@plus, Z1{v}(g(:,k),:), bootmu{v}(k,:));
+    end
+  end
+
+  % Calculate bootstrap statistic(s)
+  switch lower(runmode)
+    case {'fast'}
+      T = feval(bootfun,X1{:});
+    case {'slow'}
+      T = zeros(1,reps);
+      for i = 1:reps
+        x1= cellfun(@(X1) X1(:,i),X1,'UniformOutput',false);
+        T(i) = feval(bootfun,x1{:});
+      end
+  end
 
 end
 
