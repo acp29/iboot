@@ -973,22 +973,22 @@ end
 
 %--------------------------------------------------------------------------
 
-function [SSb, SSw, K, g] = sse_calc (x, strata, nvar)
+function [SSb, SSw, K, g] = sse_calc (x, groups, nvar)
 
   % Calculate error components of strata
 
   % Initialize
-  gid = unique(strata);  % strata ID
-  K = numel(gid);        % number of strata
+  gid = unique(groups);  % group ID
+  K = numel(gid);        % number of groups
   n = numel(x{1});
   g = zeros(n,K);
   bSQ = zeros(K,nvar);
   wSQ = zeros(n,nvar);
   center = zeros(K,nvar);
-  % Calculate within and between strata variances
+  % Calculate within and between group variances
   for k = 1:K
-    % Create strata matrix
-    g(:,k) = (strata == gid(k));
+    % Create group matrix
+    g(:,k) = (groups == gid(k));
     for v = 1:nvar
       center(k,v) = sum(g(:,k) .* x{v}) / sum(g(:,k));
       wSQ(:,v) = wSQ(:,v) + g(:,k).*(x{v}-center(k,v)).^2;
@@ -1008,14 +1008,21 @@ end
 function [mu, K, g] = clustmean (x, clusters, nvar)
 
   % Calculates shrunken cluster means for cluster bootstrap
-  % See bootclust function below
+  % See also bootclust function below
+  
+  % Center and scale data
+  z = cell(1,nvar); 
+  for v = 1:nvar
+    z{v} = (x{v} - mean(x{v})) / std(x{v});
+  end
   
   % Calculate sum-of-squared error components
-  [SSb, SSw, K, g] = sse_calc (x, clusters, nvar);
+  [SSb, SSw, K, g] = sse_calc (z, clusters, nvar);
   SSb = sum(SSb);
   SSw = sum(SSw);
   
   % Calculate cluster means in the original sample 
+  mu = cell(1,nvar); 
   for v = 1:nvar
     for k = 1:K
       mu{v}(k,:) = mean(x{v}(g(:,k),:));
