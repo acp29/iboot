@@ -125,6 +125,7 @@
 %    SSw: Within strata sum-of-squared residuals (only if strata supplied)
 %    ICC: Intraclass correlation coefficient (only if strata supplied)
 %    strata: argument supplied to 'Strata' (empty if none provided)
+%    clusters: argument supplied to 'Clusters' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
