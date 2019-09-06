@@ -246,11 +246,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = S.weights;
     strata = S.strata;
     clusters = S.clusters;
-    if isempty(S.clusters)
-      clustflag = 0;
-    else
-      clustflag = 1;
-    end
     type = S.type;
     S.coverage = 1-S.alpha;
     alpha = S.coverage;       % convert alpha to coverage
@@ -272,7 +267,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = [];
     strata = [];
     clusters = [];
-    clustflag = 0;
     type = 'bca';
     T1 = [];  % Initialize bootstat variable
 
@@ -342,6 +336,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isempty(clusters)
       try
         clusters = options{clusters};
+        strata = clusters;
       catch
         clusters = [];
       end
@@ -535,6 +530,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     
     % Prepare for cluster resampling
     if ~isempty(clusters)  
+      if nargout > 4
+        error('No bootidx for two-stage resampling of clustered data')
+      end
       [mu,K,g] = clustmean(data,clusters,nvar);
       bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
     end
