@@ -700,7 +700,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   else
     S.df = n - 1;                  % Degrees of freedom for random sample
   end
-  S.strata = strata;
+  if isempty(clusters)
+    S.strata = strata;
+  else
+    S.strata = [];
+  end
   S.clusters = clusters;
   if min(weights) ~= max(weights)
     S.weights = weights;
