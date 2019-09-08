@@ -164,9 +164,8 @@
 %  Example 3: 95% confidence intervals for the correlation coefficient
 %    >> z = mvnrnd([2,3],[1,1.5;1.5,3],20);
 %    >> x = z(:,1); y = z(:,2);
-%    >> func = @(x,y) sum((x-mean(x)).*(y-mean(y)))./...
-%    >>        (sqrt(sum((x-mean(x)).^2)).*sqrt(sum((y-mean(y)).^2)));
-%    >> ci = ibootci([5000 200],{func,x,y});
+%    >> corrcoef = @(X,Y) diag(corr(X,Y)).';
+%    >> ci = ibootci([5000 200],{corrcoef,x,y});
 %  Note that this is much faster than:
 %    >> ci = ibootci([5000 200],{@corr,x,y});
 %
