@@ -859,7 +859,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function  U = interp_boot2(T2,T0,C)
+function  U = interp_boot2 (T2, T0, C)
 
     U = sum(T2<=T0);
     if U < 1
@@ -1045,7 +1045,7 @@ end
   
 %--------------------------------------------------------------------------
 
-function T = bootclust(bootfun,K,g,runmode,mu,varargin)
+function T = bootclust (bootfun, K, g, runmode, mu, varargin)
 
   % Two-stage nonparametric bootstrap sampling with shrinkage 
   % correction for clustered data [1].
@@ -1090,7 +1090,6 @@ function T = bootclust(bootfun,K,g,runmode,mu,varargin)
   % Ordinary resampling with replacement
   if reps > 1
     idx = randi(K,K,reps);
-    idx = bsxfun(@plus,idx,(0:K:K*reps-1));
   else
     idx = randi(K,K,1);
   end
@@ -1121,7 +1120,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [F,x] = empcdf (y,c)
+function [F, x] = empcdf (y, c)
 
   % Calculate empirical cumulative distribution function of y
   %
