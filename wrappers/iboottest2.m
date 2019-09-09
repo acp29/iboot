@@ -23,11 +23,13 @@
 %
 %  'Strata': The same format as for weights.
 %
+%  'Clusters': The same format as for weights.
+%
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.3.1.0 (18/08/2019)
+%  iboottest2 v1.4.0.0 (09/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -90,6 +92,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   alpha = 1+find(strcmpi('alpha',options));
   weights = 1+find(strcmpi('Weights',options));
   strata = 1+find(strcmpi('Strata',options));
+  clusters = 1+find(strcmpi('Clusters',options));
   cellref = [];
   if ~isempty(alpha)
     try
@@ -130,13 +133,24 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   else
     strata = {[],[]};
   end
+  if ~isempty(clusters)
+    try
+      cellref = cat(2,cellref,[clusters-1,clusters]);
+      clusters = options{clusters};
+    catch
+      clusters = {[],[]};
+      cellref(end-1:end)=[];
+    end
+  else
+    clusters = {[],[]};
+  end
   options(cellref)=[];   % remove these evaluated options from the options array
 
   % Perform independent resampling from x and y
   state = warning;
   warning off;
-  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Strata',strata{1},options{:});
-  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Strata',strata{2},options{:});
+  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Strata',strata{1},'Clusters',clusters{1},options{:});
+  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Strata',strata{2},'Clusters',clusters{2},options{:});
   if C>0
     if ~isempty(weights{1})
       [~,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},options{:});
@@ -174,6 +188,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
     S = rmfield(S,{'SSb','SSw','ICC'});
   end
   S.strata = strata;
+  S.clusters = clusters;
   S.weights = weights;
 
   % Calculate p-value using ibootp
