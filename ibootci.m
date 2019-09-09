@@ -335,7 +335,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isempty(clusters)
       try
         clusters = options{clusters};
-        strata = clusters;
+        if ~isempty(clusters)
+          strata = clusters;
+        end
       catch
         clusters = [];
       end
