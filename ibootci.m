@@ -1089,11 +1089,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
 
   % Create cluster bootstrap samples
   % Ordinary resampling with replacement
-  if reps > 1
-    idx = randi(K,K,reps);
-  else
-    idx = randi(K,K,1);
-  end
+  idx = randi(K,K,reps);
   for v = 1:nvar
     bootmu{v} = mu{v}(idx);
   end
