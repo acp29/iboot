@@ -121,9 +121,9 @@
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval
 %    df: Degrees of freedom for (stratified) random sample
-%    SSb: Between strata sum-of-squared residuals (only if strata supplied)
-%    SSw: Within strata sum-of-squared residuals (only if strata supplied)
-%    ICC: Intraclass correlation coefficient (only if strata supplied)
+%    SSb: Between strata sum-of-squared residuals (only if strata/clusters supplied)
+%    SSw: Within strata sum-of-squared residuals (only if strata/clusters supplied)
+%    ICC: Intraclass correlation coefficient (only if strata/clusters supplied)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
