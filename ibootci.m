@@ -120,7 +120,7 @@
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval
-%    df: Degrees of freedom for (stratified) random sample
+%    df: Degrees of freedom of resampling
 %    SSb: Between strata sum-of-squared residuals (only if strata/clusters supplied)
 %    SSw: Within strata sum-of-squared residuals (only if strata/clusters supplied)
 %    ICC: Intraclass correlation coefficient (only if strata/clusters supplied)
