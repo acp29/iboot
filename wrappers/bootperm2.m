@@ -3,6 +3,7 @@
 %  Two-sample bootstrap (permutation) test
 %
 %   p = bootperm2(nboot,bootfun,x,y)
+%   p = bootperm2(nboot,bootfun,x,y,clusters)
 %
 %  Two sample bootstrap test for unpaired univariate data. The null
 %  hypothesis is that x and y are sampled from the same population.
@@ -11,11 +12,18 @@
 %  iteration and so iteration is not implemented but it can only
 %  compute a P value (not a confidence interval).
 %
+%  The optional input argument, clusters must be provided as a cell
+%  array. The first cell should contain cluster definitions for x 
+%  and the second cell should contain cluster definitions for y. 
+%  An empty cell signifies that no clusters will be used in the 
+%  bootstrap for that sample. See ibootci documentation for how to 
+%  construct cluster definitions.
+%
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm2 v1.0.2.0 (15/08/2019)
+%  bootperm2 v1.1.0.0 (10/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -34,13 +42,37 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm2(nboot,bootfun,x,y)
+function p = bootperm2(nboot,bootfun,x,y,clusters)
 
   % Check and process ibootperm2 input arguments
   if any(size(nboot)>1)
     error('bootperm2 is not compatible with bootstrap iteration')
   end
 
+  % Evaluate optional input arguments for nested data structures
+  if nargin > 4
+    if ~iscell(clusters)
+      error('clusters must be a cell array')
+    else
+      if ~all(size(clusters) == [1 2])
+        error('clusters must be a 1-by-2 cell array')
+      end
+      if ~isempty(clusters{1})
+        if ~all(size(clusters{1}) == size(x))
+          error('dimensions of the data and strata must be the same')
+        end
+      end
+      if ~isempty(clusters{2})
+        if ~all(size(clusters{2}) == size(y))
+          error('dimensions of the data and strata must be the same')
+        end
+      end 
+      clusters{2} = clusters{2} + max(clusters{1});
+      clusters = cat(1,clusters{1},clusters{2});
+    end
+  else
+    clusters = cell(1,2);
+  end 
   % Prepare joint distribution and define function to test the null hypothesis
   z = cat(1,x,y);
   n = numel(x);
@@ -49,7 +81,7 @@ function p = bootperm2(nboot,bootfun,x,y)
   % Use ibootci to create bootstrap statistics
   state = warning;
   warning off;
-  [~,bootstat] = ibootci(nboot,{func,z},'type','per');
+  [~,bootstat] = ibootci(nboot,{func,z},'type','per','Clusters',clusters);
   warning(state);
 
   % Calculate p-value using ibootp
