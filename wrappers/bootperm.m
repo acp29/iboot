@@ -57,7 +57,7 @@ function p = bootperm(nboot,bootfun,x,m)
   k = fix(n/2);
   z(1:k) = -1;
 
-  % If n is odd, create weights to sample signs equally
+  % If n is odd, create weights to sample signs with equally probability
   isodd = sum(z);
   w = ones(n,1);
   if isodd
@@ -68,7 +68,7 @@ function p = bootperm(nboot,bootfun,x,m)
   % Use ibootci to create bootstrap indices
   state = warning;
   warning off;
-  [ci,bootstat,S,calcurve,bootidx] = ibootci(nboot,{bootfun,z},'Weights',w,'type','per');
+  [~,~,~,~,bootidx] = ibootci(nboot,{bootfun,z},'Weights',w,'type','per');
   warning(state);
 
   % Apply bootstrapped signs to data vector x and calculate bootfun
