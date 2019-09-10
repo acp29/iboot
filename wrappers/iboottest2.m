@@ -13,7 +13,7 @@
 %  two-tailed.
 %
 %  See ibootci documentation for input argument definitions and
-%  for Name-Value pairs. The following two input arguments differ
+%  for Name-Value pairs. The following input arguments differ
 %  in their format:
 %
 %  'Weights': The 'Weights' option must be provided as a cell array:
