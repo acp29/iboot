@@ -18,8 +18,8 @@
 %
 %  'Weights': The 'Weights' option must be provided as a cell array:
 %  the first cell should contain weights for x and the second cell
-%  weights should contain weights for y. An empty cell signifies
-%  that no weights will be used in the bootstrap for that sample.
+%  should contain weights for y. An empty cell signifies that no
+%  weights will be used in the bootstrap for that sample.
 %
 %  'Strata': The same format as for weights.
 %
