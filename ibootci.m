@@ -10,7 +10,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
-%  ci = ibootci(bootstat, S)
+%  ci = ibootci(bootstat,S)
 %  [ci,bootstat] = ibootci(...)
 %  [ci,bootstat,S] = ibootci(...)
 %  [ci,bootstat,S,calcurve] = ibootci(...)
