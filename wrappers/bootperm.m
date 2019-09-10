@@ -14,6 +14,13 @@
 %  The test is two-tailed and is related to a one-sample permutation 
 %  test.
 %
+%  The optional input argument, clusters must be provided as a cell
+%  array. The first cell should contain cluster definitions for x 
+%  and the second cell should contain cluster definitions for y. 
+%  An empty cell signifies that no clusters will be used in the 
+%  bootstrap for that sample. See ibootci documentation for how to 
+%  construct cluster definitions.
+%
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
@@ -37,7 +44,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm(nboot,bootfun,x,m,clusters)
+function p = bootperm1(nboot,bootfun,x,m,clusters)
 
   % Check and process bootperm input arguments
   if any(size(nboot)>1)
