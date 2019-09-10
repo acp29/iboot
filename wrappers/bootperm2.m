@@ -49,7 +49,7 @@ function p = bootperm2(nboot,bootfun,x,y)
   % Use ibootci to create bootstrap statistics
   state = warning;
   warning off;
-  [ci,bootstat] = ibootci(nboot,{func,z},'type','per');
+  [~,bootstat] = ibootci(nboot,{func,z},'type','per');
   warning(state);
 
   % Calculate p-value using ibootp
