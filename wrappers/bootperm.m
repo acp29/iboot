@@ -3,6 +3,7 @@
 %  One-sample bootstrap (permutation) test
 %
 %   p = bootperm(nboot,bootfun,x,m)
+%   p = bootperm(nboot,bootfun,x,m,clusters)
 %
 %  One sample bootstrap test for univariate data. The null hypothesis
 %  is that x is sampled from a population with location m calculated
@@ -10,14 +11,14 @@
 %  and so iteration is not implemented but it can only compute a P
 %  value (not a confidence interval).
 %
-%  The test is two-tailed and is essentially a bootstrap version of
-%  a one-sample permutation test.
+%  The test is two-tailed and is related to a one-sample permutation 
+%  test.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm v1.0.1.0 (15/08/2019)
+%  bootperm v1.1.0.0 (10/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -36,45 +37,70 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm(nboot,bootfun,x,m)
+function p = bootperm(nboot,bootfun,x,m,clusters)
 
   % Check and process bootperm input arguments
   if any(size(nboot)>1)
     error('bootperm is not compatible with bootstrap iteration')
   end
+  
+  % Get size of data
+  n = numel(x);  
+  
+  % Evaluate optional input arguments for nested data structures
   if nargin > 3
+    if isempty(m)
+      m = 0;
+    end
     if ~isa(m,'numeric') || numel(m)~=1
       error('m must be a numeric scalar value');
     end
     x = x - m;
   end
+  global J
+  if nargin > 4
+    if ~isempty(clusters)
+      if ~all(size(clusters) == size(x))
+        error('dimensions of the data and clusters must be the same')
+      end
+      % Concatenate clusters
+      clusters = repmat(clusters,2,1);
+      % Sort clusters
+      [clusters,I] = sort(clusters);
+      [~,J] = sort(I);
+    end
+  else
+    clusters = [];
+    I = (1:2*n)';
+    J = I;
+  end 
 
-  % Prepare vector of signs
-  n = numel(x);
-  z = ones(n,1);
-  k = fix(n/2);
-  z(1:k) = -1;
+  % Prepare joint distribution (and sort to match clusters if necessary) 
+  z = cat(1,x,-1*x);
+  z = z(I);
+  
+  % Define function to test the null hypothesis
+  func = @(z) null(bootfun,z,n);
 
-  % If n is odd, create weights to sample signs with equally probability
-  isodd = sum(z);
-  w = ones(n,1);
-  if isodd
-    w(1:k) = 0.5/sum(z==-1);
-    w(k+1:n) = 0.5/sum(z==1);
-  end
-
-  % Use ibootci to create bootstrap indices
-  state = warning;
-  warning off;
-  [~,~,~,~,bootidx] = ibootci(nboot,{bootfun,z},'Weights',w,'type','per');
-  warning(state);
-
-  % Apply bootstrapped signs to data vector x and calculate bootfun
-  Z = z(bootidx);
-  bootstat = feval(bootfun,bsxfun(@times,x,Z));
+  % Use ibootci to create bootstrap statistics
+  [~,bootstat] = ibootci(nboot,{func,z},'type','per','Clusters',clusters);
 
   % Calculate p-value using ibootp
-  stat = bootfun(x);
+  stat = func(z);
   p = ibootp(stat,bootstat);
+  
+end
+        
+%--------------------------------------------------------------------------
+
+function t = null(bootfun,z,n)
+
+  % Resort resampled data
+  global J
+  z = z(J);
+  
+  % Calculate statistic for the null hypothesis
+  x = z(1:n,:);
+  t = feval(bootfun,x);
 
 end
