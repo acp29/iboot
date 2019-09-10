@@ -42,9 +42,7 @@ function p = bootperm(nboot,bootfun,x,m)
   if any(size(nboot)>1)
     error('bootperm is not compatible with bootstrap iteration')
   end
-  if nargin < 4
-    m = 0;
-  else
+  if nargin > 3
     if ~isa(m,'numeric') || numel(m)~=1
       error('m must be a numeric scalar value');
     end
