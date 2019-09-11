@@ -21,7 +21,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm v1.1.1.0 (10/09/2019)
+%  bootperm v1.1.0.0 (10/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -90,7 +90,7 @@ end
 function t = null(bootfun,x,n)
 
   % Calculate statistic for the null hypothesis
-  z = bsxfun(@times,x,2*(randi(2,n,1)-1.5));
+  z = bsxfun (@times, x, 2*(randi(2,n,1)-1.5));
   t = feval(bootfun,z);
 
 end
