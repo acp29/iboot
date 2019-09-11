@@ -29,7 +29,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.4.0.0 (09/09/2019)
+%  iboottest2 v1.4.1.0 (11/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -151,6 +151,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   warning off;
   [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Strata',strata{1},'Clusters',clusters{1},options{:});
   [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Strata',strata{2},'Clusters',clusters{2},options{:});
+
   if C>0
     if ~isempty(weights{1})
       [~,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},options{:});
@@ -176,7 +177,6 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   T0 = SX.stat - SY.stat;
   S.stat = T0;           % assign correct sample test statistic in S
   S.alpha = alpha;       % reset alpha in S
-  S.nboot = nboot;       % reset nboot in S
   S.n = SX.n + SY.n;     % calculate total sample size
   S.df = SX.df + SY.df;  % calculate degrees of freedom
 
