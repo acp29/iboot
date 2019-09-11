@@ -74,7 +74,7 @@ function p = bootperm2(nboot,bootfun,x,y,clusters)
       [clusters{1},I1] = sort(clusters{1});
       x = x(I1);
       [clusters{2},I2] = sort(clusters{2});
-      x = x(I2);
+      y = y(I2);
       % Concatenate clusters
       clusters{2} = clusters{2} + max(clusters{1});
       clusters = cat(1,clusters{1},clusters{2});
