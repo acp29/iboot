@@ -21,7 +21,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm v1.1.0.0 (10/09/2019)
+%  bootperm v1.1.1.0 (10/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -60,52 +60,37 @@ function p = bootperm(nboot,bootfun,x,m,strata)
     end
     x = x - m;
   end
-  global J
   if nargin > 4
     if ~isempty(strata)
       if ~all(size(strata) == size(x))
         error('dimensions of the data and strata must be the same')
       end
-      % Concatenate strata
-      strata = repmat(strata,2,1);
-      % Sort strata
+      % Sort strata definitions and data
       [strata,I] = sort(strata);
-      [~,J] = sort(I);
+      x = x(I);
     end
   else
     strata = [];
-    I = (1:2*n)';
-    J = I;
   end 
 
-  % Prepare joint distribution 
-  z = cat(1,x,-1*x);
-  
-  % Sort data to match strata (if applicable)
-  z = z(I);
-  
   % Define function to test the null hypothesis
-  func = @(z) null(bootfun,z,n);
+  func = @(x) null(bootfun,x,n);
 
   % Use ibootci to create bootstrap statistics
-  [~,bootstat] = ibootci(nboot,{func,z},'type','per','Strata',strata);
+  [~,bootstat] = ibootci(nboot,{func,x},'type','per','Strata',strata);
   
   % Calculate p-value using ibootp
-  stat = func(z);
+  stat = func(x);
   p = ibootp(stat,bootstat);
   
 end
         
 %--------------------------------------------------------------------------
 
-function t = null(bootfun,z,n)
+function t = null(bootfun,x,n)
 
-  % Resort resampled data
-  global J
-  z = z(J);
-  
   % Calculate statistic for the null hypothesis
-  x = z(1:n,:);
-  t = feval(bootfun,x);
+  z = bsxfun(@times,x,2*(randi(2,n,1)-1.5));
+  t = feval(bootfun,z);
 
 end
