@@ -29,7 +29,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.4.1.0 (11/09/2019)
+%  iboottest2 v1.4.2.0 (12/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -185,7 +185,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
 
   % If applicable, remove strata information from the output structure
   if ~isempty(strata{1})
-    S = rmfield(S,{'SSb','SSw','ICC'});
+    S = rmfield(S,{'Vb','Vw','ICC'});
   end
   S.strata = strata;
   S.clusters = clusters;
