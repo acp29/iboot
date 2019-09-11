@@ -49,9 +49,8 @@ function p = bootperm2(nboot,bootfun,x,y,clusters)
     error('bootperm2 is not compatible with bootstrap iteration')
   end
   
-  % Get size of data
-  n1 = numel(x);  
-  n2 = numel(y);
+  % Get size of x data
+  n = numel(x);  
 
   % Evaluate optional input arguments for nested data structures
   if nargin > 4
@@ -86,7 +85,7 @@ function p = bootperm2(nboot,bootfun,x,y,clusters)
   
   % Prepare joint distribution and define function to test the null hypothesis
   z = cat(1,x,y);
-  func = @(z) null(bootfun,z,n1);
+  func = @(z) null(bootfun,z,n);
 
   % Use ibootci to create bootstrap statistics
   [~,bootstat] = ibootci(nboot,{func,z},'type','per','Clusters',clusters);
