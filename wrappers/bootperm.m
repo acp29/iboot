@@ -3,7 +3,7 @@
 %  One-sample bootstrap (permutation) test
 %
 %   p = bootperm(nboot,bootfun,x,m)
-%   p = bootperm(nboot,bootfun,x,m,clusters)
+%   p = bootperm(nboot,bootfun,x,m,strata)
 %
 %  One sample bootstrap test for univariate data. The null hypothesis
 %  is that x is sampled from a population with location m calculated
@@ -14,12 +14,8 @@
 %  The test is two-tailed and is related to a one-sample permutation 
 %  test.
 %
-%  The optional input argument, clusters must be provided as a cell
-%  array. The first cell should contain cluster definitions for x 
-%  and the second cell should contain cluster definitions for y. 
-%  An empty cell signifies that no clusters will be used in the 
-%  bootstrap for that sample. See ibootci documentation for how to 
-%  construct cluster definitions.
+%  See ibootci documentation for information about the optional input 
+%  argument strata.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
@@ -44,7 +40,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm(nboot,bootfun,x,m,clusters)
+function p = bootperm(nboot,bootfun,x,m,strata)
 
   % Check and process bootperm input arguments
   if any(size(nboot)>1)
@@ -66,31 +62,33 @@ function p = bootperm(nboot,bootfun,x,m,clusters)
   end
   global J
   if nargin > 4
-    if ~isempty(clusters)
-      if ~all(size(clusters) == size(x))
-        error('dimensions of the data and clusters must be the same')
+    if ~isempty(strata)
+      if ~all(size(strata) == size(x))
+        error('dimensions of the data and strata must be the same')
       end
-      % Concatenate clusters
-      clusters = repmat(clusters,2,1);
-      % Sort clusters
-      [clusters,I] = sort(clusters);
+      % Concatenate strata
+      strata = repmat(strata,2,1);
+      % Sort strata
+      [strata,I] = sort(strata);
       [~,J] = sort(I);
     end
   else
-    clusters = [];
+    strata = [];
     I = (1:2*n)';
     J = I;
   end 
 
-  % Prepare joint distribution (and sort to match clusters if necessary) 
+  % Prepare joint distribution 
   z = cat(1,x,-1*x);
+  
+  % Sort data to match strata (if applicable)
   z = z(I);
   
   % Define function to test the null hypothesis
   func = @(z) null(bootfun,z,n);
 
   % Use ibootci to create bootstrap statistics
-  [~,bootstat] = ibootci(nboot,{func,z},'type','per','Clusters',clusters);
+  [~,bootstat] = ibootci(nboot,{func,z},'type','per','Strata',strata);
   
   % Calculate p-value using ibootp
   stat = func(z);
