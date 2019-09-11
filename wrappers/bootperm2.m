@@ -23,7 +23,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm2 v1.2.0.0 (10/09/2019)
+%  bootperm2 v1.2.1.0 (11/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -54,7 +54,6 @@ function p = bootperm2(nboot,bootfun,x,y,clusters)
   n2 = numel(y);
 
   % Evaluate optional input arguments for nested data structures
-  global J
   if nargin > 4
     if ~iscell(clusters)
       error('clusters must be a cell array')
@@ -72,22 +71,21 @@ function p = bootperm2(nboot,bootfun,x,y,clusters)
           error('dimensions of the data and clusters must be the same')
         end
       end 
+      % Sort cluster definitions and data
+      [clusters{1},I1] = sort(clusters{1});
+      x = x(I1);
+      [clusters{2},I2] = sort(clusters{2});
+      x = x(I2);
       % Concatenate clusters
       clusters{2} = clusters{2} + max(clusters{1});
       clusters = cat(1,clusters{1},clusters{2});
-      % Sort clusters
-      [clusters,I] = sort(clusters);
-      [~,J] = sort(I);
     end
   else
     clusters = cell(1,2);
-    I = (1:n1+n2)';
-    J = I;
   end 
   
   % Prepare joint distribution and define function to test the null hypothesis
   z = cat(1,x,y);
-  z = z(I);
   func = @(z) null(bootfun,z,n1);
 
   % Use ibootci to create bootstrap statistics
@@ -102,10 +100,6 @@ end
 %--------------------------------------------------------------------------
 
 function t = null(bootfun,z,n)
-
-  % Resort resampled data
-  global J
-  z = z(J);
   
   % Create difference statistic for the null hypothesis
   x = z(1:n,:);
