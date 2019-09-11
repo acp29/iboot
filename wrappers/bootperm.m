@@ -44,7 +44,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm1(nboot,bootfun,x,m,clusters)
+function p = bootperm(nboot,bootfun,x,m,clusters)
 
   % Check and process bootperm input arguments
   if any(size(nboot)>1)
