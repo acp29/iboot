@@ -80,7 +80,7 @@ function p = bootperm2(nboot,bootfun,x,y,clusters)
       clusters = cat(1,clusters{1},clusters{2});
     end
   else
-    clusters = cell(1,2);
+    clusters = [];
   end 
   
   % Prepare joint distribution and define function to test the null hypothesis
