@@ -91,7 +91,7 @@ function p = bootperm(nboot,bootfun,x,m,clusters)
 
   % Use ibootci to create bootstrap statistics
   [~,bootstat] = ibootci(nboot,{func,z},'type','per','Clusters',clusters);
-
+  
   % Calculate p-value using ibootp
   stat = func(z);
   p = ibootp(stat,bootstat);
