@@ -234,7 +234,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     S = argin2;
     nboot = [B,C];
-    S.nboot
     if B ~= S.nboot(1)
       error('the dimensions of bootstat are inconsistent with S.nboot')
     end
@@ -308,11 +307,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           nboot = [nboot(1) nbootstd];
         catch
           nbootstd = 200;
-          nboot = [nboot(1) nbootstd];
+          nboot = [nboot(1),nbootstd];
         end
       else
         nbootstd = 200;
-        nboot = [nboot(1) nbootstd];
+        nboot = [nboot(1),nbootstd];
       end
     end
     if ~isempty(weights)
@@ -489,18 +488,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if iter==0
       B = 5000;
       C = 200;
-      nboot = [B C];
+      nboot = [B,C];
     elseif iter==1
       B = nboot;
       C = 0;
-      nboot = [B C];
+      nboot = [B,C];
     elseif iter==2
       B = nboot(1);
       C = nboot(2);
     end
     if ~isempty(clusters)
       C = 0;
-      nboot = [B C];
+      nboot = [B,C];
       S.nboot = nboot;
       if any(strcmpi(type,{'stud','student'}))
         error('Bootstrapping clustered data is incompatible with bootstrap-t intervals')
