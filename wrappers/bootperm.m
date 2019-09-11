@@ -90,7 +90,7 @@ end
 function t = null(bootfun,x,n)
 
   % Calculate statistic for the null hypothesis
-  z = bsxfun (@times, x, 2*(randi(2,n,1)-1.5));
+  z = 2*(randi(2,n,1)-1.5) .* x;    % sign flipping
   t = feval(bootfun,z);
 
 end
