@@ -121,8 +121,8 @@
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval
 %    df: Degrees of freedom of resampling
-%    SSb: Between strata sum-of-squared residuals (only if strata/clusters supplied)
-%    SSw: Within strata sum-of-squared residuals (only if strata/clusters supplied)
+%    Vb: Variance between strata/clusters (only if strata/clusters supplied)
+%    Vw: Variance within strata/clusters (only if strata/clusters supplied)
 %    ICC: Intraclass correlation coefficient (only if strata/clusters supplied)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
@@ -189,7 +189,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.1.0 (11/09/2019)
+%  ibootci v2.3.2.0 (12/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -687,10 +687,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isempty(data)
       % Calculate variance components of strata
       [SSb, SSw, K] = sse_calc (data, strata, nvar);
-      S.df = n - K;                % Degrees of freedom for (stratified) random sample
-      S.SSb = SSb;                 % Sum-of-squared residuals between strata
-      S.SSw = SSw;                 % Sum-of-squared residuals within strata
-      S.ICC = SSb./(SSw+SSb);      % Intraclass correlation coefficient
+      S.df = n - K;                   % Degrees of freedom for resampling
+      S.Vb = SSb/K;                   % Variance between strata/clutsers
+      S.Vw = SSw/n;                   % Variance within strata/clusters
+      S.ICC = S.Vb ./ (S.Vw + S.Vb);  % Intraclass correlation coefficient
     else
       % Cannot calculate variance components of the strata if data is not provided
     end
