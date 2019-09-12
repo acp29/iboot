@@ -819,7 +819,7 @@ end
 function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
-
+    
     % Initialize
     C = nboot(2);
 
