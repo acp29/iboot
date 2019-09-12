@@ -76,11 +76,9 @@
 %  individual strata depends on their respective sample size.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies
-%  a vector containing numeric identifiers for clusters. Whereas Strata
-%  are treated as fixed factors, clusters are effectively treated as 
-%  random factors. This is achieved by two-stage bootstrap resampling
-%  with shrinkage correction [5]. Not compatible with bootstrap-t or 
-%  bootstrap iteration.
+%  a vector containing numeric identifiers for clusters. This is option
+%  implements a two-stage bootstrap resampling with shrinkage correction 
+%  [5]. Not compatible with bootstrap-t or bootstrap iteration.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -189,7 +187,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.4.0 (12/09/2019)
+%  ibootci v2.3.5.0 (12/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -819,9 +817,6 @@ end
 function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
-
-    % Comment the next line to enable stratified resampling in 2nd bootstrap
-    g = ones(n,1);
     
     % Initialize
     C = nboot(2);
