@@ -50,11 +50,11 @@
 %    the variance when the sample size is small [6].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
-%    computes the Studentized bootstrap confidence interval of the
-%    statistic defined by the function bootfun. The standard error of
-%    the bootstrap statistics is estimated using bootstrap, with nbootstd
-%    bootstrap data samples. nbootstd is a positive integer value. The
-%    default value of nbootstd is 200.
+%  computes the Studentized bootstrap confidence interval of the
+%  statistic defined by the function bootfun. The standard error of
+%  the bootstrap statistics is estimated using bootstrap, with nbootstd
+%  bootstrap data samples. nbootstd is a positive integer value. The
+%  default value of nbootstd is 200.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
