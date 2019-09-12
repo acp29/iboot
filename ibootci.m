@@ -50,11 +50,11 @@
 %    the variance when the sample size is small [6].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
-%  computes the Studentized bootstrap confidence interval of the
-%  statistic defined by the function bootfun. The standard error of
-%  the bootstrap statistics is estimated using bootstrap, with nbootstd
-%  bootstrap data samples. nbootstd is a positive integer value. The
-%  default value of nbootstd is 200.
+%    computes the Studentized bootstrap confidence interval of the
+%    statistic defined by the function bootfun. The standard error of
+%    the bootstrap statistics is estimated using bootstrap, with nbootstd
+%    bootstrap data samples. nbootstd is a positive integer value. The
+%    default value of nbootstd is 200.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
@@ -77,8 +77,8 @@
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies 
 %  a vector containing numeric identifiers for clusters. Whereas Strata 
-%  fixed, clusters are resampled. This is achieved by two-stage bootstrap 
-%  resampling with shrinkage correction [5]. 
+%  are fixed, clusters are resampled. This is achieved by two-stage 
+%  bootstrap resampling of residuals with shrinkage correction [5]. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -187,7 +187,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.5.0 (12/09/2019)
+%  ibootci v2.3.3.0 (12/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -683,7 +683,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   % Output structure fields if strata provided
   if ~isempty(strata)
     if ~isempty(data)
-      % Calculate variance components of strata/clusters
+      % Calculate variance components of strata
       [SSb, SSw, K] = sse_calc (data, strata, nvar);
       S.df = n - K;                   % Degrees of freedom for resampling
       S.Vb = SSb/K;                   % Variance between strata/clutsers
@@ -817,7 +817,7 @@ end
 function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
-    
+
     % Initialize
     C = nboot(2);
 
