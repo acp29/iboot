@@ -189,7 +189,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.3.0 (12/09/2019)
+%  ibootci v2.3.4.0 (12/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -819,6 +819,9 @@ end
 function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
+
+    % Comment the next line to enable stratified resampling in 2nd bootstrap
+    g=ones(n,1);
     
     % Initialize
     C = nboot(2);
