@@ -75,10 +75,10 @@
 %  provided then they are within-stratum weights; the weighting of
 %  individual strata depends on their respective sample size.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies
-%  a vector containing numeric identifiers for clusters. This is option
-%  implements a two-stage bootstrap resampling with shrinkage correction 
-%  [5]. Not compatible with bootstrap-t or bootstrap iteration.
+%  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies 
+%  a vector containing numeric identifiers for clusters. Whereas Strata 
+%  fixed, clusters are resampled. This is achieved by two-stage bootstrap 
+%  resampling with shrinkage correction [5]. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
