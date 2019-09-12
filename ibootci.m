@@ -819,9 +819,6 @@ end
 function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
-
-    % Comment the next line to enable stratified resampling in 2nd bootstrap
-    g=ones(n,1);
     
     % Initialize
     C = nboot(2);
