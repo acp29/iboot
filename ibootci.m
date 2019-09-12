@@ -189,7 +189,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.2.0 (12/09/2019)
+%  ibootci v2.3.3.0 (12/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -631,7 +631,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1, m2, S] = BCa(B, bootfun, data, T1, T0, alpha, S, clusters);
+      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
@@ -939,7 +939,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, clusters)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters)
 
   % Note that alpha input argument is nominal coverage
 
@@ -947,7 +947,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, clusters)
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x) && isempty(clusters)
+  if ~isempty(x) && isempty(strata) && isempty(clusters)
     try
       % Use the Jackknife to calculate acceleration
       [~, ~, U] = jack(x,func);
