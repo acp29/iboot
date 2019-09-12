@@ -109,7 +109,7 @@
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
 %    n: Size of the original sample(s)
-%    type: Type of confidence interval (bca or per)
+%    type: Type of confidence interval (bca, per or stud)
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
 %    cal: Nominal alpha level from calibration
