@@ -94,6 +94,9 @@ function p = ibootp(m,bootstat,S,calcurve)
         calcurve(1,:)=[];calcurve(end,:)=[];
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
       else
+        warning(sprintf(['P value is too small to calibrate for this bootstrap distribution. \n'...
+          'Switching to p-value calculation by the bootstrap-t method.',...
+          'Try increasing the number of second bootstrap replicate samples in ibootci.']));
         % Use bootstrap-t method when p-value is small
         p = bootstud(m,bootstat,S);
         p = 2*min(p,1-p);
@@ -103,7 +106,7 @@ function p = ibootp(m,bootstat,S,calcurve)
 
   % Check if first bootstrap replicate sample set is large enough
   if 1/p > B/2 || isnan(p)
-    warning(sprintf(['P value too small for this bootstrap distribution. \n'...
+    warning(sprintf(['P value is too small for this bootstrap distribution. \n'...
             'Try increasing the number of first bootstrap replicate samples in ibootci.']));
     if isnan(p)
       p = 0;
