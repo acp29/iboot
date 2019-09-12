@@ -685,7 +685,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   % Output structure fields if strata provided
   if ~isempty(strata)
     if ~isempty(data)
-      % Calculate variance components of strata
+      % Calculate variance components of strata/clusters
       [SSb, SSw, K] = sse_calc (data, strata, nvar);
       S.df = n - K;                   % Degrees of freedom for resampling
       S.Vb = SSb/K;                   % Variance between strata/clutsers
