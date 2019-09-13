@@ -118,10 +118,6 @@
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval
-%    df: Degrees of freedom of resampling
-%    Vb: Variance between strata/clusters (only if strata/clusters supplied)
-%    Vw: Variance within strata/clusters (only if strata/clusters supplied)
-%    ICC: Intraclass correlation coefficient (only if strata/clusters supplied)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
@@ -187,7 +183,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.3.0 (12/09/2019)
+%  ibootci v2.3.4.0 (13/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -682,23 +678,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
   % Output structure fields if strata provided
   if ~isempty(strata)
-    if ~isempty(data)
-      % Calculate variance components of strata
-      [SSb, SSw, K] = sse_calc (data, strata, nvar);
-      S.df = n - K;                   % Degrees of freedom for resampling
-      S.Vb = SSb/K;                   % Variance between strata/clutsers
-      S.Vw = SSw/n;                   % Variance within strata/clusters
-      S.ICC = S.Vb ./ (S.Vw + S.Vb);  % Intraclass correlation coefficient
-    else
-      % Cannot calculate variance components of the strata if data is not provided
-    end
     % Re-sort bootidx to match input data
     if ~isempty(idx)
       [~,J] = sort(I);
       idx = idx(J,:);
     end
-  else
-    S.df = n - 1;                  % Degrees of freedom for random sample
   end
   if isempty(clusters)
     S.strata = strata;
