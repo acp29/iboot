@@ -117,7 +117,7 @@
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
-%    ci: Bootstrap confidence interval
+%    ci: Bootstrap confidence interval of the test statistic
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
