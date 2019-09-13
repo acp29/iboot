@@ -178,15 +178,11 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   S.stat = T0;           % assign correct sample test statistic in S
   S.alpha = alpha;       % reset alpha in S
   S.n = SX.n + SY.n;     % calculate total sample size
-  S.df = SX.df + SY.df;  % calculate degrees of freedom
 
   % Calculate confidence interval using ibootci
   [ci,bootstat,S,calcurve] = ibootci(bootstatZ, S);
 
-  % If applicable, remove strata information from the output structure
-  if ~isempty(strata{1})
-    S = rmfield(S,{'Vb','Vw','ICC'});
-  end
+  % Update output structure
   S.strata = strata;
   S.clusters = clusters;
   S.weights = weights;
