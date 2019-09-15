@@ -191,7 +191,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.6.0 (15/09/2019)
+%  ibootci v2.3.7.0 (15/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -537,15 +537,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     
     % Prepare for cluster resampling
     if ~isempty(clusters) 
-      funmsg = ['Two-stage bootstrap resampling of clustered data is '...
-               'parameterized for the mean'];
-      if nvar > 1
-        warning(funmsg);
-      else
-        if ~strcmpi(char(bootfun),'mean')
-          warning(funmsg);
-        end
-      end
       if nargout > 4
         error('No bootidx for two-stage resampling of clustered data')
       end
