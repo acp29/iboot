@@ -183,7 +183,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.5.0 (13/09/2019)
+%  ibootci v2.3.6.0 (15/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -1026,7 +1026,7 @@ function [mu, K, g] = clustmean (x, clusters, nvar)
   end
   
   % Calculate shrunken cluster means from the original sample
-  nk = mean(sum(g));
+  nk = harmmean(sum(g));
   c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(nk.*(nk-1).*SSb))));
   for v = 1:nvar
     for k = 1:K
