@@ -79,6 +79,8 @@
 %  a vector containing numeric identifiers for clusters. Whereas strata 
 %  are fixed, clusters are resampled. This is achieved by two-stage 
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8]. 
+%  This algorithm is parameterized for the mean as bootfun. The strata 
+%  and clusters options are mutually exclusive.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -336,6 +338,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       try
         clusters = options{clusters};
         if ~isempty(clusters)
+          if ~isempty(strata)
+            error('strata and clusters options are mutually exclusive')
+          end
           strata = clusters;
         end
       catch
@@ -537,7 +542,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if nvar > 1
         warning(funmsg);
       else
-        if feval(bootfun,data{:}) ~= mean(data{:})
+        if ~strcmpi(char(bootfun),'mean')
           warning(funmsg);
         end
       end
