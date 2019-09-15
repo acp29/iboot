@@ -544,8 +544,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if nargout > 4
         error('No bootidx for two-stage resampling of clustered data')
       end
-      [mu,K,g] = clustmean(data,clusters,nvar);
-      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
+      [mu,K,g,dk] = clustmean(data,clusters,nvar);
+      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,dk,varargin);
     end
 
     % Perform bootstrap
@@ -1007,7 +1007,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [mu, K, g] = clustmean (x, clusters, nvar)
+function [mu, K, g, dk] = clustmean (x, clusters, nvar)
 
   % Calculates shrunken cluster means for cluster bootstrap
   % See also bootclust function below
@@ -1033,7 +1033,7 @@ function [mu, K, g] = clustmean (x, clusters, nvar)
   
   % Calculate shrunken cluster means from the original sample
   nk = mean(sum(g));
-  dk = nk - sum((sum(g)-nk).^2)/((K-1)*sum(g(:)));  % Average cluster size
+  dk = nk - sum((sum(g)-nk).^2)/((K-1)*sum(g(:)));
   c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(dk.*(dk-1).*SSb))));
   for v = 1:nvar
     for k = 1:K
@@ -1045,7 +1045,7 @@ end
   
 %--------------------------------------------------------------------------
 
-function T = bootclust (bootfun, K, g, runmode, mu, varargin)
+function T = bootclust (bootfun, K, g, runmode, mu, dk, varargin)
 
   % Two-stage nonparametric bootstrap sampling with shrinkage 
   % correction for clustered data [1].
@@ -1079,8 +1079,6 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   
   % Calculate residuals from the cluster means and the stratified
   % bootstrap sample replicates
-  nk = mean(sum(g));
-  dk = nk - sum((sum(g)-nk).^2)/((K-1)*sum(g(:)));  % Average cluster size
   for v = 1:nvar
     for k = 1:K
       Z1{v}(g(:,k),:) = bsxfun(@minus, X{v}(g(:,k),:), mu{v}(k,:));
