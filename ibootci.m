@@ -525,7 +525,16 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     alpha = 1-alpha;
     
     % Prepare for cluster resampling
-    if ~isempty(clusters)  
+    if ~isempty(clusters) 
+      funmsg = ['Two-stage bootstrap resampling of clustered data is '...
+               'parameterized for the mean'];
+      if nvar > 1
+        warning(funmsg);
+      else
+        if feval(bootfun,data{:}) ~= mean(data{:})
+          warning(funmsg);
+        end
+      end
       if nargout > 4
         error('No bootidx for two-stage resampling of clustered data')
       end
