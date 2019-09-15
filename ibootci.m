@@ -79,8 +79,7 @@
 %  a vector containing numeric identifiers for clusters. Whereas strata 
 %  are fixed, clusters are resampled. This is achieved by two-stage 
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8]. 
-%  This algorithm is parameterized for the mean as bootfun. The strata 
-%  and clusters options are mutually exclusive.
+%  Note that the strata and clusters options are mutually exclusive.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
