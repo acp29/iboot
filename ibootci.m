@@ -78,7 +78,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies 
 %  a vector containing numeric identifiers for clusters. Whereas strata 
 %  are fixed, clusters are resampled. This is achieved by two-stage 
-%  bootstrap resampling of residuals with shrinkage correction [5]. 
+%  bootstrap resampling of residuals with shrinkage correction [5,7,8]. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -143,6 +143,12 @@
 %       application. Chapter 3: pg 97-100
 %  [6] Polansky (2000) Stabilizing bootstrap-t confidence intervals
 %       for small samples. Can J Stat. 28(3):501-516
+%  [7] Gomes et al. (2012) Developing appropriate methods for cost-
+%       effectiveness analysis of cluster randomized trials. 
+%       Medical Decision Making. 32(2): 350-361
+%  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric 
+%       bootstrap sampling with shrinkage correction for clustered 
+%       data. The Stata Journal. 13(1): 141-164
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -1055,7 +1061,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   %  [2] Ng, Grieve and Carpenter (2013) The Stata Journal. 
   %       13(1): 141-164
   %  [3] Gomes et al. (2012) Medical Decision Making. 
-  %       Mar-Apr: 350-361
+  %       32(2): 350-361
  
   % Calculate data dimensions
   X = varargin{1};
