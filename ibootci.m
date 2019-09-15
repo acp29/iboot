@@ -1026,7 +1026,7 @@ function [mu, K, g] = clustmean (x, clusters, nvar)
   end
   
   % Calculate shrunken cluster means from the original sample
-  nk = harmmean(sum(g));
+  nk = mean(sum(g));
   c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(nk.*(nk-1).*SSb))));
   for v = 1:nvar
     for k = 1:K
