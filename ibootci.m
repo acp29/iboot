@@ -1027,7 +1027,8 @@ function [mu, K, g] = clustmean (x, clusters, nvar)
   
   % Calculate shrunken cluster means from the original sample
   nk = mean(sum(g));
-  c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(nk.*(nk-1).*SSb))));
+  dk = nk - sum((sum(g)-nk).^2)/((K-1)*sum(g(:)));  % Average cluster size
+  c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(dk.*(dk-1).*SSb))));
   for v = 1:nvar
     for k = 1:K
       mu{v}(k,:) = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v}(k,:));
@@ -1072,10 +1073,12 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   
   % Calculate residuals from the cluster means and the stratified
   % bootstrap sample replicates
+  nk = mean(sum(g));
+  dk = nk - sum((sum(g)-nk).^2)/((K-1)*sum(g(:)));  % Average cluster size
   for v = 1:nvar
     for k = 1:K
       Z1{v}(g(:,k),:) = bsxfun(@minus, X{v}(g(:,k),:), mu{v}(k,:));
-      Z1{v}(g(:,k),:) = Z1{v}(g(:,k),:) ./ sqrt(1-sum(g(:,K))^-1);
+      Z1{v}(g(:,k),:) = Z1{v}(g(:,k),:) ./ sqrt(1-dk^-1);
     end
   end
 
