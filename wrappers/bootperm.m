@@ -10,7 +10,7 @@
 %  and so iteration is not implemented but it can only compute a P
 %  value (not a confidence interval).
 %
-%  The test is two-tailed and is related to a one-sample permutation 
+%  The test is two-tailed and is related to a one-sample permutation
 %  test.
 %
 %  The syntax in this function code is known to be compatible with
@@ -36,16 +36,16 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm(nboot,bootfun,x,m,clusters)
+function p = bootperm(nboot,bootfun,x,m)
 
   % Check and process bootperm input arguments
   if any(size(nboot)>1)
     error('bootperm is not compatible with bootstrap iteration')
   end
-  
+
   % Get size of data
-  n = numel(x);  
-  
+  n = numel(x);
+
   % Evaluate optional input arguments for nested data structures
   if nargin > 3
     if isempty(m)
@@ -63,13 +63,13 @@ function p = bootperm(nboot,bootfun,x,m,clusters)
 
   % Use ibootci to create bootstrap statistics
   [~,bootstat] = ibootci(nboot,{func,z},'type','per');
-  
+
   % Calculate p-value using ibootp
   stat = func(z);
   p = ibootp(stat,bootstat);
-  
+
 end
-        
+
 %--------------------------------------------------------------------------
 
 function t = null(bootfun,z,n)
