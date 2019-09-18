@@ -23,18 +23,18 @@
 %  bootfun is a function handle specified with @, or a string indicating
 %  the function name. The third and later input arguments are data (column
 %  vectors), that are used to create inputs to bootfun. ibootci creates
-%  each first level bootstrap by sampling from the rows of the column
-%  vector data arguments (which must be the same size) [1]. If a positive
-%  integer for the number of second bootstrap replicates is provided, then 
-%  nominal central coverage of two-sided intervals is calibrated to achieve 
-%  second order accurate coverage by bootstrap iteration and interpolation 
-%  [2]. Linear interpolation of the empirical cumulative distribution 
-%  function of bootstat is then used to construct two-sided confidence 
-%  intervals [3]. The resampling method used throughout is balanced 
-%  resampling [4]. Default values for the number of first and second 
-%  bootstrap replicate sample sets in nboot are 5000 and 200 respectively. 
-%  Note that this calibration procedure does not apply to the Studentized 
-%  or Cluster bootstrap.
+%  each first level bootstrap by block resampling from the rows of the 
+%  column vector data arguments (which must be the same size) [1]. If a 
+%  positive integer for the number of second bootstrap replicates is 
+%  provided, then nominal central coverage of two-sided intervals is 
+%  calibrated to achieve second order accurate coverage by bootstrap 
+%  iteration and interpolation [2]. Linear interpolation of the empirical 
+%  cumulative distribution function of bootstat is then used to construct 
+%  two-sided confidence intervals [3]. The resampling method used throughout 
+%  is balanced resampling [4]. Default values for the number of first and
+%  second bootstrap replicate sample sets in nboot are 5000 and 200 
+%  respectively. Note that this calibration procedure does not apply to  
+%  Studentized or Cluster bootstrap options (see below).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha) computes the
 %  iterated bootstrap confidence interval of the statistic defined by the
