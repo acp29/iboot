@@ -24,7 +24,7 @@
 %  the function name. The third and later input arguments are data (column
 %  vectors), that are used to create inputs to bootfun. ibootci creates
 %  each first level bootstrap by sampling from the rows of the column
-%  vector data arguments (which must be the same size) [1]. If a non-zero
+%  vector data arguments (which must be the same size) [1]. If a positive
 %  integer for the number of second bootstrap replicates is provided, then 
 %  nominal central coverage of two-sided intervals is calibrated to achieve 
 %  second order accurate coverage by bootstrap iteration and interpolation 
