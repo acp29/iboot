@@ -953,8 +953,8 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters)
   else
     a = nan;
   end
-  % Check if calculation of acceleration using
-  % the jackknife was possible and successful
+  % Check if calculation of the acceleration constant 
+  % using the jackknife was possible (and successful)
   if isnan(a)
     % If not, directly calculate acceleration from
     % the skewness of the bootstrap statistics
