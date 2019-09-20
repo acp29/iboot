@@ -29,7 +29,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.4.2.0 (12/09/2019)
+%  iboottest2 v1.4.4.0 (20/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -183,6 +183,8 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   [ci,bootstat,S,calcurve] = ibootci(bootstatZ, S);
 
   % Update output structure
+  S.ICC = [SX.ICC, SY.ICC];
+  S.DEFF = [SX.DEFF, SY.DEFF];
   S.strata = strata;
   S.clusters = clusters;
   S.weights = weights;
