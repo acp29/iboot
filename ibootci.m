@@ -117,6 +117,8 @@
 %    cal: Nominal alpha level from calibration
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
+%    ICC: Intraclass correlation coefficient
+%    DEFF: Design effect
 %    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
@@ -193,7 +195,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.7.0 (15/09/2019)
+%  ibootci v2.3.8.0 (20/09/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -683,6 +685,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
              'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
   end
 
+  % Calculate intraclass correlation coefficient if applicable
+  %  - Smeeth and Ng (2002) Control Clin Trials.23(4):409-21
+  %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
+  if ~isempty(strata)
+    [~, ~, ~, g, MSb, MSw] = sse_calc (data, strata, nvar);
+    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
+    S.DEFF = 1+S.ICC*(harmmean(sum(g))-1);
+  else
+    S.ICC = 0;
+    S.DEFF = 1;
+  end
+  
   % Complete output structure
   S.stat = T0;                     % Sample test statistic
   S.bias = bias;                   % Bias of the test statistic
@@ -973,7 +987,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [SSb, SSw, K, g] = sse_calc (x, groups, nvar)
+function [SSb, SSw, K, g, MSb, MSw] = sse_calc (x, groups, nvar)
 
   % Calculate error components of groups
 
@@ -1000,7 +1014,13 @@ function [SSb, SSw, K, g] = sse_calc (x, groups, nvar)
   SSb = sum(bSQ);         % Between-group SSE
   SSw = sum(wSQ);         % Within-group SSE
   g = logical(g);         % Logical array defining groups
-
+  
+  % Calculate mean squared error (MSE)
+  if nargout > 4
+    MSb = (sum(sum(g)'.*bSQ))/(K-1);
+    MSw = SSw/(n-K); 
+  end
+  
 end
 
 %--------------------------------------------------------------------------
