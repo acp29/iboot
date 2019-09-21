@@ -691,7 +691,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if ~isempty(strata)
     [~, ~, ~, g, MSb, MSw] = sse_calc (data, strata, nvar);
     S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
-    S.DEFF = 1+S.ICC*(harmmean(sum(g))-1);
+    S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   else
     S.ICC = 0;
     S.DEFF = 1;
