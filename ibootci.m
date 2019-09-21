@@ -685,12 +685,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
              'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
   end
 
-  % Calculate intraclass correlation coefficient and design effect
-  %  - Smeeth and Ng (2002) Control Clin Trials.23(4):409-21
+  % Calculate intraclass correlation coefficient (ICC) and design effect
+  %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
   %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
+  %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
   if ~isempty(strata)
+    % Intraclass correlation coefficient
+    % One-way random, single measures ICC(1,1)
     [~, ~, ~, g, MSb, MSw] = sse_calc (data, strata, nvar);
-    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);   % one-way random, ICC(1,1)
+    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);   
     S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   else
     S.ICC = 0;
