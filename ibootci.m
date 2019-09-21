@@ -1051,8 +1051,8 @@ function [mu, K, g, dk] = clustmean (x, clusters, nvar)
   end
   
   % Calculate shrunken cluster means from the original sample
-  nk = mean(sum(g));
-  dk = nk - sum((sum(g)-nk).^2)/((K-1)*sum(g(:)));
+  nk = sum(g).';
+  dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
   c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(dk.*(dk-1).*SSb))));
   for v = 1:nvar
     for k = 1:K
