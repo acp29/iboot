@@ -117,7 +117,7 @@
 %    cal: Nominal alpha level from calibration
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
-%    ICC: Intraclass correlation coefficient
+%    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect
 %    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
@@ -685,12 +685,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
              'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
   end
 
-  % Calculate intraclass correlation coefficient if applicable
+  % Calculate intraclass correlation coefficient and design effect
   %  - Smeeth and Ng (2002) Control Clin Trials.23(4):409-21
   %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
   if ~isempty(strata)
     [~, ~, ~, g, MSb, MSw] = sse_calc (data, strata, nvar);
-    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
+    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);   % one-way random, ICC(1,1)
     S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   else
     S.ICC = 0;
