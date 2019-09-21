@@ -690,7 +690,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
   if ~isempty(strata)
     [~, ~, ~, g, MSb, MSw] = sse_calc (data, strata, nvar);
-    S.ICC = max(0,(MSb-MSw)/(MSb+(dk-1)*MSw));
+    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
     S.DEFF = 1+S.ICC*(harmmean(sum(g))-1);
   else
     S.ICC = 0;
