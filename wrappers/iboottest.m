@@ -2,9 +2,9 @@
 %
 %  One-sample and paired-sample bootstrap test
 %
-%   p = iboottest(nboot,{bootfun,x,y})
-%   p = iboottest(nboot,{bootfun,x,y},Name,Value)
-%   p = iboottest(m,nboot,{bootfun,x},...)
+%   p = iboottest(m,nboot,{bootfun,x})
+%   p = iboottest(m,nboot,{bootfun,x},Name,Value)
+%   p = iboottest(nboot,{bootfun,x,y},...)
 %   [p,ci] = iboottest(...)
 %   [p,ci,S] = iboottest(...)
 %
