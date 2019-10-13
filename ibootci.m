@@ -259,6 +259,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = S.weights;
     strata = S.strata;
     clusters = S.clusters;
+    blocksize = S.blocksize;
     type = S.type;
     S.coverage = 1-S.alpha;
     alpha = S.coverage;       % convert alpha to coverage
@@ -1178,7 +1179,7 @@ function [y, b, l] = split_blocks(x, l)
   % Calculate data and block dimensions
   n = size(x{1},1);
   if nargin < 2
-    l = round(n^(1/3));  % block length set to ~ n^(1/3)
+    l = round(n^(1/3));  % set block length to ~ n^(1/3)
   end
   b = ceil(n/l);         % number of blocks
 
