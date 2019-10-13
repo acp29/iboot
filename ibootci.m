@@ -9,6 +9,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters)
+%  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(bootstat,S)
 %  [ci,bootstat] = ibootci(...)
@@ -84,6 +85,12 @@
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8]. 
 %  Note that the strata and clusters options are mutually exclusive.
 %
+%  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
+%  a positive integer defining the block length for block bootstrapping
+%  dependent-data (e.g. time series). The algorithm uses Carlstein's 
+%  rule of non-overlapping blocks. If 'auto' is provided, the block
+%  length is calculated automatically. 
+%
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
@@ -127,6 +134,7 @@
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
+%    blocksize: Length of non-overlapping blocks (empty if none provided)
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
 %  curve for central coverage. The first column is nominal coverage and
@@ -195,7 +203,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.3.9.0 (13/10/2019)
+%  ibootci v2.4.0.0 (13/10/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -287,6 +295,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = 1+find(strcmpi('Weights',options));
     strata = 1+find(strcmpi('Strata',options));
     clusters = 1+find(strcmpi('Clusters',options));
+    blocksize = 1+find(strcmpi('Block',options));
     bootidx = 1+find(strcmpi('bootidx',options));
     if ~isempty(alpha)
       try
@@ -352,6 +361,20 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else 
       clusters = [];
+    end
+    if ~isempty(blocksize)
+      try
+        blocksize = options{blocksize};
+      catch
+        blocksize = [];
+      end  
+    else
+      blocksize = [];
+    end
+    if ~isempty(blocksize)
+      if ~isempty(strata) || ~isempty(clusters) || ~isempty(weights)
+        error('Block bootstrap cannot be used with Strata, Clusters or Weights')
+      end
     end
     if ~isempty(bootidx)
       try
@@ -539,7 +562,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.coverage = 1-alpha;
     alpha = 1-alpha;
     
-    % Prepare for cluster resampling
+    % Prepare for cluster resampling (if applicable)
     if ~isempty(clusters) 
       if nargout > 4
         error('No bootidx for two-stage resampling of clustered data')
@@ -548,6 +571,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,dk,varargin);
     end
 
+    % Prepare for block resampling (if applicable)
+    if ~isempty(blocksize)
+      if strcmpi(blocksize,'auto') 
+        [data,n,blocksize] = split_blocks(data);
+      else
+        [data,n] = split_blocks(data,blocksize);
+      end
+      nvar = blocksize;
+      bootfun = @(varargin) bootfun(cat_blocks(S.n,varargin));
+    end
+    
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
@@ -725,6 +759,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   else
     S.weights = [];
   end
+  S.blocksize = blocksize;
 
 end
 
@@ -1138,6 +1173,47 @@ end
 
 %--------------------------------------------------------------------------
 
+function [y, b, l] = split_blocks(x, l)
+
+  % Calculate data and block dimensions
+  n = size(x{1},1);
+  if nargin < 2
+    l = round(n^(1/3));  % block length set to ~ n^(1/3)
+  end
+  b = ceil(n/l);         % number of blocks
+
+  % Bounce end correction if n is not divisible by l 
+  y = cat(1,x{1},flipud(x{1}(n-(b*l-n):end-1)));
+  
+  % Reshape data 
+  y = reshape(y,l,b).';
+  y = num2cell(y,1);
+  
+end
+
+%--------------------------------------------------------------------------
+
+function y = cat_blocks(n,varargin)
+
+  % Get data dimensions
+  x = varargin{1};
+  l = numel(x);
+  [rows, cols] = size(x{1});
+  N = rows * l;
+  
+  % Concatenate blocks
+  y = zeros(N,cols);
+  for i = 1:l
+    y(i:l:rows*l,:) = x{i};
+  end
+  
+  % Extract sample(s)
+  y = y(1:n,:);
+  
+end
+
+%--------------------------------------------------------------------------
+  
 function [F, x] = empcdf (y, c)
 
   % Calculate empirical cumulative distribution function of y
