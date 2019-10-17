@@ -87,9 +87,12 @@
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
-%  dependent-data (e.g. time series). The algorithm uses Carlstein's 
-%  rule of non-overlapping blocks. If 'auto' is provided, the block
-%  length is calculated automatically. 
+%  dependent-data (e.g. time series). The algorithm uses circular, 
+%  overlapping blocks. The double bootstrap resampling and calibration
+%  procedure make interval coverage less sensitive block length [9].
+%  If the blocksize is set to 'auto' (recommended), the block length 
+%  is calculated automatically. Note that balanced resampling is not
+%  maintained for block bootstrap.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -134,7 +137,7 @@
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
 %    weights: argument supplied to 'Weights' (empty if none provided)
-%    blocksize: Length of non-overlapping blocks (empty if none provided)
+%    blocksize: Length of overlapping blocks (empty if none provided)
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
 %  curve for central coverage. The first column is nominal coverage and
@@ -163,6 +166,8 @@
 %  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric 
 %       bootstrap sampling with shrinkage correction for clustered 
 %       data. The Stata Journal. 13(1): 141-164
+%  [9] Lee and Lai (2009) Double block bootstrap confidence intervals
+%       for dependent data. Biometrika. 96(2):427–443
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -203,7 +208,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.4.0.0 (13/10/2019)
+%  ibootci v2.5.0.0 (17/10/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -579,13 +584,16 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
     % Prepare for block resampling (if applicable)
     if ~isempty(blocksize)
+      if any(strcmpi(type,{'stud','student'}))
+        error('Use BCa or percentile intervals for block bootstrap');
+      end
       if strcmpi(blocksize,'auto') 
-        [data,n,blocksize] = split_blocks(data);
+        [data,blocksize] = split_blocks(data);
       else
-        [data,n] = split_blocks(data,blocksize);
+        [data] = split_blocks(data,blocksize);
       end
       nvar = blocksize;
-      bootfun = @(varargin) bootfun(cat_blocks(S.n,varargin));
+      bootfun = @(varargin) bootfun(cat_blocks(varargin));
     end
     
     % Perform bootstrap
@@ -593,10 +601,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if isempty(idx)
       if nargout < 5
         [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
-                             strata, runmode);
+                             strata, blocksize, runmode);
       else
         [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0,...
-                                  weights, strata, runmode);
+                                  weights, strata, blocksize, runmode);
       end
     else
       X1 = cell(1,nvar);
@@ -680,7 +688,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters);
+      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters,blocksize);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
@@ -772,7 +780,7 @@ end
 %--------------------------------------------------------------------------
 
 function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
-                            weights, strata, runmode)
+                            weights, strata, blocksize, runmode)
 
     % Initialize
     B = nboot(1);
@@ -860,7 +868,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
       % balanced resampling by a permutation algorithm
       if C>0
         [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
-                                 runmode);
+                                 blocksize, runmode);
       end
     end
     U = U/C;
@@ -869,10 +877,19 @@ end
 
 %--------------------------------------------------------------------------
 
-function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, runmode)
+function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode)
 
     % Note that weights are not implemented here with iterated bootstrap
 
+    % Prepare for block resampling (if applicable)
+    if ~isempty(blocksize)
+      x1 = cell(1);
+      x1{1} = cat_blocks(X1);
+      nvar = round(nvar/2);
+      [X1] = split_blocks(x1,nvar);
+      g = ones(n,1);
+    end
+    
     % Initialize
     C = nboot(2);
 
@@ -992,7 +1009,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, blocksize)
 
   % Note that alpha input argument is nominal coverage
 
@@ -1000,7 +1017,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters)
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x) && isempty(strata) && isempty(clusters)
+  if ~isempty(x) && isempty(strata) && isempty(clusters) && isempty(blocksize)
     try
       % Use the Jackknife to calculate acceleration
       [~, ~, U] = jack(x,func);
@@ -1179,38 +1196,39 @@ end
 
 %--------------------------------------------------------------------------
 
-function [y, b, l] = split_blocks(x, l)
+function [y, l] = split_blocks(x, l)
 
   % Calculate data and block dimensions
   n = size(x{1},1);
   if nargin < 2
     l = round(n^(1/3));  % set block length to ~ n^(1/3)
   end
-  b = ceil(n/l);         % number of blocks
 
-  % Bounce end correction if n is not divisible by l 
-  y = cat(1,x{1},flipud(x{1}(n-(b*l-n):end-1)));
-  
-  % Reshape data 
-  y = reshape(y,l,b).';
+  % Create a matrix of circular, overlapping blocks
+  % Ref: Politis and Romano (1991) Technical report No. 370
+  y = zeros(n,l);
+  X = repmat(x{1},2,1);
+  for i = 1:n
+    y(i,:) = X(i:i+l-1);
+  end
   y = num2cell(y,1);
   
 end
 
 %--------------------------------------------------------------------------
 
-function y = cat_blocks(n,varargin)
+function y = cat_blocks(varargin)
 
   % Get data dimensions
   x = varargin{1};
   l = numel(x);
-  [rows, cols] = size(x{1});
-  N = rows * l;
+  [n, reps] = size(x{1});
+  N = n * l;
   
   % Concatenate blocks
-  y = zeros(N,cols);
+  y = zeros(N,reps);
   for i = 1:l
-    y(i:l:rows*l,:) = x{i};
+    y(i:l:n*l,:) = x{i};
   end
   
   % Extract sample(s)
