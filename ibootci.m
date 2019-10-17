@@ -89,7 +89,7 @@
 %  a positive integer defining the block length for block bootstrapping
 %  dependent-data (e.g. time series). The algorithm uses circular, 
 %  overlapping blocks. The double bootstrap resampling and calibration
-%  procedure make interval coverage less sensitive block length [9].
+%  procedure makes interval coverage less sensitive block length [9].
 %  If the blocksize is set to 'auto' (recommended), the block length 
 %  is calculated automatically. Note that balanced resampling is not
 %  maintained for block bootstrap.
