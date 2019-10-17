@@ -373,6 +373,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       blocksize = [];
     end
     if ~isempty(blocksize)
+      if size(data,2)>1
+        error('Block bootstrap option cannot be used with multivariate data')
+      end
+    end
+    if ~isempty(blocksize)
       if ~isempty(strata) || ~isempty(clusters) || ~isempty(weights)
         error('Block bootstrap cannot be used with Strata, Clusters or Weights')
       end
