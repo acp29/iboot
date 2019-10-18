@@ -167,7 +167,7 @@
 %       bootstrap sampling with shrinkage correction for clustered 
 %       data. The Stata Journal. 13(1): 141-164
 %  [9] Lee and Lai (2009) Double block bootstrap confidence intervals
-%       for dependent data. Biometrika. 96(2):427–443
+%       for dependent data. Biometrika. 96(2):427?443
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -1207,9 +1207,9 @@ function [y, l] = split_blocks(x, l)
   % Create a matrix of circular, overlapping blocks
   % Ref: Politis and Romano (1991) Technical report No. 370
   y = zeros(n,l);
-  X = repmat(x{1},2,1);
+  x = cat(1,x{1},x{1}(1:l-1));
   for i = 1:n
-    y(i,:) = X(i:i+l-1);
+    y(i,:) = x(i:i+l-1);
   end
   y = num2cell(y,1);
   
