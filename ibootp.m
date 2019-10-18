@@ -89,7 +89,7 @@ function p = ibootp(m,bootstat,S,calcurve)
   if nargin > 3 && any(strcmpi(S.type,{'per','percentile','bca'}))
     C = S.nboot(2);
     if C > 0
-      if (1/p < C/2) || ~isempty(S.blocksize)
+      if (1/p < C/2)
         % Use same calibration of p-value as used for confidence intervals
         calcurve(1,:)=[];calcurve(end,:)=[];
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
