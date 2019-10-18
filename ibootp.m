@@ -55,10 +55,6 @@ function p = ibootp(m,bootstat,S,calcurve)
     S.z0 = 0;
     S.a = 0;
     S.type = 'per';
-  else
-    if ~isempty(S.blocksize)
-      error('ibootp cannot be used yet with block bootstrap')
-    end
   end
 
   % Calculate number of bootstrap replicates
@@ -93,7 +89,7 @@ function p = ibootp(m,bootstat,S,calcurve)
   if nargin > 3 && any(strcmpi(S.type,{'per','percentile','bca'}))
     C = S.nboot(2);
     if C > 0
-      if 1/p < C/2
+      if (1/p < C/2) || ~isempty(S.blocksize)
         % Use same calibration of p-value as used for confidence intervals
         calcurve(1,:)=[];calcurve(end,:)=[];
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
