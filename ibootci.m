@@ -585,7 +585,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Prepare for block resampling (if applicable)
     if ~isempty(blocksize)
       if any(strcmpi(type,{'stud','student'}))
-        error('Use BCa or percentile intervals for block bootstrap');
+        %error('Use BCa or percentile intervals for block bootstrap');
       end
       if strcmpi(blocksize,'auto') 
         [data,blocksize] = split_blocks(data);
