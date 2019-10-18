@@ -55,6 +55,10 @@ function p = ibootp(m,bootstat,S,calcurve)
     S.z0 = 0;
     S.a = 0;
     S.type = 'per';
+  else
+    if ~isempty(S.blocksize)
+      error('ibootp cannot be used yet with block bootstrap')
+    end
   end
 
   % Calculate number of bootstrap replicates
