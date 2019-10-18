@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.2.0 (12/09/2019)
+%  ibootp v1.5.3.0 (18/10/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -89,7 +89,8 @@ function p = ibootp(m,bootstat,S,calcurve)
   if nargin > 3 && any(strcmpi(S.type,{'per','percentile','bca'}))
     C = S.nboot(2);
     if C > 0
-      if (1/p < C/2)
+      idx = sum((calcurve(:,1)<1));
+      if 1-p < calcurve(idx,1)
         % Use same calibration of p-value as used for confidence intervals
         calcurve(1,:)=[];calcurve(end,:)=[];
         p = 1 - interp1(calcurve(:,1),calcurve(:,2),1-p,'linear');
