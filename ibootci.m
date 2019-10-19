@@ -87,12 +87,12 @@
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
-%  dependent-data (e.g. time series). The algorithm uses circular, 
-%  overlapping blocks. The double bootstrap resampling and calibration
-%  procedure makes interval coverage less sensitive block length [9].
-%  If the blocksize is set to 'auto' (recommended), the block length 
-%  is calculated automatically. Note that balanced resampling is not
-%  maintained for block bootstrap.
+%  dependent-data (e.g. stationary time series). The algorithm uses  
+%  circular, overlapping blocks. The double bootstrap resampling and 
+%  calibration procedure makes interval coverage less sensitive to  
+%  block length [9]. If the blocksize is set to 'auto' (recommended),   
+%  the block length is calculated automatically. Note that balanced 
+%  resampling is not maintained for block bootstrap.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
