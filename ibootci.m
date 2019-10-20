@@ -82,8 +82,10 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies 
 %  a vector containing numeric identifiers for clusters. Whereas strata 
 %  are fixed, clusters are resampled. This is achieved by two-stage 
-%  bootstrap resampling of residuals with shrinkage correction [5,7,8]. 
-%  Note that the strata and clusters options are mutually exclusive.
+%  bootstrap resampling of residuals with shrinkage correction [5,7,8].
+%  If a matrix is provided defining more than 2 levels in a hierarchical
+%  data model, then the level two cluster means are resampled. Note that  
+%  the strata and clusters options are mutually exclusive.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
@@ -208,7 +210,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.5.0.0 (17/10/2019)
+%  ibootci v2.5.1.0 (20/10/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -460,6 +462,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else
       n = rows;
+    end
+    if ~isempty(clusters)
+      if size(clusters,2) > 1
+        warning('The hierarchical model has >2 levels. Level 2 cluster means will be resampled');
+      end
+      while size(clusters,2) > 1
+        % Calculate cluster means for resampling more than two nested levels
+        % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
+        [data,clusters] = unitmeans(data,clusters,nvar);
+      end
+      strata = clusters;
+      n = size(clusters,1);
     end
     if isempty(weights)
       weights = ones(n,1);
@@ -1084,6 +1098,49 @@ end
 
 %--------------------------------------------------------------------------
 
+function [y, g] = unitmeans (x, clusters, nvar)
+
+  % Calculate unit (cluster) means
+  
+  % Calculate number of levels of subsampling
+  L = size(clusters,2);
+  
+  % Get IDs of unique clusters in lowest level
+  gid = unique(clusters(:,L));
+  K = numel(gid);
+  
+  % Initialize output variables
+  g = zeros(K,L-1);
+  y = cell(1,nvar);
+  for v = 1:nvar
+    y{v} = zeros(K,1);
+  end
+
+  % Calculate cluster means
+  for k = 1:K
+
+    % Find last level cluster members
+    idx = find(clusters(:,L) == gid(k));
+
+    % Compute cluster means
+    for v = 1:nvar
+      y{v}(k) = mean(x{v}(idx));
+    end
+
+    % Check data nesting
+    if numel(unique(clusters(idx,L-1))) > 1
+      error('Impossible hierarchical data structure')
+    end
+
+    % Redefine clusters
+    g(k,:) = clusters(idx(1),1:L-1);
+
+  end
+
+end
+
+%--------------------------------------------------------------------------
+
 function [mu, K, g, dk] = clustmean (x, clusters, nvar)
 
   % Calculates shrunken cluster means for cluster bootstrap
@@ -1193,7 +1250,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [y, l] = split_blocks(x, l)
+function [y, l] = split_blocks (x, l)
 
   % Calculate data and block dimensions
   n = size(x{1},1);
@@ -1214,7 +1271,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function y = cat_blocks(varargin)
+function y = cat_blocks (varargin)
 
   % Get data dimensions
   x = varargin{1};
