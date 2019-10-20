@@ -465,7 +465,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     if ~isempty(clusters)
       if size(clusters,2) > 1
-        warning('The hierarchical model has >2 levels. Level 2 cluster means will be resampled');
+        warning('The hierarchical model has > 2 levels. Level 2 cluster means will be resampled');
       end
       while size(clusters,2) > 1
         % Calculate cluster means for resampling more than two nested levels
