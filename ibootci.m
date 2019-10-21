@@ -175,7 +175,7 @@
 %        Bootstrap for Stationary Observations. The Annals of Statistics.
 %        24(5):1914-1933
 %  [10] Lee and Lai (2009) Double block bootstrap confidence intervals
-%        for dependent data. Biometrika. 96(2):427?443
+%        for dependent data. Biometrika. 96(2):427-443
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
