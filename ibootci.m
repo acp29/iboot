@@ -95,7 +95,9 @@
 %  calibration procedure makes interval coverage less sensitive to  
 %  block length [9]. If the blocksize is set to 'auto' (recommended),   
 %  the block length is calculated automatically. Note that balanced 
-%  resampling is not maintained for block bootstrap.
+%  resampling is not maintained for block bootstrap. Intervals are 
+%  constructed without standardization making them equivariant under 
+%  monotone transformations [10].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -171,6 +173,9 @@
 %       data. The Stata Journal. 13(1): 141-164
 %  [9] Lee and Lai (2009) Double block bootstrap confidence intervals
 %       for dependent data. Biometrika. 96(2):427?443
+%  [10] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
+%       Bootstrap for Stationary Observations. The Annals of Statistics.
+%       24(5):1914-1933
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
