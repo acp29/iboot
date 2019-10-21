@@ -35,7 +35,7 @@
 %  is balanced resampling [4]. Default values for the number of first and
 %  second bootstrap replicate sample sets in nboot are 5000 and 200 
 %  respectively. Note that this calibration procedure does not apply to  
-%  Studentized, Cluster or Weights bootstrap options (see below).
+%  Studentized, Cluster or Weights bootstrap options (see below). 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha) computes the
 %  iterated bootstrap confidence interval of the statistic defined by the
