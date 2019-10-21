@@ -180,7 +180,7 @@
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
 %    >> ci = ibootci([5000 200],@mean,y);
-%    >> ci = ibootci([5000 200],{@mean,y},'alpha',0.05);
+%    >> ci = ibootci([5000 200],{@mean,y},'alpha',0.05); 
 %
 %  Example 2: 95% confidence intervals for the means of paired/matched data
 %    >> y1 = randn(20,1);
