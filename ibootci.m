@@ -91,10 +91,10 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
 %  dependent-data (e.g. stationary time series). The algorithm uses  
-%  circular, overlapping blocks. The double bootstrap resampling and 
-%  calibration procedure makes interval coverage less sensitive to  
-%  block length [9]. Intervals are constructed without standardization 
-%  making them equivariant under monotone transformations [10]. If the 
+%  circular, overlapping blocks. Intervals are constructed without 
+%  standardization making them equivariant under monotone transformations 
+%  [9]. The double bootstrap resampling and calibration procedure makes 
+%  interval coverage less sensitive to block length [10]. If the 
 %  blocksize is set to 'auto' (recommended), the block length is 
 %  calculated automatically. Note that balanced resampling is not 
 %  maintained for block bootstrap. 
@@ -153,29 +153,30 @@
 %
 %  Bibliography:
 %  [1] Efron, and Tibshirani (1993) An Introduction to the
-%       Bootstrap. New York, NY: Chapman & Hall
+%        Bootstrap. New York, NY: Chapman & Hall
 %  [2] Hall, Lee and Young (2000) Importance of interpolation when
-%       constructing double-bootstrap confidence intervals. Journal
-%       of the Royal Statistical Society. Series B. 62(3): 479-491
+%        constructing double-bootstrap confidence intervals. Journal
+%        of the Royal Statistical Society. Series B. 62(3): 479-491
 %  [3] Efron (1981) Censored data and the bootstrap. JASA
-%       76(374): 312-319
+%        76(374): 312-319
 %  [4] Davison et al. (1986) Efficient Bootstrap Simulation.
-%       Biometrika, 73: 555-66
+%        Biometrika, 73: 555-66
 %  [5] Davison and Hinkley (1997) Bootstrap Methods and their
-%       application. Chapter 3: pg 97-100
+%        application. Chapter 3: pg 97-100
 %  [6] Polansky (2000) Stabilizing bootstrap-t confidence intervals
-%       for small samples. Can J Stat. 28(3):501-516
+%        for small samples. Can J Stat. 28(3):501-516
 %  [7] Gomes et al. (2012) Developing appropriate methods for cost-
-%       effectiveness analysis of cluster randomized trials. 
-%       Medical Decision Making. 32(2): 350-361
+%        effectiveness analysis of cluster randomized trials. 
+%        Medical Decision Making. 32(2): 350-361
 %  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric 
-%       bootstrap sampling with shrinkage correction for clustered 
-%       data. The Stata Journal. 13(1): 141-164
-%  [9] Lee and Lai (2009) Double block bootstrap confidence intervals
-%       for dependent data. Biometrika. 96(2):427?443
-%  [10] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
-%       Bootstrap for Stationary Observations. The Annals of Statistics.
-%       24(5):1914-1933
+%        bootstrap sampling with shrinkage correction for clustered 
+%        data. The Stata Journal. 13(1): 141-164
+%  [9] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
+%        Bootstrap for Stationary Observations. The Annals of Statistics.
+%        24(5):1914-1933
+%  [10] Lee and Lai (2009) Double block bootstrap confidence intervals
+%        for dependent data. Biometrika. 96(2):427?443
+
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
