@@ -83,9 +83,10 @@
 %  a vector containing numeric identifiers for clusters. Whereas strata 
 %  are fixed, clusters are resampled. This is achieved by two-stage 
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8].
-%  If a matrix is provided defining more than 2 levels in a hierarchical
-%  data model, then the level two cluster means are resampled. Note that  
-%  the strata and clusters options are mutually exclusive.
+%  If a matrix is provided defining additional levels of subsampling in
+%  a hierarchical data model, then level two cluster means are computed
+%  and resampled. Note that the strata and clusters options are mutually 
+%  exclusive.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
@@ -210,7 +211,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.5.1.0 (20/10/2019)
+%  ibootci v2.5.2.0 (21/10/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -464,9 +465,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       n = rows;
     end
     if ~isempty(clusters)
-      if size(clusters,2) > 1
-        warning('The hierarchical model has > 2 levels. Level 2 cluster means will be resampled');
-      end
       while size(clusters,2) > 1
         % Calculate cluster means for resampling more than two nested levels
         % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
