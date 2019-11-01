@@ -1182,8 +1182,7 @@ function [mu, Z, K, g] = clustmean (x, clusters, nvar)
     end
   end
   
-  % Calculate residuals from the cluster means and the stratified
-  % bootstrap sample replicates
+  % Calculate residuals from the sample and cluster means
   Z = cell(1,nvar);
   for v = 1:nvar
     for k = 1:K
@@ -1226,8 +1225,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
     X{v} = zeros(n,reps);
   end
 
-  % Create cluster bootstrap samples
-  % Ordinary resampling with replacement
+  % Ordinary resampling with replacement of cluster means
   idx = randi(K,K,reps);
   for v = 1:nvar
     bootmu{v} = mu{v}(idx);
