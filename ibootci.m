@@ -1091,15 +1091,13 @@ function [SSb, SSw, K, g, MSb, MSw, dk] = sse_calc (x, groups, nvar)
   SSw = sum(wSQ);         % Within-group SSE
   g = logical(g);         % Logical array defining groups
   
-  % Calculate mean squared error (MSE)
+  % Calculate mean squared error (MSE) and representative cluster size
   if nargout > 4
     nk = sum(g).';
     MSb = (sum(nk.*bSQ))/(K-1);
     MSw = SSw/(n-K); 
+    dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
   end
-  
-  % Calculate representative cluster size
-  dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
   
 end
 
