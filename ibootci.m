@@ -216,7 +216,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.5.2.0 (21/10/2019)
+%  ibootci v2.5.3.0 (01/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -499,9 +499,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       % Sort strata and data vactors so that strata components are grouped
       [strata,I] = sort(strata);
-      for i=1:nvar
+      for v = 1:nvar
         data{v} = data{v}(I);
       end
+      ori_data = data;
     end
     if any(diff(weights)) && strcmpi(type,'bca')
       error('Weights are not implemented for BCa intervals.');
@@ -595,8 +596,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if nargout > 4
         error('No bootidx for two-stage resampling of clustered data')
       end
-      [mu,K,g,dk] = clustmean(data,clusters,nvar);
-      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,dk,varargin);
+      [mu,data,K,g] = clustmean(data,clusters,nvar);
+      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
     end
 
     % Prepare for block resampling (if applicable)
@@ -754,7 +755,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if ~isempty(strata)
     % Intraclass correlation coefficient
     % One-way random, single measures ICC(1,1)
-    [~, ~, ~, g, MSb, MSw] = sse_calc (data, strata, nvar);
+    [~, ~, ~, g, MSb, MSw, dk] = sse_calc (ori_data, strata, nvar);
     S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);   
     S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   else
@@ -1062,7 +1063,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [SSb, SSw, K, g, MSb, MSw] = sse_calc (x, groups, nvar)
+function [SSb, SSw, K, g, MSb, MSw, dk] = sse_calc (x, groups, nvar)
 
   % Calculate error components of groups
 
@@ -1096,6 +1097,9 @@ function [SSb, SSw, K, g, MSb, MSw] = sse_calc (x, groups, nvar)
     MSb = (sum(nk.*bSQ))/(K-1);
     MSw = SSw/(n-K); 
   end
+  
+  % Calculate representative cluster size
+  dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
   
 end
 
@@ -1144,9 +1148,9 @@ end
 
 %--------------------------------------------------------------------------
 
-function [mu, K, g, dk] = clustmean (x, clusters, nvar)
+function [mu, Z, K, g] = clustmean (x, clusters, nvar)
 
-  % Calculates shrunken cluster means for cluster bootstrap
+  % Calculates shrunken cluster means and residuals for cluster bootstrap
   % See also bootclust function below
   
   % Center and scale data
@@ -1178,11 +1182,21 @@ function [mu, K, g, dk] = clustmean (x, clusters, nvar)
     end
   end
   
+  % Calculate residuals from the cluster means and the stratified
+  % bootstrap sample replicates
+  Z = cell(1,nvar);
+  for v = 1:nvar
+    for k = 1:K
+      Z{v}(g(:,k),:) = bsxfun(@minus, x{v}(g(:,k),:), mu{v}(k,:));
+      Z{v}(g(:,k),:) = Z{v}(g(:,k),:) ./ sqrt(1-dk^-1);
+    end
+  end
+  
 end
   
 %--------------------------------------------------------------------------
 
-function T = bootclust (bootfun, K, g, runmode, mu, dk, varargin)
+function T = bootclust (bootfun, K, g, runmode, mu, varargin)
 
   % Two-stage nonparametric bootstrap sampling with shrinkage 
   % correction for clustered data [1].
@@ -1201,26 +1215,15 @@ function T = bootclust (bootfun, K, g, runmode, mu, dk, varargin)
   %       32(2): 350-361
  
   % Calculate data dimensions
-  X = varargin{1};
-  nvar = numel(X);
-  [n,reps] = size(X{1});
+  Z = varargin{1};
+  nvar = numel(Z);
+  [n,reps] = size(Z{1});
   
   % Preallocate arrays 
   bootmu = cell(1,nvar);
-  Z1 = cell(1,nvar);
-  X1 = cell(1,nvar);
+  X = cell(1,nvar);
   for v = 1:nvar
-    X1{v} = zeros(n,reps);
-    Z1{v} = zeros(n,reps);
-  end
-  
-  % Calculate residuals from the cluster means and the stratified
-  % bootstrap sample replicates
-  for v = 1:nvar
-    for k = 1:K
-      Z1{v}(g(:,k),:) = bsxfun(@minus, X{v}(g(:,k),:), mu{v}(k,:));
-      Z1{v}(g(:,k),:) = Z1{v}(g(:,k),:) ./ sqrt(1-dk^-1);
-    end
+    X{v} = zeros(n,reps);
   end
 
   % Create cluster bootstrap samples
@@ -1233,19 +1236,19 @@ function T = bootclust (bootfun, K, g, runmode, mu, dk, varargin)
   % Combine residuals with resampled cluster means
   for v = 1:nvar
     for k = 1:K 
-      X1{v}(g(:,k),:) = bsxfun(@plus, Z1{v}(g(:,k),:), bootmu{v}(k,:));
+      X{v}(g(:,k),:) = bsxfun(@plus, Z{v}(g(:,k),:), bootmu{v}(k,:));
     end
   end
 
   % Calculate bootstrap statistic(s)
   switch lower(runmode)
     case {'fast'}
-      T = feval(bootfun,X1{:});
+      T = feval(bootfun,X{:});
     case {'slow'}
       T = zeros(1,reps);
       for i = 1:reps
-        x1= cellfun(@(X1) X1(:,i),X1,'UniformOutput',false);
-        T(i) = feval(bootfun,x1{:});
+        x = cellfun(@(X) X(:,i),X,'UniformOutput',false);
+        T(i) = feval(bootfun,x{:});
       end
   end
 
