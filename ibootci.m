@@ -134,6 +134,7 @@
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect
+%    xcorr: Autocorrelation coefficients for lags 0-9
 %    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
@@ -216,7 +217,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.5.3.0 (01/11/2019)
+%  ibootci v2.5.4.0 (03/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -755,12 +756,19 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if ~isempty(strata)
     % Intraclass correlation coefficient
     % One-way random, single measures ICC(1,1)
-    [~, ~, ~, g, MSb, MSw, dk] = sse_calc (ori_data, strata, nvar);
+    data = ori_data;
+    [~, ~, ~, g, MSb, MSw, dk] = sse_calc (data, strata, nvar);
     S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);   
     S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   else
     S.ICC = 0;
     S.DEFF = 1;
+  end
+  if nvar < 2   
+    S.xcorr = xcorr(data{1},9,'coeff');
+    S.xcorr(1:9) = [];
+  else
+    S.xcorr = 'Autocorrelation not available for multivariate data';
   end
   
   % Complete output structure
