@@ -112,7 +112,7 @@
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
 %
-%  ci = ibootci(bootstat,S) produces calibrated confidence intervals
+%  ci = ibootci(bootstat,S) produces (calibrated) confidence intervals
 %  for the bootstrap replicate sample set statistics provided in bootstat.
 %  This usage also requires a complete settings structure (see below).
 %
