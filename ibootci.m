@@ -91,8 +91,8 @@
 %  Note that the strata option is ignored if the clusters option is used. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Wild',residuals) specifies a 
-%  vector of residuals for wild bootstrapping in regression models using
-%  the Rademacher distribution [9]. The dimensions of the residuals must 
+%  vector of regression model residuals for wild bootstrap using the 
+%  Rademacher distribution [9]. The dimensions of the residuals must 
 %  be equal to that of the non-scalar input arguments to bootfun. Note 
 %  that balanced resampling is not maintained for block bootstrap. 
 %  Compatible with the 'Block' option but not bootstrap iteration.
