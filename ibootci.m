@@ -9,6 +9,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters)
+%  ci = ibootci(nboot,{bootfun,...},...,'Wild',residuals)
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(bootstat,S)
@@ -69,7 +70,8 @@
 %  from a single bootstrap when using weights, we suggest calibrating the
 %  nominal alpha level using iterated bootstrap without weights, then
 %  using the calibrated alpha in a weighted bootstrap without iteration
-%  (see example 4 below).
+%  (see example 4 below). Note that weights are not compatible with other
+%  options.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata) specifies a
 %  vector containing numeric identifiers of strata. The dimensions of
@@ -85,16 +87,23 @@
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8].
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
-%  and resampled. Note that the strata and clusters options are mutually 
-%  exclusive.
+%  and resampled. This option is not compatible with bootstrap iteration.
+%  Note that the strata option is ignored if the clusters option is used. 
+%
+%  ci = ibootci(nboot,{bootfun,...},...,'Wild',residuals) specifies a 
+%  vector of residuals for wild bootstrapping in regression models using
+%  the Rademacher distribution [9]. The dimensions of the residuals must 
+%  be equal to that of the non-scalar input arguments to bootfun. Note 
+%  that balanced resampling is not maintained for block bootstrap. 
+%  Compatible with the 'Block' option but not bootstrap iteration.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
 %  dependent-data (e.g. stationary time series). The algorithm uses  
 %  circular, overlapping blocks. Intervals are constructed without 
 %  standardization making them equivariant under monotone transformations 
-%  [9]. The double bootstrap resampling and calibration procedure makes 
-%  interval coverage less sensitive to block length [10]. If the 
+%  [10]. The double bootstrap resampling and calibration procedure makes 
+%  interval coverage less sensitive to block length [11]. If the 
 %  blocksize is set to 'auto' (recommended), the block length is 
 %  calculated automatically. Note that balanced resampling is not 
 %  maintained for block bootstrap. 
@@ -134,15 +143,16 @@
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect
-%    xcorr: Autocorrelation coefficients for lags 0-9
+%    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval of the test statistic
+%    weights: argument supplied to 'Weights' (empty if none provided)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
-%    weights: argument supplied to 'Weights' (empty if none provided)
+%    residuals: argument supplied to 'Wild' (empty if none provided)
 %    blocksize: Length of overlapping blocks (empty if none provided)
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
@@ -172,10 +182,12 @@
 %  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric 
 %        bootstrap sampling with shrinkage correction for clustered 
 %        data. The Stata Journal. 13(1): 141-164
-%  [9] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
+%  [9] Davidson and Flachaire (2008) The wild bootstrap, tamed at last.
+%        Journal of Econometrics. 146(1):162-169
+%  [10] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
 %        Bootstrap for Stationary Observations. The Annals of Statistics.
 %        24(5):1914-1933
-%  [10] Lee and Lai (2009) Double block bootstrap confidence intervals
+%  [11] Lee and Lai (2009) Double block bootstrap confidence intervals
 %        for dependent data. Biometrika. 96(2):427-443
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
@@ -217,7 +229,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.5.4.0 (03/11/2019)
+%  ibootci v2.6.0.0 (03/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -273,6 +285,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = S.weights;
     strata = S.strata;
     clusters = S.clusters;
+    residuals = S.residuals;
     blocksize = S.blocksize;
     type = S.type;
     S.coverage = 1-S.alpha;
@@ -295,6 +308,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = [];
     strata = [];
     clusters = [];
+    residuals = [];
+    blocksize = [];
     type = 'bca';
     T1 = [];  % Initialize bootstat variable
 
@@ -311,6 +326,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     strata = 1+find(strcmpi('Strata',options));
     clusters = 1+find(strcmpi('Clusters',options));
     blocksize = 1+find(strcmpi('Block',options));
+    residuals = 1+find(strcmpi('Wild',options));
     bootidx = 1+find(strcmpi('bootidx',options));
     if ~isempty(alpha)
       try
@@ -386,15 +402,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       blocksize = [];
     end
-    if ~isempty(blocksize)
-      if size(data,2)>1
-        error('Block bootstrap option cannot be used with multivariate data')
-      end
-    end
-    if ~isempty(blocksize)
-      if ~isempty(strata) || ~isempty(clusters) || ~isempty(weights)
-        error('Block bootstrap cannot be used with Strata, Clusters or Weights')
-      end
+    if ~isempty(residuals)
+      try
+        residuals = options{residuals};
+      catch
+        residuals = [];
+      end  
+    else
+      residuals = [];
     end
     if ~isempty(bootidx)
       try
@@ -469,7 +484,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else
       n = rows;
-    end
+    end  
     if ~isempty(clusters)
       while size(clusters,2) > 1
         % Calculate cluster means for resampling more than two nested levels
@@ -559,14 +574,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       B = nboot(1);
       C = nboot(2);
     end
-    if ~isempty(clusters)
-      C = 0;
-      nboot = [B,C];
-      S.nboot = nboot;
-      if any(strcmpi(type,{'stud','student'}))
-        error('Bootstrapping clustered data is incompatible with bootstrap-t intervals')
-      end
-    end
     if C>0
       if (1/min(alpha,1-alpha)) > (0.5 * C)
         error('ibootci:extremeAlpha',...
@@ -576,10 +583,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if any(diff(weights))
         error('Weights are not implemented for iterated bootstrap.');
-      end
-    else
-      if any(strcmpi(type,{'stud','student'}))
-        error('Bootstrap-t requires double bootstrap to calculate standard errors.');
       end
     end
     S.bootfun = bootfun;
@@ -594,15 +597,58 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     
     % Prepare for cluster resampling (if applicable)
     if ~isempty(clusters) 
+      if ~isempty(blocksize) || any(diff(weights))
+        error('Incompatible combination of options.')
+      end
+      if any(strcmpi(type,{'stud','student'}))
+        error('Bootstrapping clustered data is not implemented with bootstrap-t intervals.')
+      end
+      if C > 0
+        error('Bootstrapping clustered data is not implemented with bootstrap iteration.')
+      end
       if nargout > 4
-        error('No bootidx for two-stage resampling of clustered data')
+        error('No bootidx for two-stage resampling of clustered data.')
       end
       [mu,data,K,g] = clustmean(data,clusters,nvar);
       bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
     end
 
+    % Prepare for wild bootstrap (if applicable)
+    if ~isempty(residuals)
+      if ~isempty(clusters) || ~isempty(strata) || any(diff(weights))
+        error('Incompatible combination of options.')
+      end
+      if any(strcmpi(type,{'stud','student'}))
+       error('Wild bootstrap is not implemented for bootstrap-t intervals.') 
+      end
+      if C > 0
+        error('Wild bootstrap is not implemented with bootstrap iteration.')
+      end
+      if nvar ~= 2
+        error('Wild bootstrap is only for regression models of bivariate data.')
+      end
+      x = data{1};
+      y = data{2};
+      if ~all(size(y)==size(residuals))
+        error('The dimenions of the residuals provided are inconsistent with those of the data arguments')
+      end
+      fit = y - residuals;
+      nvar = 1;
+      bootfun = @(signs) S.bootfun(x,bsxfun(@plus,fit,residuals.*signs(1:n,:)));
+      data = cell(1,nvar);
+      data{1} = cat(1,sign(residuals),-1*sign(residuals));
+      n = S.n*2;
+    end
+    
     % Prepare for block resampling (if applicable)
     if ~isempty(blocksize)
+      if ~isempty(clusters) || ~isempty(strata) || any(diff(weights))
+        error('Incompatible combination of options')
+      end 
+      if size(data,2)>1
+        error('Block bootstrap option cannot be used with multivariate data')
+      end
+      ori_data = data;
       if strcmpi(blocksize,'auto') 
         [data,blocksize] = split_blocks(data);
       else
@@ -704,7 +750,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters,blocksize);
+      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters,blocksize,residuals);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
@@ -764,9 +810,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.ICC = 0;
     S.DEFF = 1;
   end
-  if nvar < 2   
-    S.xcorr = xcorr(data{1},9,'coeff');
-    S.xcorr(1:9) = [];
+  if ~isempty(blocksize)
+    nvar = 1;
+    data = ori_data;
+  end
+  if nvar < 2 
+    S.xcorr = xcorr(data{1},min(S.n,99),'coeff');
+    S.xcorr(1:min(S.n,99)) = [];
   else
     S.xcorr = 'Autocorrelation not available for multivariate data';
   end
@@ -777,6 +827,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   S.bc_stat = T0-bias;             % Bias-corrected test statistic
   S.SE = SE;                       % Bootstrap standard error of the test statistic
   S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
+  if min(weights) ~= max(weights)
+    S.weights = weights;
+  else
+    S.weights = [];
+  end
   % Output structure fields if strata provided
   if ~isempty(strata)
     % Re-sort bootidx to match input data
@@ -791,11 +846,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.strata = [];
   end
   S.clusters = clusters;
-  if min(weights) ~= max(weights)
-    S.weights = weights;
-  else
-    S.weights = [];
-  end
+  S.residuals = residuals;
   S.blocksize = blocksize;
 
 end
@@ -1032,7 +1083,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, blocksize)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, blocksize, residuals)
 
   % Note that alpha input argument is nominal coverage
 
@@ -1040,7 +1091,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, bloc
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x) && isempty(strata) && isempty(clusters) && isempty(blocksize)
+  if ~isempty(x) && isempty(strata) && isempty(clusters) && isempty(blocksize) && isempty(residuals)
     try
       % Use the Jackknife to calculate acceleration
       [~, ~, U] = jack(x,func);
