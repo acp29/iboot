@@ -94,8 +94,8 @@
 %  vector of regression model residuals for wild bootstrap using the 
 %  Rademacher distribution [9]. The dimensions of the residuals must 
 %  be equal to that of the non-scalar input arguments to bootfun. Note 
-%  that balanced resampling is not maintained for block bootstrap. 
-%  Compatible with the 'Block' option but not bootstrap iteration.
+%  that balanced resampling is not maintained for wild bootstrap. 
+%  Wild bootstrap is not implemented with bootstrap iteration.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
