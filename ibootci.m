@@ -271,6 +271,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     bootfun = S.bootfun;
     data = [];
+    ori_data = data;
     n = S.n;
     idx = [];
     T0 = S.stat;
@@ -294,6 +295,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     nboot = argin1;
     bootfun = argin2;
     data = varargin;
+    ori_data = data;
     alpha = 0.05;
     idx = [];
     weights = [];
@@ -762,11 +764,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
   
   % Examine dependence structure of each variable by autocorrelation
-  S.xcorr = zeros(2*min(S.n,99)+1,S.nvar);
-  for v = 1:S.nvar 
-    S.xcorr(:,v) = xcorr(ori_data{v},min(S.n,99),'coeff');
+  if ~isempty(ori_data)
+    S.xcorr = zeros(2*min(S.n,99)+1,S.nvar);
+    for v = 1:S.nvar 
+      S.xcorr(:,v) = xcorr(ori_data{v},min(S.n,99),'coeff');
+    end
+    S.xcorr(1:min(S.n,99),:) = [];
   end
-  S.xcorr(1:min(S.n,99),:) = [];
   
   % Complete output structure
   S.stat = T0;                     % Sample test statistic
