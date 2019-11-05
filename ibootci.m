@@ -640,8 +640,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         C = 0;
         nboot = [B,C];
         S.nboot = nboot;
-        T2 = [];
       end
+      T2 = [];
     end
     % Assign data to bootstat
     if isempty(T2)
