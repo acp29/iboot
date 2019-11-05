@@ -638,7 +638,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         T2 = zeros(C,B);
         U = zeros(1,B);
         for h = 1:B
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, runmode);
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode, S);
         end
         U = U/C;
       else
