@@ -100,7 +100,7 @@
 %  calculated automatically. Note that balanced resampling is not 
 %  maintained for block bootstrap. Block bootstrap can also be used
 %  in regression contexts by combining it with pairs bootstrap (i.e. by
-%  providing x and y vectors as data variables)
+%  providing x and y vectors as data variables).
 %  
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
