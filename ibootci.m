@@ -635,15 +635,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
             T1(i) = feval(bootfun,x1{:});
           end
       end
-      % Perform second bootstrap if applicable
       if C>0
-        T2 = zeros(C,B);
-        U = zeros(1,B);
-        for h = 1:B
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode, S);
-        end
-        U = U/C;
-      else
+        warning('Bootstrap iteration not implemented when bootidx provided');
+        C = 0;
+        nboot = [B,C];
+        S.nboot = nboot;
         T2 = [];
       end
     end
