@@ -9,7 +9,6 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters)
-%  ci = ibootci(nboot,{bootfun,...},...,'Wild',residuals)
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(bootstat,S)
@@ -90,24 +89,19 @@
 %  and resampled. This option is not compatible with bootstrap iteration.
 %  Note that the strata option is ignored if the clusters option is used. 
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Wild',residuals) specifies a 
-%  vector of regression model residuals for wild bootstrap using the 
-%  Rademacher distribution [9]. The dimensions of the residuals must 
-%  be equal to that of the non-scalar input arguments to bootfun. Note 
-%  that balanced resampling is not maintained for wild bootstrap. 
-%  Wild bootstrap is not implemented with bootstrap iteration.
-%
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
 %  a positive integer defining the block length for block bootstrapping
-%  dependent-data (e.g. stationary time series). The algorithm uses  
-%  circular, overlapping blocks. Intervals are constructed without 
-%  standardization making them equivariant under monotone transformations 
-%  [10]. The double bootstrap resampling and calibration procedure makes 
-%  interval coverage less sensitive to block length [11]. If the 
-%  blocksize is set to 'auto' (recommended), the block length is 
+%  data with serial dependence (e.g. stationary time series). The    
+%  algorithm uses circular, overlapping blocks. Intervals are constructed  
+%  without standardization making them equivariant under monotone  
+%  transformations [9]. The double bootstrap resampling and calibration  
+%  procedure makes interval coverage less sensitive to block length [10].
+%  If the blocksize is set to 'auto' (recommended), the block length is 
 %  calculated automatically. Note that balanced resampling is not 
-%  maintained for block bootstrap. 
-%
+%  maintained for block bootstrap. Block bootstrap can also be used
+%  in regression contexts by combining it with pairs bootstrap (i.e. by
+%  providing x and y vectors as data variables)
+%  
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
@@ -134,7 +128,8 @@
 %  The output structure S contains the following fields:
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
-%    n: Size of the original sample(s)
+%    nvar: Number of data variables 
+%    n: Length of each data variable
 %    type: Type of confidence interval (bca, per or stud)
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
@@ -152,7 +147,6 @@
 %    weights: argument supplied to 'Weights' (empty if none provided)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
-%    residuals: argument supplied to 'Wild' (empty if none provided)
 %    blocksize: Length of overlapping blocks (empty if none provided)
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
@@ -182,12 +176,10 @@
 %  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric 
 %        bootstrap sampling with shrinkage correction for clustered 
 %        data. The Stata Journal. 13(1): 141-164
-%  [9] Davidson and Flachaire (2008) The wild bootstrap, tamed at last.
-%        Journal of Econometrics. 146(1):162-169
-%  [10] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
+%  [9] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
 %        Bootstrap for Stationary Observations. The Annals of Statistics.
 %        24(5):1914-1933
-%  [11] Lee and Lai (2009) Double block bootstrap confidence intervals
+%  [10] Lee and Lai (2009) Double block bootstrap confidence intervals
 %        for dependent data. Biometrika. 96(2):427-443
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
@@ -229,7 +221,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.6.1.0 (04/11/2019)
+%  ibootci v2.7.1.0 (05/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -285,7 +277,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = S.weights;
     strata = S.strata;
     clusters = S.clusters;
-    residuals = S.residuals;
     blocksize = S.blocksize;
     type = S.type;
     S.coverage = 1-S.alpha;
@@ -308,7 +299,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     weights = [];
     strata = [];
     clusters = [];
-    residuals = [];
     blocksize = [];
     type = 'bca';
     T1 = [];  % Initialize bootstat variable
@@ -326,7 +316,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     strata = 1+find(strcmpi('Strata',options));
     clusters = 1+find(strcmpi('Clusters',options));
     blocksize = 1+find(strcmpi('Block',options));
-    residuals = 1+find(strcmpi('Wild',options));
     bootidx = 1+find(strcmpi('bootidx',options));
     if ~isempty(alpha)
       try
@@ -402,15 +391,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       blocksize = [];
     end
-    if ~isempty(residuals)
-      try
-        residuals = options{residuals};
-      catch
-        residuals = [];
-      end  
-    else
-      residuals = [];
-    end
     if ~isempty(bootidx)
       try
         idx = options{bootidx};
@@ -485,6 +465,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       n = rows;
     end  
+    ori_data = data;  % Make a copy of the data
     if ~isempty(clusters)
       while size(clusters,2) > 1
         % Calculate cluster means for resampling more than two nested levels
@@ -587,6 +568,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     S.bootfun = bootfun;
     S.nboot = nboot;
+    S.nvar = nvar;
     S.n = n;
     S.type = type;
 
@@ -612,50 +594,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       [mu,data,K,g] = clustmean(data,clusters,nvar);
       bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
     end
-
-    % Prepare for wild bootstrap (if applicable)
-    if ~isempty(residuals)
-      if ~isempty(clusters) || ~isempty(strata) || ~isempty(blocksize) || any(diff(weights))
-        error('Incompatible combination of options.')
-      end
-      if any(strcmpi(type,{'stud','student'}))
-       error('Wild bootstrap is not implemented for bootstrap-t intervals.') 
-      end
-      if C > 0
-        error('Wild bootstrap is not implemented with bootstrap iteration.')
-      end
-      if nvar ~= 2
-        error('Wild bootstrap is only for regression models of bivariate data.')
-      end
-      x = data{1};
-      y = data{2};
-      if ~all(size(y)==size(residuals))
-        error('The dimenions of the residuals provided are inconsistent with those of the data arguments')
-      end
-      fit = y - residuals;
-      nvar = 1;
-      bootfun = @(signs) S.bootfun(x,bsxfun(@plus,fit,residuals.*signs(1:n,:)));
-      data = cell(1,nvar);
-      data{1} = cat(1,sign(residuals),-1*sign(residuals));
-      n = S.n*2;
-    end
     
     % Prepare for block resampling (if applicable)
     if ~isempty(blocksize)
       if ~isempty(clusters) || ~isempty(strata) || any(diff(weights))
         error('Incompatible combination of options')
       end 
-      if size(data,2)>1
-        error('Block bootstrap option cannot be used with multivariate data')
-      end
-      ori_data = data;
       if strcmpi(blocksize,'auto') 
-        [data,blocksize] = split_blocks(data);
-      else
-        [data] = split_blocks(data,blocksize);
+        blocksize = round(n^(1/3));  % set block length to ~ n^(1/3)
       end
-      nvar = blocksize;
-      bootfun = @(varargin) bootfun(cat_blocks(varargin));
+      data = split_blocks(data,blocksize);
+      bootfun = @(varargin) auxfun(S.bootfun,S.nvar,varargin);
+      nvar = S.nvar * blocksize;
     end
     
     % Perform bootstrap
@@ -663,10 +613,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if isempty(idx)
       if nargout < 5
         [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
-                             strata, blocksize, runmode);
+                             strata, blocksize, runmode, S);
       else
         [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0,...
-                                  weights, strata, blocksize, runmode);
+                                  weights, strata, blocksize, runmode, S);
       end
     else
       X1 = cell(1,nvar);
@@ -750,7 +700,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters,blocksize,residuals);
+      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters,blocksize);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
@@ -810,16 +760,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.ICC = 0;
     S.DEFF = 1;
   end
-  if ~isempty(blocksize)
-    nvar = 1;
-    data = ori_data;
+  
+  % Examine dependence structure of each variable by autocorrelation
+  S.xcorr = zeros(2*min(S.n,99)+1,S.nvar);
+  for v = 1:S.nvar 
+    S.xcorr(:,v) = xcorr(ori_data{v},min(S.n,99),'coeff');
   end
-  if nvar < 2 
-    S.xcorr = xcorr(data{1},min(S.n,99),'coeff');
-    S.xcorr(1:min(S.n,99)) = [];
-  else
-    S.xcorr = 'Autocorrelation not available for multivariate data';
-  end
+  S.xcorr(1:min(S.n,99),:) = [];
   
   % Complete output structure
   S.stat = T0;                     % Sample test statistic
@@ -832,7 +779,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   else
     S.weights = [];
   end
-  % Output structure fields if strata provided
   if ~isempty(strata)
     % Re-sort bootidx to match input data
     if ~isempty(idx)
@@ -845,8 +791,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   else
     S.strata = [];
   end
+  if ~isempty(blocksize) && ~isempty(idx)
+    temp = cell(n,1);
+    for i = 1:n
+      temp{i} = bsxfun(@plus,(0:blocksize-1)'.*ones(1,B),...
+                             ones(blocksize,1).*idx(i,:));
+    end
+    idx = cell2mat(temp);
+    idx(n+1:end,:) = [];
+    idx(idx>n) = idx(idx>n)-n;
+  end
   S.clusters = clusters;
-  S.residuals = residuals;
   S.blocksize = blocksize;
 
 end
@@ -854,7 +809,7 @@ end
 %--------------------------------------------------------------------------
 
 function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
-                            weights, strata, blocksize, runmode)
+                            weights, strata, blocksize, runmode, S)
 
     % Initialize
     B = nboot(1);
@@ -942,7 +897,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
       % balanced resampling by a permutation algorithm
       if C>0
         [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
-                                 blocksize, runmode);
+                                 blocksize, runmode, S);
       end
     end
     U = U/C;
@@ -951,16 +906,16 @@ end
 
 %--------------------------------------------------------------------------
 
-function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode)
+function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode, S)
 
     % Note that weights are not implemented here with iterated bootstrap
 
     % Prepare for block resampling (if applicable)
     if ~isempty(blocksize)
-      x1 = cell(1);
-      x1{1} = cat_blocks(X1);
-      nvar = round(nvar/2);
-      [X1] = split_blocks(x1,nvar);
+      x1 = cat_blocks(S.nvar,X1{:});
+      blocksize = round(blocksize/2);
+      X1 = split_blocks(x1,blocksize);
+      nvar = S.nvar * blocksize;
       g = ones(n,1);
     end
     
@@ -1083,7 +1038,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, blocksize, residuals)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, blocksize)
 
   % Note that alpha input argument is nominal coverage
 
@@ -1091,7 +1046,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, bloc
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x) && isempty(strata) && isempty(clusters) && isempty(blocksize) && isempty(residuals)
+  if ~isempty(x) && isempty(strata) && isempty(clusters) && isempty(blocksize)
     try
       % Use the Jackknife to calculate acceleration
       [~, ~, U] = jack(x,func);
@@ -1311,48 +1266,62 @@ end
 
 %--------------------------------------------------------------------------
 
-function [y, l] = split_blocks (x, l)
+function y = split_blocks (x, l)
 
   % Calculate data and block dimensions
   n = size(x{1},1);
-  if nargin < 2
-    l = round(n^(1/3));  % set block length to ~ n^(1/3)
-  end
+  nvar = numel(x);
 
   % Create a matrix of circular, overlapping blocks
   % Ref: Politis and Romano (1991) Technical report No. 370
-  y = zeros(n,l);
-  x = cat(1,x{1},x{1}(1:l-1));
-  for i = 1:n
-    y(i,:) = x(i:i+l-1);
+  y = cell(1,nvar);
+  for v = 1:nvar
+    y{v} = zeros(n,l);
+    temp = cat(1,x{v},x{v}(1:l-1));
+    for i = 1:n
+      y{v}(i,:) = temp(i:i+l-1);
+    end
   end
+  y = cell2mat(y);
   y = num2cell(y,1);
   
 end
 
 %--------------------------------------------------------------------------
 
-function y = cat_blocks (varargin)
+function y = cat_blocks (nvar, varargin)
 
   % Get data dimensions
-  x = varargin{1};
-  l = numel(x);
+  x = (varargin);
+  N = numel(x);
+  l = N/nvar;
   [n, reps] = size(x{1});
-  N = n * l;
   
   % Concatenate blocks
-  y = zeros(N,reps);
-  for i = 1:l
-    y(i:l:n*l,:) = x{i};
+  y = cell(1,nvar);
+  for v = 1:nvar
+    y{v} = zeros(N,reps);
+    for i = 1:l
+      y{v}(i:l:n*l,:) = x{(v-1)*l+i};
+    end
+    y{v} = y{v}(1:n,:);
   end
-  
-  % Extract sample(s)
-  y = y(1:n,:);
-  
+
 end
 
 %--------------------------------------------------------------------------
   
+function T = auxfun (bootfun, nvar, varargin)
+
+   % Auxiliary function for block bootstrap
+   X = varargin{1};
+   Y = cat_blocks(nvar,X{:});
+   T = bootfun(Y{:});
+      
+end
+      
+%--------------------------------------------------------------------------
+
 function [F, x] = empcdf (y, c)
 
   % Calculate empirical cumulative distribution function of y
