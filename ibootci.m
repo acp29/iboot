@@ -204,8 +204,8 @@
 %  Example 4: 95% confidence interval for the weighted arithmetic mean
 %    >> y = randn(20,1);
 %    >> w = [ones(5,1)*10/(20*5);ones(15,1)*10/(20*15)];
-%    >> [ci,~,S] = ibootci([5000,200],{'mean',y},'alpha',0.05);
-%    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w);
+%    >> [ci,~,S] = ibootci([5000,200],{'mean',y},'alpha',0.05,'type','per');
+%    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w,'type','per');
 %
 %  Example 5: 95% confidence interval for the median by smoothed bootstrap
 %  (requires the smoothmedian function available at Matlab Central File Exchange)
