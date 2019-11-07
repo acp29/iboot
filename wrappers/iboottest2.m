@@ -25,11 +25,13 @@
 %
 %  'Clusters': The same format as for weights.
 %
+%  'Block': The same format as for weights.
+%
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.4.4.0 (20/09/2019)
+%  iboottest2 v1.5.5.0 (07/10/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -93,6 +95,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   weights = 1+find(strcmpi('Weights',options));
   strata = 1+find(strcmpi('Strata',options));
   clusters = 1+find(strcmpi('Clusters',options));
+  blocksize = 1+find(strcmpi('Block',options));
   cellref = [];
   if ~isempty(alpha)
     try
@@ -144,13 +147,24 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   else
     clusters = {[],[]};
   end
+  if ~isempty(blocksize)
+    try
+      cellref = cat(2,cellref,[blocksize-1,blocksize]);
+      blocksize = options{blocksize};
+    catch
+      blocksize = {[],[]};
+      cellref(end-1:end)=[];
+    end
+  else
+    blocksize = {[],[]};
+  end
   options(cellref)=[];   % remove these evaluated options from the options array
 
   % Perform independent resampling from x and y
   state = warning;
   warning off;
-  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Strata',strata{1},'Clusters',clusters{1},options{:});
-  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Strata',strata{2},'Clusters',clusters{2},options{:});
+  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Strata',strata{1},'Clusters',clusters{1},'Block',blocksize{1},options{:});
+  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Strata',strata{2},'Clusters',clusters{2},'Block',blocksize{2},options{:});
 
   if C>0
     if ~isempty(weights{1})
@@ -181,12 +195,14 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
 
   % Calculate confidence interval using ibootci
   [ci,bootstat,S,calcurve] = ibootci(bootstatZ, S);
-
+  
   % Update output structure
   S.ICC = [SX.ICC, SY.ICC];
   S.DEFF = [SX.DEFF, SY.DEFF];
+  S.xcorr = {SX.xcorr, SY.xcorr};
   S.strata = strata;
   S.clusters = clusters;
+  S.blocksize = [SX.blocksize,SY.blocksize];
   S.weights = weights;
 
   % Calculate p-value using ibootp
