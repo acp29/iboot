@@ -8,7 +8,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
-%  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters)
+%  ci = ibootci(nboot,{bootfun,...},...,'Cluster',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(bootstat,S)
@@ -221,7 +221,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.1.0 (07/11/2019)
+%  ibootci v2.7.2.0 (07/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -316,9 +316,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     type = 1+find(strcmpi('type',options));
     nbootstd = 1+find(strcmpi('nbootstd',options));
     weights = 1+find(strcmpi('Weights',options));
-    strata = 1+find(strcmpi('Strata',options));
-    clusters = 1+find(strcmpi('Clusters',options));
-    blocksize = 1+find(strcmpi('Block',options));
+    strata = 1+find(cellfun(@(options) any(strcmpi({'Strata','Stratum','Stratified'},options)),options));
+    clusters = 1+find(cellfun(@(options) any(strcmpi({'Clusters','Cluster'},options)),options));
+    blocksize = 1+find(cellfun(@(options) any(strcmpi({'Block','Blocks','Blocksize'},options)),options));
     bootidx = 1+find(strcmpi('bootidx',options));
     if ~isempty(alpha)
       try
@@ -475,8 +475,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
         [data,clusters] = unitmeans(data,clusters,nvar);
       end
+      if numel(unique(clusters)) == 1
+        clusters = []; % Cannot perform cluster bootstrap
+      else
+        n = size(clusters,1);
+      end
       strata = clusters;
-      n = size(clusters,1);
     end
     if isempty(weights)
       weights = ones(n,1);
@@ -637,12 +641,25 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           end
       end
       if C>0
-        warning('Bootstrap iteration not implemented when bootidx provided');
-        C = 0;
-        nboot = [B,C];
-        S.nboot = nboot;
+        if ~isempty(strata)
+          [~, ~, ~, g] = sse_calc (data, strata, nvar);
+        else
+          g = ones(n,1);
+        end
+        T2 = zeros(C,B);
+        U = zeros(1,B);
+        for h = 1:B
+          x1 = cell(1,nvar);
+          for v = 1:nvar
+            x1{v} = X1{v}(:,h);
+          end
+          [U(h), T2(:,h)] = boot2 (x1, nboot, n, nvar, bootfun, T0, g,...
+                                   blocksize, runmode, S);
+        end
+        U = U/C;
+      else
+        T2 = [];
       end
-      T2 = [];
     end
     % Assign data to bootstat
     if isempty(T2)
