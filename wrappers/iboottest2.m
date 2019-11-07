@@ -31,7 +31,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.6.0 (07/10/2019)
+%  iboottest2 v1.5.5.0 (07/10/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -93,9 +93,9 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   options = varargin;
   alpha = 1+find(strcmpi('alpha',options));
   weights = 1+find(strcmpi('Weights',options));
-  strata = 1+find(cellfun(@(options) any(strcmpi({'Strata','Stratum','Stratified'},options)),options));
-  clusters = 1+find(cellfun(@(options) any(strcmpi({'Clusters','Cluster'},options)),options));
-  blocksize = 1+find(cellfun(@(options) any(strcmpi({'Block','Blocks','Blocksize'},options)),options));
+  strata = 1+find(strcmpi('Strata',options));
+  clusters = 1+find(strcmpi('Cluster',options));
+  blocksize = 1+find(strcmpi('Block',options));
   cellref = [];
   if ~isempty(alpha)
     try
