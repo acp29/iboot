@@ -80,7 +80,7 @@
 %  provided then they are within-stratum weights; the weighting of
 %  individual strata depends on their respective sample size.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Clusters',clusters) specifies 
+%  ci = ibootci(nboot,{bootfun,...},...,'Cluster',clusters) specifies 
 %  a vector containing numeric identifiers for clusters. Whereas strata 
 %  are fixed, clusters are resampled. This is achieved by two-stage 
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8].
