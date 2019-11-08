@@ -24,18 +24,18 @@
 %  bootfun is a function handle specified with @, or a string indicating
 %  the function name. The third and later input arguments are data (column
 %  vectors), that are used to create inputs to bootfun. ibootci creates
-%  each first level bootstrap by block resampling from the rows of the 
-%  column vector data arguments (which must be the same size) [1]. If a 
-%  positive integer for the number of second bootstrap replicates is 
-%  provided, then nominal central coverage of two-sided intervals is 
-%  calibrated to achieve second order accurate coverage by bootstrap 
-%  iteration and interpolation [2]. Linear interpolation of the empirical 
-%  cumulative distribution function of bootstat is then used to construct 
-%  two-sided confidence intervals [3]. The resampling method used throughout 
+%  each first level bootstrap by block resampling from the rows of the
+%  column vector data arguments (which must be the same size) [1]. If a
+%  positive integer for the number of second bootstrap replicates is
+%  provided, then nominal central coverage of two-sided intervals is
+%  calibrated to achieve second order accurate coverage by bootstrap
+%  iteration and interpolation [2]. Linear interpolation of the empirical
+%  cumulative distribution function of bootstat is then used to construct
+%  two-sided confidence intervals [3]. The resampling method used throughout
 %  is balanced resampling [4]. Default values for the number of first and
-%  second bootstrap replicate sample sets in nboot are 5000 and 200 
-%  respectively. Note that this calibration procedure does not apply to  
-%  Studentized, Cluster or Weights bootstrap options (see below). 
+%  second bootstrap replicate sample sets in nboot are 5000 and 200
+%  respectively. Note that this calibration procedure does not apply to
+%  Studentized, Cluster or Weights bootstrap options (see below).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha) computes the
 %  iterated bootstrap confidence interval of the statistic defined by the
@@ -80,28 +80,28 @@
 %  provided then they are within-stratum weights; the weighting of
 %  individual strata depends on their respective sample size.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Cluster',clusters) specifies 
-%  a vector containing numeric identifiers for clusters. Whereas strata 
-%  are fixed, clusters are resampled. This is achieved by two-stage 
+%  ci = ibootci(nboot,{bootfun,...},...,'Cluster',clusters) specifies
+%  a vector containing numeric identifiers for clusters. Whereas strata
+%  are fixed, clusters are resampled. This is achieved by two-stage
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8].
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration.
-%  Note that the strata option is ignored if the clusters option is used. 
+%  Note that the strata option is ignored if the clusters option is used.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies 
+%  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies
 %  a positive integer defining the block length for block bootstrapping
-%  data with serial dependence (e.g. stationary time series). The    
-%  algorithm uses circular, overlapping blocks. Intervals are constructed  
-%  without standardization making them equivariant under monotone  
-%  transformations [9]. The double bootstrap resampling and calibration  
+%  data with serial dependence (e.g. stationary time series). The
+%  algorithm uses circular, overlapping blocks. Intervals are constructed
+%  without standardization making them equivariant under monotone
+%  transformations [9]. The double bootstrap resampling and calibration
 %  procedure makes interval coverage less sensitive to block length [10].
-%  If the blocksize is set to 'auto' (recommended), the block length is 
-%  calculated automatically. Note that balanced resampling is not 
-%  maintained for block bootstrap. Block bootstrap can also be used
-%  in regression contexts by combining it with pairs bootstrap (i.e. by
-%  providing x and y vectors as data variables).
-%  
+%  If the blocksize is set to 'auto' (recommended), the block length is
+%  calculated automatically. Note that balanced resampling is not
+%  maintained for block bootstrap. Block bootstrap can also be used for
+%  regression of timeseries data by combining it with pairs bootstrap
+%  (i.e. by providing x and y vectors as data variables).
+%
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
@@ -128,7 +128,7 @@
 %  The output structure S contains the following fields:
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
-%    nvar: Number of data variables 
+%    nvar: Number of data variables
 %    n: Length of each data variable
 %    type: Type of confidence interval (bca, per or stud)
 %    alpha: Desired alpha level
@@ -171,12 +171,12 @@
 %  [6] Polansky (2000) Stabilizing bootstrap-t confidence intervals
 %        for small samples. Can J Stat. 28(3):501-516
 %  [7] Gomes et al. (2012) Developing appropriate methods for cost-
-%        effectiveness analysis of cluster randomized trials. 
+%        effectiveness analysis of cluster randomized trials.
 %        Medical Decision Making. 32(2): 350-361
-%  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric 
-%        bootstrap sampling with shrinkage correction for clustered 
+%  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric
+%        bootstrap sampling with shrinkage correction for clustered
 %        data. The Stata Journal. 13(1): 141-164
-%  [9] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise 
+%  [9] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise
 %        Bootstrap for Stationary Observations. The Annals of Statistics.
 %        24(5):1914-1933
 %  [10] Lee and Lai (2009) Double block bootstrap confidence intervals
@@ -185,13 +185,13 @@
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
 %    >> ci = ibootci([5000 200],@mean,y);
-%    >> ci = ibootci([5000 200],{@mean,y},'alpha',0.05); 
+%    >> ci = ibootci([5000 200],{@mean,y},'alpha',0.05);
 %
 %  Example 2: 95% confidence intervals for the means of paired/matched data
 %    >> y1 = randn(20,1);
 %    >> y2 = randn(20,1);
 %    >> [ci1,bootstat,S,calcurve,bootidx] = ibootci([5000 200],{@mean,y1});
-%    >> [ci2] = ibootci(5000,{@mean,y2},'bootidx',bootidx,'alpha',S.cal);
+%    >> [ci2,bootstat,S] = ibootci([5000 200],{@mean,y2},'bootidx',bootidx);
 %
 %  Example 3: 95% confidence intervals for the correlation coefficient
 %    >> z = mvnrnd([2,3],[1,1.5;1.5,3],20);
@@ -221,7 +221,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.2.0 (07/11/2019)
+%  ibootci v2.7.3.0 (08/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -382,7 +382,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       catch
         clusters = [];
       end
-    else 
+    else
       clusters = [];
     end
     if ~isempty(blocksize)
@@ -390,7 +390,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         blocksize = options{blocksize};
       catch
         blocksize = [];
-      end  
+      end
     else
       blocksize = [];
     end
@@ -467,7 +467,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else
       n = rows;
-    end  
+    end
     ori_data = data;  % Make a copy of the data
     if ~isempty(clusters)
       while size(clusters,2) > 1
@@ -583,9 +583,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.alpha = alpha;
     S.coverage = 1-alpha;
     alpha = 1-alpha;
-    
+
     % Prepare for cluster resampling (if applicable)
-    if ~isempty(clusters) 
+    if ~isempty(clusters)
       if ~isempty(blocksize) || any(diff(weights))
         error('Incompatible combination of options.')
       end
@@ -601,20 +601,20 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       [mu,data,K,g] = clustmean(data,clusters,nvar);
       bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
     end
-    
+
     % Prepare for block resampling (if applicable)
     if ~isempty(blocksize)
       if ~isempty(clusters) || ~isempty(strata) || any(diff(weights))
         error('Incompatible combination of options')
-      end 
-      if strcmpi(blocksize,'auto') 
+      end
+      if strcmpi(blocksize,'auto')
         blocksize = round(n^(1/3));  % set block length to ~ n^(1/3)
       end
       data = split_blocks(data,blocksize);
       bootfun = @(varargin) auxfun(S.bootfun,S.nvar,varargin);
       nvar = S.nvar * blocksize;
     end
-    
+
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
@@ -690,14 +690,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   % Calibrate central two-sided coverage
   if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
     % Create a calibration curve
-    V = abs(2*U-1); 
+    V = abs(2*U-1);
     [calcurve(:,2),calcurve(:,1)] = empcdf(V,1);
     alpha = interp1(calcurve(:,2),calcurve(:,1),alpha);
   else
     calcurve = [];
   end
   S.cal = 1-alpha;
-  
+
   % Check the nominal central coverage
   if (S.cal == 0)
     warning('ibootci:calibrationHitEnd',...
@@ -770,22 +770,22 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % One-way random, single measures ICC(1,1)
     data = ori_data;
     [~, ~, ~, g, MSb, MSw, dk] = sse_calc (data, strata, nvar);
-    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);   
+    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
     S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   else
     S.ICC = 0;
     S.DEFF = 1;
   end
-  
+
   % Examine dependence structure of each variable by autocorrelation
   if ~isempty(ori_data)
     S.xcorr = zeros(2*min(S.n,99)+1,S.nvar);
-    for v = 1:S.nvar 
+    for v = 1:S.nvar
       S.xcorr(:,v) = xcorr(ori_data{v},min(S.n,99),'coeff');
     end
     S.xcorr(1:min(S.n,99),:) = [];
   end
-  
+
   % Complete output structure
   S.stat = T0;                     % Sample test statistic
   S.bias = bias;                   % Bias of the test statistic
@@ -936,7 +936,7 @@ function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode
       nvar = S.nvar * blocksize;
       g = ones(n,1);
     end
-    
+
     % Initialize
     C = nboot(2);
 
@@ -1075,7 +1075,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, bloc
   else
     a = nan;
   end
-  % Check if calculation of the acceleration constant 
+  % Check if calculation of the acceleration constant
   % using the jackknife was possible (and successful)
   if isnan(a)
     % If not, directly calculate acceleration from
@@ -1122,15 +1122,15 @@ function [SSb, SSw, K, g, MSb, MSw, dk] = sse_calc (x, groups, nvar)
   SSb = sum(bSQ);         % Between-group SSE
   SSw = sum(wSQ);         % Within-group SSE
   g = logical(g);         % Logical array defining groups
-  
+
   % Calculate mean squared error (MSE) and representative cluster size
   if nargout > 4
     nk = sum(g).';
     MSb = (sum(nk.*bSQ))/(K-1);
-    MSw = SSw/(n-K); 
+    MSw = SSw/(n-K);
     dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
   end
-  
+
 end
 
 %--------------------------------------------------------------------------
@@ -1138,14 +1138,14 @@ end
 function [y, g] = unitmeans (x, clusters, nvar)
 
   % Calculate unit (cluster) means
-  
+
   % Calculate number of levels of subsampling
   L = size(clusters,2);
-  
+
   % Get IDs of unique clusters in lowest level
   gid = unique(clusters(:,L));
   K = numel(gid);
-  
+
   % Initialize output variables
   g = zeros(K,L-1);
   y = cell(1,nvar);
@@ -1182,26 +1182,26 @@ function [mu, Z, K, g] = clustmean (x, clusters, nvar)
 
   % Calculates shrunken cluster means and residuals for cluster bootstrap
   % See also bootclust function below
-  
+
   % Center and scale data
-  z = cell(1,nvar); 
+  z = cell(1,nvar);
   for v = 1:nvar
     z{v} = (x{v} - mean(x{v})) / std(x{v});
   end
-  
+
   % Calculate sum-of-squared error components
   [SSb, SSw, K, g] = sse_calc (z, clusters, nvar);
   SSb = sum(SSb);
   SSw = sum(SSw);
-  
-  % Calculate cluster means in the original sample 
-  mu = cell(1,nvar); 
+
+  % Calculate cluster means in the original sample
+  mu = cell(1,nvar);
   for v = 1:nvar
     for k = 1:K
       mu{v}(k,:) = mean(x{v}(g(:,k),:));
     end
   end
-  
+
   % Calculate shrunken cluster means from the original sample
   nk = sum(g).';
   dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
@@ -1211,7 +1211,7 @@ function [mu, Z, K, g] = clustmean (x, clusters, nvar)
       mu{v}(k,:) = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v}(k,:));
     end
   end
-  
+
   % Calculate residuals from the sample and cluster means
   Z = cell(1,nvar);
   for v = 1:nvar
@@ -1220,35 +1220,35 @@ function [mu, Z, K, g] = clustmean (x, clusters, nvar)
       Z{v}(g(:,k),:) = Z{v}(g(:,k),:) ./ sqrt(1-dk^-1);
     end
   end
-  
+
 end
-  
+
 %--------------------------------------------------------------------------
 
 function T = bootclust (bootfun, K, g, runmode, mu, varargin)
 
-  % Two-stage nonparametric bootstrap sampling with shrinkage 
+  % Two-stage nonparametric bootstrap sampling with shrinkage
   % correction for clustered data [1].
   %
-  % By resampling residuals, this bootstrap method can be used when 
+  % By resampling residuals, this bootstrap method can be used when
   % cluster sizes are unequal. However, cluster samples are assumed
-  % to be taken from populations with equal variance. Not compatible 
+  % to be taken from populations with equal variance. Not compatible
   % with bootstrap-t or bootstrap iteration.
-  % 
+  %
   % Reference:
   %  [1] Davison and Hinkley (1997) Bootstrap Methods and their
-  %       application. Chapter 3: pg 97-100 
-  %  [2] Ng, Grieve and Carpenter (2013) The Stata Journal. 
+  %       application. Chapter 3: pg 97-100
+  %  [2] Ng, Grieve and Carpenter (2013) The Stata Journal.
   %       13(1): 141-164
-  %  [3] Gomes et al. (2012) Medical Decision Making. 
+  %  [3] Gomes et al. (2012) Medical Decision Making.
   %       32(2): 350-361
- 
+
   % Calculate data dimensions
   Z = varargin{1};
   nvar = numel(Z);
   [n,reps] = size(Z{1});
-  
-  % Preallocate arrays 
+
+  % Preallocate arrays
   bootmu = cell(1,nvar);
   X = cell(1,nvar);
   for v = 1:nvar
@@ -1260,10 +1260,10 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   for v = 1:nvar
     bootmu{v} = mu{v}(idx);
   end
-  
+
   % Combine residuals with resampled cluster means
   for v = 1:nvar
-    for k = 1:K 
+    for k = 1:K
       X{v}(g(:,k),:) = bsxfun(@plus, Z{v}(g(:,k),:), bootmu{v}(k,:));
     end
   end
@@ -1302,7 +1302,7 @@ function y = split_blocks (x, l)
   end
   y = cell2mat(y);
   y = num2cell(y,1);
-  
+
 end
 
 %--------------------------------------------------------------------------
@@ -1314,7 +1314,7 @@ function y = cat_blocks (nvar, varargin)
   N = numel(x);
   l = N/nvar;
   [n, reps] = size(x{1});
-  
+
   % Concatenate blocks
   y = cell(1,nvar);
   for v = 1:nvar
@@ -1328,16 +1328,16 @@ function y = cat_blocks (nvar, varargin)
 end
 
 %--------------------------------------------------------------------------
-  
+
 function T = auxfun (bootfun, nvar, varargin)
 
    % Auxiliary function for block bootstrap
    X = varargin{1};
    Y = cat_blocks(nvar,X{:});
    T = bootfun(Y{:});
-      
+
 end
-      
+
 %--------------------------------------------------------------------------
 
 function [F, x] = empcdf (y, c)
