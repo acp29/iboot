@@ -64,9 +64,9 @@
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The dimensions of weights must be equal to that of the non-scalar input
 %  arguments to bootfun. The weights are used as bootstrap sampling
-%  probabilities. Note that weights are not implemented for BCa intervals
-%  or for bootstrap iteration. To improve on standard percentile intervals
-%  from a single bootstrap when using weights, we suggest calibrating the
+%  probabilities. Note that weights are not implemented for Studentized-
+%  type intervals or bootstrap iteration. To improve on intervals from
+%  a single bootstrap when using weights, we suggest calibrating the
 %  nominal alpha level using iterated bootstrap without weights, then
 %  using the calibrated alpha in a weighted bootstrap without iteration
 %  (see example 4 below). Note that weights are not compatible with other
@@ -204,8 +204,8 @@
 %  Example 4: 95% confidence interval for the weighted arithmetic mean
 %    >> y = randn(20,1);
 %    >> w = [ones(5,1)*10/(20*5);ones(15,1)*10/(20*15)];
-%    >> [ci,~,S] = ibootci([5000,200],{'mean',y},'alpha',0.05,'type','per');
-%    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w,'type','per');
+%    >> [ci,~,S] = ibootci([5000,200],{'mean',y},'alpha',0.05);
+%    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w);
 %
 %  Example 5: 95% confidence interval for the median by smoothed bootstrap
 %  (requires the smoothmedian function available at Matlab Central File Exchange)
@@ -221,7 +221,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.3.0 (08/11/2019)
+%  ibootci v2.7.4.0 (09/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -508,9 +508,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       ori_data = data;
     end
-    if any(diff(weights)) && strcmpi(type,'bca')
-      error('Weights are not implemented for BCa intervals.');
-    end
 
     % Evaluate bootfun
     if ~isa(bootfun,'function_handle')
@@ -716,7 +713,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,strata,clusters,blocksize);
+      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,weights,strata,clusters,blocksize);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
@@ -1056,7 +1053,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, blocksize)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, weights, strata, clusters, blocksize)
 
   % Note that alpha input argument is nominal coverage
 
@@ -1064,7 +1061,8 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, strata, clusters, bloc
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x) && isempty(strata) && isempty(clusters) && isempty(blocksize)
+  if ~isempty(x) && isempty(weights) && isempty(strata) && ... 
+      isempty(clusters) && isempty(blocksize)
     try
       % Use the Jackknife to calculate acceleration
       [~, ~, U] = jack(x,func);
