@@ -99,7 +99,7 @@
 %  If the blocksize is set to 'auto' (recommended), the block length is
 %  calculated automatically. Note that balanced resampling is not
 %  maintained for block bootstrap. Block bootstrap can also be used for
-%  regression of timeseries data by combining it with pairs bootstrap
+%  regression of time series data by combining it with pairs bootstrap
 %  (i.e. by providing x and y vectors as data variables).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
