@@ -798,8 +798,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.ICC = NaN;    
   end
   if ~isempty(clusters)
+    % Calculate the design effect for clustering
     S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   elseif ~isempty(strata)
+    % Design effect for stratification not calculated    
     S.DEFF = [];
   else
     S.DEFF = 1;
