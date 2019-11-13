@@ -23,10 +23,10 @@
 %  the number of replicate samples for the first and second bootstraps.
 %  bootfun is a function handle specified with @, or a string indicating
 %  the function name. The third and later input arguments are data (column
-%  vectors), that are used to create inputs to bootfun. ibootci creates
-%  each first level bootstrap by block resampling from the rows of the
-%  column vector data arguments (which must be the same size) [1]. If a
-%  positive integer for the number of second bootstrap replicates is
+%  vectors, or a matrix), that are used to create inputs for bootfun. 
+%  ibootci creates each first level bootstrap by block resampling from the 
+%  rows of the data argument(s) (which must be the same size) [1]. If a 
+%  positive integer for the number of second bootstrap replicates is 
 %  provided, then nominal central coverage of two-sided intervals is
 %  calibrated to achieve second order accurate coverage by bootstrap
 %  iteration and interpolation [2]. Linear interpolation of the empirical
@@ -144,6 +144,7 @@
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval of the test statistic
+%    prct: Percentiles used to generate confidence intervals (proportion)
 %    weights: argument supplied to 'Weights' (empty if none provided)
 %    strata: argument supplied to 'Strata' (empty if none provided)
 %    clusters: argument supplied to 'Clusters' (empty if none provided)
@@ -221,7 +222,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.4.0 (09/11/2019)
+%  ibootci v2.7.5.0 (09/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -438,13 +439,26 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
       error('The type of bootstrap must be either per, bca or stud');
     end
+    if (min(size(data{1}))>1)
+      if (nvar == 1)      
+        nvar = size(data{1},2);
+        data = num2cell(data{1},1);
+        matflag = 1;   % Flag for matrix input set to True
+        runmode = 'slow';
+      else
+        error('Multiple data input arguments must be provided as vectors')
+      end
+    else
+      matflag = 0;
+      runmode = [];
+    end
     varclass = zeros(1,nvar);
     rows = zeros(1,nvar);
     cols = zeros(1,nvar);
     for v = 1:nvar
       varclass(v) = isa(data{v},'double');
-      if all(size(data{v})>1)
-        error('The data must be provided as vectors')
+      if all(size(data{v})>1) && (v > 1)
+        error('Vector input arguments must be the same size')
       end
       rows(v) = size(data{v},1);
       cols(v) = size(data{v},2);
@@ -468,7 +482,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       n = rows;
     end
-    ori_data = data;  % Make a copy of the data
+    ori_data = data; % Make a copy of the data
     if ~isempty(clusters)
       while size(clusters,2) > 1
         % Calculate cluster means for resampling more than two nested levels
@@ -490,7 +504,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if cols>1
         % Transpose row vector weights
-        weights = weights';
+        weights = weights.';
       end
     end
     if any(weights<0)
@@ -514,7 +528,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       error('bootfun must be a function name or function handle');
     end
     try
-      T0 = feval(bootfun,data{:});
+      if matflag > 0
+        temp = list2mat(data{:});
+        T0 = feval(bootfun,temp);       
+      else
+        T0 = feval(bootfun,data{:});
+      end
     catch
       error('An error occurred while trying to evaluate bootfun with the input data');
     end
@@ -524,25 +543,27 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if max(size(T0))>1
       error('Column vector inputs to bootfun must return a scalar');
     end
+    % Minimal simulation to evaluate bootfun with matrix input arguments
     M = cell(1,nvar);
     for v = 1:nvar
       x = data{v};
-      % Minimal simulation to evaluate bootfun with matrix input arguments
       if v == 1
         simidx = randi(n,n,2);
       end
       M{v} = x(simidx);
     end
-    try
-      sim = feval(bootfun,M{:});
-      if size(sim,1)>1
-        error('Invoke catch statement');
+    if ~isempty(runmode)
+      try
+        sim = feval(bootfun,M{:});
+        if size(sim,1)>1
+          error('Invoke catch statement');
+        end
+        runmode = 'fast';
+      catch
+        warning('ibootci:slowMode',...
+                'Slow mode. Faster if matrix input arguments to bootfun return a row vector.')
+        runmode = 'slow';
       end
-      runmode = 'fast';
-    catch
-      warning('ibootci:slowMode',...
-              'Slow mode. Faster if matrix input arguments to bootfun return a row vector.')
-      runmode = 'slow';
     end
 
     % Set the bootstrap sample sizes
@@ -575,6 +596,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.nvar = nvar;
     S.n = n;
     S.type = type;
+    
+    % Update bootfun for matrix data input argument
+    if matflag > 0
+      bootfun = @(varargin) bootfun(list2mat(varargin{:}));
+    end
 
     % Convert alpha to coverage level (decimal format)
     S.alpha = alpha;
@@ -784,11 +810,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Complete output structure
-  S.stat = T0;                     % Sample test statistic
-  S.bias = bias;                   % Bias of the test statistic
-  S.bc_stat = T0-bias;             % Bias-corrected test statistic
-  S.SE = SE;                       % Bootstrap standard error of the test statistic
-  S.ci = ci;                       % Bootstrap confidence intervals of the test statistic
+  S.stat = T0;         % Sample test statistic
+  S.bias = bias;       % Bias of the test statistic
+  S.bc_stat = T0-bias; % Bias-corrected test statistic
+  S.SE = SE;           % Bootstrap standard error of the test statistic
+  S.ci = ci;           % Bootstrap confidence intervals of the test statistic
+  S.prct = [m2,m1];    % Percentiles used to generate confidence intervals  
   if min(weights) ~= max(weights)
     S.weights = weights;
   else
@@ -1061,7 +1088,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, weights, strata, clust
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x) && isempty(weights) && isempty(strata) && ... 
+  if ~isempty(x) && ~any(diff(weights)) && isempty(strata) && ... 
       isempty(clusters) && isempty(blocksize)
     try
       % Use the Jackknife to calculate acceleration
@@ -1329,11 +1356,20 @@ end
 
 function T = auxfun (bootfun, nvar, varargin)
 
-   % Auxiliary function for block bootstrap
-   X = varargin{1};
-   Y = cat_blocks(nvar,X{:});
-   T = bootfun(Y{:});
+  % Auxiliary function for block bootstrap
+  X = varargin{1};
+  Y = cat_blocks(nvar,X{:});
+  T = bootfun(Y{:});
 
+end
+
+%--------------------------------------------------------------------------
+
+function data = list2mat (varargin)
+
+  % Convert comma-separated list input to matrix
+  data = cell2mat(varargin);
+  
 end
 
 %--------------------------------------------------------------------------
