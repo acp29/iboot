@@ -552,7 +552,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       M{v} = x(simidx);
     end
-    if ~isempty(runmode)
+    if isempty(runmode)
       try
         sim = feval(bootfun,M{:});
         if size(sim,1)>1
@@ -794,9 +794,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     data = ori_data;
     [~, ~, ~, g, MSb, MSw, dk] = sse_calc (data, strata, nvar);
     S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
-    S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
   else
-    S.ICC = 0;
+    S.ICC = NaN;    
+  end
+  if ~isempty(clusters)
+    S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
+  elseif ~isempty(strata)
+    S.DEFF = [];
+  else
     S.DEFF = 1;
   end
 
@@ -1292,7 +1297,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
       X{v}(g(:,k),:) = bsxfun(@plus, Z{v}(g(:,k),:), bootmu{v}(k,:));
     end
   end
-
+  
   % Calculate bootstrap statistic(s)
   switch lower(runmode)
     case {'fast'}
