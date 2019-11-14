@@ -7,7 +7,7 @@
 %  Interval types:
 %  - PER  : Percentile interval
 %  - BCA  : Bias-corrected and accelerated interval
-%  - CAL  : Double bootstrap with calibrated interval coverage (PER or BCA)
+%  - CAL  : Double bootstrap with calibrated interval (PER or BCA)
 %  - STUD : Double bootstrap with Studentized (Bootstrap-t) interval
 %
 %  Non-parametric bootstrap resampling capabilities:
