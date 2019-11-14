@@ -137,7 +137,7 @@
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
-%    DEFF: Design effect
+%    DEFF: Design effect (estimated by resampling)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
@@ -789,7 +789,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
   %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
   if ~isempty(strata)
-    % Intraclass correlation coefficient
+    % Intraclass correlation coefficient for the mean
     % One-way random, single measures ICC(1,1)
     data = ori_data;
     [~, ~, ~, g, MSb, MSw, dk] = sse_calc (data, strata, nvar);
@@ -797,15 +797,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   else
     S.ICC = NaN;    
   end
-  if ~isempty(clusters)
-    % Calculate the design effect for clustering
-    S.DEFF = 1+(harmmean(sum(g))-1)*S.ICC;
-  elseif ~isempty(strata)
-    % Design effect for stratification not calculated    
-    S.DEFF = [];
-  else
-    S.DEFF = 1;
-  end
+  % Calculate the design effect by resampling
+  S.DEFF = (SE^2)/(jack(data,S.bootfun))^2;
 
   % Examine dependence structure of each variable by autocorrelation
   if ~isempty(ori_data)
