@@ -12,7 +12,7 @@
 %
 %  Non-parametric bootstrap resampling capabilities:
 %  - Balanced bootstrap for univariate, I.I.D. data (PER, BCA, CAL, STUD)
-%  - Pairs bootstrap for clustered data or regression (PER, BCA, CAL, STUD)
+%  - Pairs bootstrap for clustered data, multivariate data or regression (PER, BCA, CAL, STUD)
 %  - Two-stage residual bootstrap with shrinkage correction for clustered data (PER, BCA)
 %  - Block bootstrap for time series data (PER, BCA, CAL, STUD)
 %  - Block pairs bootstrap for regression on time series data (PER, BCA, CAL, STUD)
