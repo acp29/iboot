@@ -6,17 +6,17 @@
 %
 %  Interval types:
 %  - PER  : Percentile interval
-%  - BCA  : Bias-corrected and acceleration
-%  - STUD : Studentized bootstrap (Bootstrap-t)
-%  - DB   : Double bootstrap with calibration
+%  - BCA  : Bias-corrected and accelerated interval
+%  - CAL  : Double bootstrap with calibrated interval (PER or BCA)
+%  - STUD : Double bootstrap with Studentized (Bootstrap-t) interval 
 %
 %  Resampling capabilities:
-%  - balanced bootstrap (PER, BCA, DB, STUD)
-%  - pairs bootstrap for clustered data or regression (PER, BCA, DB, STUD)
-%  - 2-stage residual bootstrap with shrinkage correction for clustered data (PER, BCA, DB)
-%  - block bootstrap for time series data (PER, BCA, DB, STUD)
-%  - block pairs bootstrap for regression on time series data (PER, BCA, DB, STUD)
-%  - stratified bootstrap (PER, BCA, DB, STUD)
+%  - balanced bootstrap (PER, BCA, CAL, STUD)
+%  - pairs bootstrap for clustered data or regression (PER, BCA, CAL, STUD)
+%  - 2-stage residual bootstrap with shrinkage correction for clustered data (PER, BCA, CAL)
+%  - block bootstrap for time series data (PER, BCA, CAL, STUD)
+%  - block pairs bootstrap for regression on time series data (PER, BCA, CAL, STUD)
+%  - stratified bootstrap (PER, BCA, CAL, STUD)
 %  - weighted bootstrap (PER)
 %
 %  USAGE:
