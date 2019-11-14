@@ -11,7 +11,7 @@
 %  - STUD : Double bootstrap with Studentized (Bootstrap-t) interval
 %
 %  Non-parametric bootstrap resampling capabilities:
-%  - Balanced bootstrap (PER, BCA, CAL, STUD)
+%  - Balanced bootstrap for univariate, I.I.D. data (PER, BCA, CAL, STUD)
 %  - Pairs bootstrap for clustered data or regression (PER, BCA, CAL, STUD)
 %  - Two-stage residual bootstrap with shrinkage correction for clustered data (PER, BCA)
 %  - Block bootstrap for time series data (PER, BCA, CAL, STUD)
