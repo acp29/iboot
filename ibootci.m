@@ -784,7 +784,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
              'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
   end
 
-  % Calculate intraclass correlation coefficient (ICC) and design effect
+  % Calculate intraclass correlation coefficient (ICC)
   %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
   %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
   %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
@@ -797,6 +797,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   else
     S.ICC = NaN;    
   end
+
   % Estimate the design effect by resampling
   S.DEFF = (SE^2)/(jack(data,S.bootfun))^2;
 
