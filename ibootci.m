@@ -23,10 +23,10 @@
 %  the number of replicate samples for the first and second bootstraps.
 %  bootfun is a function handle specified with @, or a string indicating
 %  the function name. The third and later input arguments are data (column
-%  vectors, or a matrix), that are used to create inputs for bootfun. 
-%  ibootci creates each first level bootstrap by block resampling from the 
-%  rows of the data argument(s) (which must be the same size) [1]. If a 
-%  positive integer for the number of second bootstrap replicates is 
+%  vectors, or a matrix), that are used to create inputs for bootfun.
+%  ibootci creates each first level bootstrap by block resampling from the
+%  rows of the data argument(s) (which must be the same size) [1]. If a
+%  positive integer for the number of second bootstrap replicates is
 %  provided, then nominal central coverage of two-sided intervals is
 %  calibrated to achieve second order accurate coverage by bootstrap
 %  iteration and interpolation [2]. Linear interpolation of the empirical
@@ -440,7 +440,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       error('The type of bootstrap must be either per, bca or stud');
     end
     if (min(size(data{1}))>1)
-      if (nvar == 1)      
+      if (nvar == 1)
         nvar = size(data{1},2);
         data = num2cell(data{1},1);
         matflag = 1;   % Flag for matrix input set to True
@@ -530,7 +530,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     try
       if matflag > 0
         temp = list2mat(data{:});
-        T0 = feval(bootfun,temp);       
+        T0 = feval(bootfun,temp);
       else
         T0 = feval(bootfun,data{:});
       end
@@ -596,7 +596,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.nvar = nvar;
     S.n = n;
     S.type = type;
-    
+
     % Update bootfun for matrix data input argument
     if matflag > 0
       bootfun = @(varargin) bootfun(list2mat(varargin{:}));
@@ -795,11 +795,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (data, strata, nvar);
     S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
   else
-    S.ICC = NaN;    
+    S.ICC = NaN;
   end
 
   % Estimate the design effect by resampling
-  S.DEFF = (SE^2)/(jack(data,S.bootfun))^2;
+  % Ratio of variance to that calculated by simple sampling with replacement (SRS)
+  [SRS1,SRS2] = boot1(ori_data,nboot,n,nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+  if C > 0
+    SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
+  else
+    SRSV = var(SRS1,0);
+  end
+  S.DEFF = SE^2/SRSV;
 
   % Examine dependence structure of each variable by autocorrelation
   if ~isempty(ori_data)
@@ -816,7 +823,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   S.bc_stat = T0-bias; % Bias-corrected test statistic
   S.SE = SE;           % Bootstrap standard error of the test statistic
   S.ci = ci;           % Bootstrap confidence intervals of the test statistic
-  S.prct = [m2,m1];    % Percentiles used to generate confidence intervals  
+  S.prct = [m2,m1];    % Percentiles used to generate confidence intervals
   if min(weights) ~= max(weights)
     S.weights = weights;
   else
@@ -1089,7 +1096,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, weights, strata, clust
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
-  if ~isempty(x) && ~any(diff(weights)) && isempty(strata) && ... 
+  if ~isempty(x) && ~any(diff(weights)) && isempty(strata) && ...
       isempty(clusters) && isempty(blocksize)
     try
       % Use the Jackknife to calculate acceleration
@@ -1293,7 +1300,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
       X{v}(g(:,k),:) = bsxfun(@plus, Z{v}(g(:,k),:), bootmu{v}(k,:));
     end
   end
-  
+
   % Calculate bootstrap statistic(s)
   switch lower(runmode)
     case {'fast'}
@@ -1370,7 +1377,7 @@ function data = list2mat (varargin)
 
   % Convert comma-separated list input to matrix
   data = cell2mat(varargin);
-  
+
 end
 
 %--------------------------------------------------------------------------
