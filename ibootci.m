@@ -784,75 +784,80 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
              'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
   end
 
-  % Calculate intraclass correlation coefficient (ICC)
-  %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
-  %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
-  %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
-  if ~isempty(strata)
-    % Intraclass correlation coefficient for the mean
-    % One-way random, single measures ICC(1,1)
-    data = ori_data;
-    [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (data, strata, nvar);
-    S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
-  else
-    S.ICC = NaN;
-  end
-
-  % Estimate the design effect by resampling
-  % Ratio of variance to that calculated by simple sampling with replacement (SRS)
-  [SRS1,SRS2] = boot1(ori_data,nboot,n,nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
-  if C > 0
-    SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
-  else
-    SRSV = var(SRS1,0);
-  end
-  S.DEFF = SE^2/SRSV;
-
-  % Examine dependence structure of each variable by autocorrelation
-  if ~isempty(ori_data)
-    S.xcorr = zeros(2*min(S.n,99)+1,S.nvar);
-    for v = 1:S.nvar
-      S.xcorr(:,v) = xcorr(ori_data{v},min(S.n,99),'coeff');
-    end
-    S.xcorr(1:min(S.n,99),:) = [];
-  end
-
   % Complete output structure
-  S.stat = T0;         % Sample test statistic
-  S.bias = bias;       % Bias of the test statistic
-  S.bc_stat = T0-bias; % Bias-corrected test statistic
-  S.SE = SE;           % Bootstrap standard error of the test statistic
-  S.ci = ci;           % Bootstrap confidence intervals of the test statistic
-  S.prct = [m2,m1];    % Percentiles used to generate confidence intervals
-  if min(weights) ~= max(weights)
-    S.weights = weights;
-  else
-    S.weights = [];
-  end
-  if ~isempty(strata)
-    % Re-sort bootidx to match input data
-    if ~isempty(idx)
-      [~,J] = sort(I);
-      idx = idx(J,:);
+  if nargout > 2
+
+    % Calculate intraclass correlation coefficient (ICC)
+    %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
+    %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
+    %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
+    if ~isempty(strata)
+      % Intraclass correlation coefficient for the mean
+      % One-way random, single measures ICC(1,1)
+      data = ori_data;
+      [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (data, strata, nvar);
+      S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
+    else
+      S.ICC = NaN;
     end
-  end
-  if isempty(clusters)
-    S.strata = strata;
-  else
-    S.strata = [];
-  end
-  if ~isempty(blocksize) && ~isempty(idx)
-    temp = cell(n,1);
-    for i = 1:n
-      temp{i} = bsxfun(@plus,(0:blocksize-1)'.*ones(1,B),...
-                             ones(blocksize,1).*idx(i,:));
+
+    % Estimate the design effect by resampling
+    % Ratio of variance to that calculated by simple sampling with replacement (SRS)
+    [SRS1,SRS2] = boot1(ori_data,nboot,n,nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+    if C > 0
+      SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
+    else
+      SRSV = var(SRS1,0);
     end
-    idx = cell2mat(temp);
-    idx(n+1:end,:) = [];
-    idx(idx>n) = idx(idx>n)-n;
+    S.DEFF = SE^2/SRSV;
+
+    % Examine dependence structure of each variable by autocorrelation
+    if ~isempty(ori_data)
+      S.xcorr = zeros(2*min(S.n,99)+1,S.nvar);
+      for v = 1:S.nvar
+        S.xcorr(:,v) = xcorr(ori_data{v},min(S.n,99),'coeff');
+      end
+      S.xcorr(1:min(S.n,99),:) = [];
+    end
+
+    % Complete output structure
+    S.stat = T0;         % Sample test statistic
+    S.bias = bias;       % Bias of the test statistic
+    S.bc_stat = T0-bias; % Bias-corrected test statistic
+    S.SE = SE;           % Bootstrap standard error of the test statistic
+    S.ci = ci;           % Bootstrap confidence intervals of the test statistic
+    S.prct = [m2,m1];    % Percentiles used to generate confidence intervals
+    if min(weights) ~= max(weights)
+      S.weights = weights;
+    else
+      S.weights = [];
+    end
+    if ~isempty(strata)
+      % Re-sort bootidx to match input data
+      if ~isempty(idx)
+        [~,J] = sort(I);
+        idx = idx(J,:);
+      end
+    end
+    if isempty(clusters)
+      S.strata = strata;
+    else
+      S.strata = [];
+    end
+    if ~isempty(blocksize) && ~isempty(idx)
+      temp = cell(n,1);
+      for i = 1:n
+        temp{i} = bsxfun(@plus,(0:blocksize-1)'.*ones(1,B),...
+                               ones(blocksize,1).*idx(i,:));
+      end
+      idx = cell2mat(temp);
+      idx(n+1:end,:) = [];
+      idx(idx>n) = idx(idx>n)-n;
+    end
+    S.clusters = clusters;
+    S.blocksize = blocksize;
+
   end
-  S.clusters = clusters;
-  S.blocksize = blocksize;
 
 end
 
