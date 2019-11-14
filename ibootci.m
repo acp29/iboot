@@ -10,7 +10,7 @@
 %  - CAL  : Double bootstrap with calibrated interval (PER or BCA)
 %  - STUD : Double bootstrap with Studentized (Bootstrap-t) interval
 %
-%  Resampling capabilities:
+%  Non-parametric bootstrap resampling capabilities:
 %  - Balanced bootstrap (PER, BCA, CAL, STUD)
 %  - Pairs bootstrap for clustered data or regression (PER, BCA, CAL, STUD)
 %  - Two-stage residual bootstrap with shrinkage correction for clustered data (PER, BCA, CAL)
