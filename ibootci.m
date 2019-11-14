@@ -2,6 +2,25 @@
 %
 %  Bootstrap confidence interval
 %
+%  FEATURES:
+%
+%  Interval types:
+%  - PER  : Percentile interval
+%  - BCA  : Bias-corrected and acceleration
+%  - STUD : Studentized bootstrap (Bootstrap-t)
+%  - DB   : Double bootstrap with calibration
+%
+%  Resampling capabilities:
+%  - balanced bootstrap (PER, BCA, DB, STUD)
+%  - pairs bootstrap for clustered data or regression (PER, BCA, DB, STUD)
+%  - 2-stage residual bootstrap with shrinkage correction for clustered data (PER, BCA, DB)
+%  - block bootstrap for time series data (PER, BCA, DB, STUD)
+%  - block pairs bootstrap for regression on time series data (PER, BCA, DB, STUD)
+%  - stratified bootstrap (PER, BCA, DB, STUD)
+%  - weighted bootstrap (PER)
+%
+%  USAGE:
+%
 %  ci = ibootci(nboot,bootfun,...)
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
@@ -222,7 +241,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.5.2 (14/11/2019)
+%  ibootci v2.7.5.3 (14/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
