@@ -792,12 +792,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Intraclass correlation coefficient for the mean
     % One-way random, single measures ICC(1,1)
     data = ori_data;
-    [~, ~, ~, g, MSb, MSw, dk] = sse_calc (data, strata, nvar);
+    [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (data, strata, nvar);
     S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
   else
     S.ICC = NaN;    
   end
-  % Calculate the design effect by resampling
+  % Estimate the design effect by resampling
   S.DEFF = (SE^2)/(jack(data,S.bootfun))^2;
 
   % Examine dependence structure of each variable by autocorrelation
