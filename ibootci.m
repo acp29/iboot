@@ -2,23 +2,6 @@
 %
 %  Bootstrap confidence interval
 %
-%  FEATURES:
-%
-%  Interval types:
-%  - PER  : Percentile interval
-%  - BCA  : Bias-corrected and accelerated interval
-%  - CAL  : Double bootstrap with calibrated interval (PER or BCA)
-%  - STUD : Double bootstrap with Studentized (Bootstrap-t) interval
-%
-%  Non-parametric bootstrap resampling capabilities:
-%  - Balanced bootstrap for univariate, I.I.D. data (PER, BCA, CAL, STUD)
-%  - Pairs bootstrap for clustered data, multivariate data or regression (PER, BCA, CAL, STUD)
-%  - Two-stage residual bootstrap with shrinkage correction for clustered data (PER, BCA)
-%  - Block bootstrap for time series data (PER, BCA, CAL, STUD)
-%  - Block pairs bootstrap for regression on time series data (PER, BCA, CAL, STUD)
-%  - Stratified bootstrap (PER, BCA, CAL, STUD)
-%  - Weighted bootstrap (PER)
-%
 %  USAGE:
 %
 %  ci = ibootci(nboot,bootfun,...)
