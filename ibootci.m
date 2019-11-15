@@ -813,7 +813,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       SRSV = var(SRS1,0);
     end
-    S.DEFF = SE^2/SRSV;S.DEFF
+    S.DEFF = SE^2/SRSV;
 
     % Examine dependence structure of each variable by autocorrelation
     if ~isempty(ori_data)
