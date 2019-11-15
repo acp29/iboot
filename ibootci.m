@@ -804,7 +804,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Estimate the design effect by resampling
     % Ratio of variance to that calculated by simple random sampling (SRS)
     [SRS1,SRS2] = boot1(ori_data,nboot,n,nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
-    if C > 0
+    if (C > 0) || ~isempty(clusters)
       SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
     else
       SRSV = var(SRS1,0);
