@@ -2,8 +2,6 @@
 %
 %  Bootstrap confidence interval
 %
-%  USAGE:
-%
 %  ci = ibootci(nboot,bootfun,...)
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
