@@ -222,9 +222,12 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.5.3 (14/11/2019)
+%  ibootci v2.7.5.4 (16/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
+%
+%  Cite as:
+%  Andrew Penn (2019). ibootci (https://www.github.com/acp29/iboot), GitHub.  
 %
 %  Copyright 2019 Andrew Charles Penn
 %  This program is free software: you can redistribute it and/or modify
@@ -378,6 +381,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           if ~isempty(strata)
             warning('strata and clusters options are mutually exclusive; strata option ignored')
           end
+          strata = clusters;
         end
       catch
         clusters = [];
@@ -438,6 +442,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
       error('The type of bootstrap must be either per, bca or stud');
     end
+    
+    % Evaluate data
     if (min(size(data{1}))>1)
       if (nvar == 1)
         nvar = size(data{1},2);
@@ -482,6 +488,21 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       n = rows;
     end
     ori_data = data; % Make a copy of the data
+    if ~isempty(strata)
+      strata = strata(:);
+      if ~all(size(strata) == size(data{1}))
+        error('strata must be cell array or vector the same size as the data')
+      end
+      % Sort strata and data vectors so that strata components are grouped
+      [strata,I] = sort(strata);
+      if ~isempty(clusters)
+        clusters = strata;
+      end
+      for v = 1:nvar
+        data{v} = data{v}(I);
+      end
+      ori_data = data;
+    end
     if ~isempty(clusters)
       while size(clusters,2) > 1
         % Calculate cluster means for resampling more than two nested levels
@@ -508,18 +529,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     if any(weights<0)
       error('Weights must be a vector of non-negative numbers')
-    end
-    if ~isempty(strata)
-      strata = strata(:);
-      if ~all(size(strata) == size(data{1}))
-        error('strata must be cell array or vector the same size as the data')
-      end
-      % Sort strata and data vactors so that strata components are grouped
-      [strata,I] = sort(strata);
-      for v = 1:nvar
-        data{v} = data{v}(I);
-      end
-      ori_data = data;
     end
 
     % Evaluate bootfun
@@ -836,9 +845,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.weights = [];
     end
     if ~isempty(strata)
-      % Re-sort bootidx to match input data
+      % Re-sort variables to match input data
+      [~,J] = sort(I);
+      strata = strata(J,:);
+      if ~isempty(clusters)
+        clusters = clusters(J,:);
+      end
       if ~isempty(idx)
-        [~,J] = sort(I);
         idx = idx(J,:);
       end
     end
