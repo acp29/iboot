@@ -378,7 +378,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           if ~isempty(strata)
             warning('strata and clusters options are mutually exclusive; strata option ignored')
           end
-          strata = clusters;
         end
       catch
         clusters = [];
