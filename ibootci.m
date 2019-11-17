@@ -222,7 +222,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.5.4 (16/11/2019)
+%  ibootci v2.7.5.5 (17/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -381,7 +381,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           if ~isempty(strata)
             warning('strata and clusters options are mutually exclusive; strata option ignored')
           end
-          strata = clusters;
         end
       catch
         clusters = [];
@@ -443,7 +442,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       error('The type of bootstrap must be either per, bca or stud');
     end
     
-    % Evaluate data
+    % Evaluate data input
     if (min(size(data{1}))>1)
       if (nvar == 1)
         nvar = size(data{1},2);
@@ -489,19 +488,22 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     ori_data = data; % Make a copy of the data
     if ~isempty(strata)
-      strata = strata(:);
-      if ~all(size(strata) == size(data{1}))
-        error('strata must be cell array or vector the same size as the data')
+      while size(strata,2) > 1
+        % Calculate strata means for resampling more than two nested levels
+        % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
+        [data,strata] = unitmeans(data,strata,nvar);
+      end
+      if numel(unique(strata)) == 1
+        strata = []; % Cannot perform stratified resampling
+      else
+        n = size(strata,1);
       end
       % Sort strata and data vectors so that strata components are grouped
       [strata,I] = sort(strata);
-      if ~isempty(clusters)
-        clusters = strata;
-      end
       for v = 1:nvar
         data{v} = data{v}(I);
       end
-      ori_data = data;
+      ori_data = data; % recreate copy of the data
     end
     if ~isempty(clusters)
       while size(clusters,2) > 1
@@ -514,7 +516,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       else
         n = size(clusters,1);
       end
-      strata = clusters;
+       % Sort clusters and data vectors so that strata components are grouped
+      [clusters,I] = sort(clusters);
+      for v = 1:nvar
+        data{v} = data{v}(I);
+      end
+      ori_data = data; % recreate copy of the data
     end
     if isempty(weights)
       weights = ones(n,1);
@@ -575,7 +582,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
 
     % Set the bootstrap sample sizes
-    S = struct;
     if iter==0
       B = 5000;
       C = 200;
@@ -599,11 +605,16 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         error('Weights are not implemented for iterated bootstrap.');
       end
     end
+
+    % Initialize output structure 
+    S = struct;
     S.bootfun = bootfun;
     S.nboot = nboot;
     S.nvar = nvar;
     S.n = n;
     S.type = type;
+    S.alpha = alpha;
+    S.coverage = 1-alpha;
 
     % Update bootfun for matrix data input argument
     if matflag > 0
@@ -611,8 +622,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
 
     % Convert alpha to coverage level (decimal format)
-    S.alpha = alpha;
-    S.coverage = 1-alpha;
     alpha = 1-alpha;
 
     % Prepare for cluster resampling (if applicable)
@@ -799,11 +808,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
     %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
     %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
-    if ~isempty(strata)
+    if ~isempty(strata) || ~isempty(clusters)
       % Intraclass correlation coefficient for the mean
       % One-way random, single measures ICC(1,1)
-      data = ori_data;
-      [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (data, strata, nvar);
+      if ~isempty(strata)
+        groups = strata;
+      elseif ~isempty(clusters)
+        groups = clusters;
+      end
+      [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (ori_data, groups, nvar);
       S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
     else
       S.ICC = NaN;
@@ -812,9 +825,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Estimate the design effect by resampling
     % Ratio of variance to that calculated by simple random sampling (SRS)
     if ~isempty(clusters)
-      [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],n,nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+      [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n,S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
     else
-      [SRS1,SRS2] = boot1(ori_data,nboot,n,nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+      [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
     end
     if (C > 0) || ~isempty(clusters)
       SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
@@ -844,22 +857,23 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       S.weights = [];
     end
+    % Re-sort variables to match input data
     if ~isempty(strata)
-      % Re-sort variables to match input data
       [~,J] = sort(I);
       strata = strata(J,:);
-      if ~isempty(clusters)
-        clusters = clusters(J,:);
-      end
       if ~isempty(idx)
         idx = idx(J,:);
       end
     end
-    if isempty(clusters)
-      S.strata = strata;
-    else
-      S.strata = [];
+    if ~isempty(clusters)
+      [~,J] = sort(I);
+      clusters = clusters(J,:);
+      if ~isempty(idx)
+        idx = idx(J,:);
+      end
     end
+    S.strata = strata;
+    S.clusters = clusters;
     if ~isempty(blocksize) && ~isempty(idx)
       temp = cell(n,1);
       for i = 1:n
@@ -870,7 +884,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       idx(n+1:end,:) = [];
       idx(idx>n) = idx(idx>n)-n;
     end
-    S.clusters = clusters;
     S.blocksize = blocksize;
 
   end
