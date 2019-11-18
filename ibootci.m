@@ -222,7 +222,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.5.5 (17/11/2019)
+%  ibootci v2.7.5.6 (18/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -312,6 +312,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
   else
     % Normal usage with options
+    % Evaluate option input arguments
     nboot = argin1;
     bootfun = argin2{1};
     data = {argin2{2:end}};
@@ -415,14 +416,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   if isempty(T1)
-    if ischar(bootfun)
-      % Convert character string of a function name to a function handle
-      bootfun = str2func(bootfun);
-    end
-    iter = numel(nboot);
-    nvar = size(data,2);
 
     % Evaluate function variables
+    iter = numel(nboot);
     if iter > 2
       error('Size of nboot exceeds maximum number of iterations supported by ibootci')
     end
@@ -443,6 +439,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     
     % Evaluate data input
+    nvar = size(data,2);
     if (min(size(data{1}))>1)
       if (nvar == 1)
         nvar = size(data{1},2);
@@ -539,6 +536,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
 
     % Evaluate bootfun
+    if ischar(bootfun)
+      % Convert character string of a function name to a function handle
+      bootfun = str2func(bootfun);
+    end
     if ~isa(bootfun,'function_handle')
       error('bootfun must be a function name or function handle');
     end
