@@ -222,7 +222,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.5.6 (18/11/2019)
+%  ibootci v2.7.5.7 (18/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -1275,9 +1275,7 @@ function [mu, Z, K, g] = clustmean (x, clusters, nvar)
   dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
   c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(dk.*(dk-1).*SSb))));
   for v = 1:nvar
-    for k = 1:K
-      mu{v}(k,:) = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v}(k,:));
-    end
+    mu{v} = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v});
   end
 
   % Calculate residuals from the sample and cluster means
