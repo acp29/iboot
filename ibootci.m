@@ -1329,7 +1329,7 @@ function T = bootclust (bootfun, K, g, runmode, Z, varargin)
   n = size(Z{1},1);
 
   % Preallocate arrays
-  bootres = cell(1,nvar);
+  bootZ = cell(1,nvar);
   X = cell(1,nvar);
   for v = 1:nvar
     X{v} = zeros(n,reps);
