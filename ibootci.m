@@ -65,12 +65,7 @@
 %  The dimensions of weights must be equal to that of the non-scalar input
 %  arguments to bootfun. The weights are used as bootstrap sampling
 %  probabilities. Note that weights are not implemented for Studentized-
-%  type intervals or bootstrap iteration. To improve on intervals from
-%  a single bootstrap when using weights, we suggest calibrating the
-%  nominal alpha level using iterated bootstrap without weights, then
-%  using the calibrated alpha in a weighted bootstrap without iteration
-%  (see example 4 below). Note that weights are not compatible with other
-%  options.
+%  type intervals or bootstrap iteration. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata) specifies a
 %  vector containing numeric identifiers of strata. The dimensions of
@@ -87,7 +82,10 @@
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration.
-%  Note that the strata option is ignored if the clusters option is used.
+%  If used in conjunction with the 'Weights' option, the number of elements 
+%  in weights must be equal to the number of clusters. An exception is when 
+%  weights is set to 'auto', in which case weights are calculated to be 
+%  the inverse of the cluster size. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies
 %  a positive integer defining the block length for block bootstrapping
@@ -222,7 +220,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.6.1 (20/11/2019)
+%  ibootci v2.7.7.0 (20/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -519,16 +517,32 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         data{v} = data{v}(I);
       end
       ori_data = data; % recreate copy of the data
+      [~,~,K,g] = sse_calc (data, clusters, nvar);
+      if ischar(weights)
+        if strcmpi(weights,'auto')
+          % Automatically assign weights for unequal clusters sizes
+          weights = zeros(K,1);
+          for k = 1:K
+            weights(k) = 1/sum(g(:,k));
+          end
+        end
+      end
     end
     if isempty(weights)
       weights = ones(n,1);
     else
-      if ~all(size(weights) == [rows,cols])
-        error('The weights vector is not the same dimensions as the data');
-      end
-      if cols>1
+      if size(weights,2)>1
         % Transpose row vector weights
         weights = weights.';
+      end
+      if ~isempty(clusters)
+        if ~all(size(weights) == [K,1])
+          error('The number of elements in the weights vector does not match the number of clusters');
+        end 
+      else
+        if ~all(size(weights) == [n,1])
+          error('The weights vector is not the same dimensions as the data');
+        end         
       end
     end
     if any(weights<0)
@@ -627,7 +641,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
     % Prepare for cluster resampling (if applicable)
     if ~isempty(clusters)
-      if ~isempty(blocksize) || any(diff(weights))
+      if ~isempty(blocksize)
         error('Incompatible combination of options.')
       end
       if any(strcmpi(type,{'stud','student'}))
