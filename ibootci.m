@@ -143,9 +143,9 @@
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval of the test statistic
 %    prct: Percentiles used to generate confidence intervals (proportion)
-%    weights: argument supplied to 'Weights' (empty if none provided)
-%    strata: argument supplied to 'Strata' (empty if none provided)
-%    clusters: argument supplied to 'Clusters' (empty if none provided)
+%    weights: Argument supplied to 'Weights' (empty if none provided)
+%    strata: Argument supplied to 'Strata' (empty if none provided)
+%    clusters: Argument supplied to 'Clusters' (empty if none provided)
 %    blocksize: Length of overlapping blocks (empty if none provided)
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
