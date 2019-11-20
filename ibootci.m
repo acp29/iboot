@@ -129,7 +129,7 @@
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
 %    nvar: Number of data variables
-%    n: Length of each data variable
+%    n: The length of each data variable (and number of clusters if applicable)
 %    type: Type of confidence interval (bca, per or stud)
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
@@ -222,7 +222,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.5.7 (18/11/2019)
+%  ibootci v2.7.6.0 (20/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -639,8 +639,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if nargout > 4
         error('No bootidx for two-stage resampling of clustered data.')
       end
-      [mu,data,K,g] = clustmean(data,clusters,nvar);
-      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
+      % Redefine data as cluster means
+      % Cluster means will undergo balanced resampling with replacement
+      % Ordinary sampling with replacement is used for resampling residuals
+      [data,Z,K,g] = clustmean(data,clusters,nvar);
+      S.n(2) = K; % S.n is [number of observations, number of clusters]
+      n = K;
+      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,Z,varargin);
     end
 
     % Prepare for block resampling (if applicable)
@@ -803,49 +808,69 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Complete output structure
-  if nargout > 2
+  if (nargout>2) 
+    if ~isempty(data)
+      % Calculate intraclass correlation coefficient (ICC)
+      %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
+      %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
+      %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
+      if ~isempty(strata) || ~isempty(clusters)
+        % Intraclass correlation coefficient for the mean
+        % One-way random, single measures ICC(1,1)
+        if ~isempty(strata)
+          groups = strata;
+        elseif ~isempty(clusters)
+          groups = clusters;
+        end
+        [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (ori_data, groups, nvar);
+        S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
+      else
+        S.ICC = NaN;
+      end
 
-    % Calculate intraclass correlation coefficient (ICC)
-    %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
-    %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
-    %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
-    if ~isempty(strata) || ~isempty(clusters)
-      % Intraclass correlation coefficient for the mean
-      % One-way random, single measures ICC(1,1)
+      % Estimate the design effect by resampling
+      % Ratio of variance to that calculated by simple random sampling (SRS)
+      if ~isempty(clusters)
+        [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+      else
+        [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+      end
+      if (C > 0) || ~isempty(clusters)
+        SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
+      else
+        SRSV = var(SRS1,0);
+      end
+      S.DEFF = SE^2/SRSV;
+
+      % Examine dependence structure of each variable by autocorrelation
+      if ~isempty(ori_data)
+        S.xcorr = zeros(2*min(S.n(1),99)+1,S.nvar);
+        for v = 1:S.nvar
+          S.xcorr(:,v) = xcorr(ori_data{v},min(S.n(1),99),'coeff');
+        end
+        S.xcorr(1:min(S.n(1),99),:) = [];
+      end
+      % Re-sort variables to match input data
       if ~isempty(strata)
-        groups = strata;
-      elseif ~isempty(clusters)
-        groups = clusters;
+        [~,J] = sort(I);
+        strata = strata(J,:);
+        if ~isempty(idx)
+          idx = idx(J,:);
+        end
       end
-      [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (ori_data, groups, nvar);
-      S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
-    else
-      S.ICC = NaN;
-    end
-
-    % Estimate the design effect by resampling
-    % Ratio of variance to that calculated by simple random sampling (SRS)
-    if ~isempty(clusters)
-      [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n,S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
-    else
-      [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
-    end
-    if (C > 0) || ~isempty(clusters)
-      SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
-    else
-      SRSV = var(SRS1,0);
-    end
-    S.DEFF = SE^2/SRSV;
-
-    % Examine dependence structure of each variable by autocorrelation
-    if ~isempty(ori_data)
-      S.xcorr = zeros(2*min(S.n,99)+1,S.nvar);
-      for v = 1:S.nvar
-        S.xcorr(:,v) = xcorr(ori_data{v},min(S.n,99),'coeff');
+      if ~isempty(clusters)
+        [~,J] = sort(I);
+        clusters = clusters(J,:);
+        if ~isempty(idx)
+          idx = idx(J,:);
+        end
       end
-      S.xcorr(1:min(S.n,99),:) = [];
+    else
+      S.ICC = [];
+      S.DEFF = [];
+      S.xcorr = [];
     end
-
+    
     % Complete output structure
     S.stat = T0;         % Sample test statistic
     S.bias = bias;       % Bias of the test statistic
@@ -853,25 +878,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.SE = SE;           % Bootstrap standard error of the test statistic
     S.ci = ci;           % Bootstrap confidence intervals of the test statistic
     S.prct = [m2,m1];    % Percentiles used to generate confidence intervals
-    if min(weights) ~= max(weights)
+    if any(diff(weights))
       S.weights = weights;
     else
       S.weights = [];
-    end
-    % Re-sort variables to match input data
-    if ~isempty(strata)
-      [~,J] = sort(I);
-      strata = strata(J,:);
-      if ~isempty(idx)
-        idx = idx(J,:);
-      end
-    end
-    if ~isempty(clusters)
-      [~,J] = sort(I);
-      clusters = clusters(J,:);
-      if ~isempty(idx)
-        idx = idx(J,:);
-      end
     end
     S.strata = strata;
     S.clusters = clusters;
@@ -1291,7 +1301,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function T = bootclust (bootfun, K, g, runmode, mu, varargin)
+function T = bootclust (bootfun, K, g, runmode, Z, varargin)
 
   % Two-stage nonparametric bootstrap sampling with shrinkage
   % correction for clustered data [1].
@@ -1310,27 +1320,28 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   %       32(2): 350-361
 
   % Calculate data dimensions
-  Z = varargin{1};
-  nvar = numel(Z);
-  [n,reps] = size(Z{1});
+  mu = varargin{1};
+  nvar = numel(mu);
+  reps = size(mu{1},2);
+  n = size(Z{1},1);
 
   % Preallocate arrays
-  bootmu = cell(1,nvar);
+  bootres = cell(1,nvar);
   X = cell(1,nvar);
   for v = 1:nvar
     X{v} = zeros(n,reps);
   end
 
-  % Ordinary resampling with replacement of cluster means
-  idx = randi(K,K,reps);
+  % Ordinary resampling with replacement of residuals
+  idx = randi(n,n,reps);
   for v = 1:nvar
-    bootmu{v} = mu{v}(idx);
+    bootZ{v} = Z{v}(idx);
   end
 
-  % Combine residuals with resampled cluster means
+  % Combine resampled residuals and cluster means
   for v = 1:nvar
     for k = 1:K
-      X{v}(g(:,k),:) = bsxfun(@plus, Z{v}(g(:,k),:), bootmu{v}(k,:));
+      X{v}(g(:,k),:) = bsxfun(@plus, bootZ{v}(g(:,k),:), mu{v}(k,:));
     end
   end
 
