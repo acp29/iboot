@@ -31,7 +31,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.6.0 (20/11/2019)
+%  iboottest2 v1.5.7.0 (20/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -122,6 +122,13 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
       weights = {[],[]};
       cellref(end-1:end)=[];
     end
+    if ~iscell(weights)
+      error('The option argument for weights should be a cell array')
+    else
+      if numel(weights) ~= 2
+        error('The option argument for weights should be an array of 2 cells')
+      end
+    end
   else
     weights = {[],[]};
   end
@@ -184,8 +191,8 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   % Perform independent resampling from x and y
   state = warning;
   warning off;
-  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},options{:});
-  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},options{:});
+  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},options{:});
+  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},options{:});
 
   if C>0
     if ~isempty(weights{1})
@@ -224,7 +231,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   S.strata = strata;
   S.clusters = clusters;
   S.blocksize = [SX.blocksize,SY.blocksize];
-  S.weights = weights;
+  S.weights = {SX.weights,SY.weights};
 
   % Calculate p-value using ibootp
   p = ibootp(0,bootstat,S,calcurve);
