@@ -1350,7 +1350,7 @@ function T = bootclust (bootfun, K, g, runmode, Z, varargin)
   end
 
   % Ordinary resampling with replacement of residuals
-  idx = randi(n,n,reps);
+  idx = randsrc(n,reps,(1:n));
   for v = 1:nvar
     bootZ{v} = Z{v}(idx);
   end
