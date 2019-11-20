@@ -222,7 +222,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.6.0 (20/11/2019)
+%  ibootci v2.7.6.1 (20/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -807,7 +807,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
              'bootstrap. If the problem persists, the original sample size may be inadequate.\n']);
   end
 
-  % Complete output structure
+  % Analysis of dependence structure of the data
+  % Also resort data to match original input data
   if (nargout>2) 
     if ~isempty(data)
       % Calculate intraclass correlation coefficient (ICC)
@@ -850,6 +851,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         end
         S.xcorr(1:min(S.n(1),99),:) = [];
       end
+      
       % Re-sort variables to match input data
       if ~isempty(strata)
         [~,J] = sort(I);
@@ -865,6 +867,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           idx = idx(J,:);
         end
       end
+      if ~isempty(blocksize) && ~isempty(idx)
+        temp = cell(n,1);
+        for i = 1:n
+          temp{i} = bsxfun(@plus,(0:blocksize-1)'.*ones(1,B),...
+                                 ones(blocksize,1).*idx(i,:));
+        end
+        idx = cell2mat(temp);
+        idx(n+1:end,:) = [];
+        idx(idx>n) = idx(idx>n)-n;
+      end
+      
     else
       S.ICC = [];
       S.DEFF = [];
@@ -885,16 +898,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     S.strata = strata;
     S.clusters = clusters;
-    if ~isempty(blocksize) && ~isempty(idx)
-      temp = cell(n,1);
-      for i = 1:n
-        temp{i} = bsxfun(@plus,(0:blocksize-1)'.*ones(1,B),...
-                               ones(blocksize,1).*idx(i,:));
-      end
-      idx = cell2mat(temp);
-      idx(n+1:end,:) = [];
-      idx(idx>n) = idx(idx>n)-n;
-    end
     S.blocksize = blocksize;
 
   end
