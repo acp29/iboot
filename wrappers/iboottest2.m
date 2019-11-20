@@ -31,7 +31,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.5.0 (07/10/2019)
+%  iboottest2 v1.5.6.0 (20/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -93,9 +93,9 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   options = varargin;
   alpha = 1+find(strcmpi('alpha',options));
   weights = 1+find(strcmpi('Weights',options));
-  strata = 1+find(strcmpi('Strata',options));
-  clusters = 1+find(strcmpi('Cluster',options));
-  blocksize = 1+find(strcmpi('Block',options));
+  strata = 1+find(sum([strcmpi('Strata',options);strcmpi('Stratum',options);strcmpi('Stratified',options)]));
+  clusters = 1+find(sum([strcmpi('Cluster',options);strcmpi('Clusters',options)]));
+  blocksize = 1+find(sum([strcmpi('Block',options);strcmpi('Blocks',options);strcmpi('Blocksize',options)]));
   cellref = [];
   if ~isempty(alpha)
     try
@@ -133,6 +133,13 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
       strata = {[],[]};
       cellref(end-1:end)=[];
     end
+    if ~iscell(strata)
+      error('The option argument for strata should be a cell array')
+    else
+      if numel(strata) ~= 2
+        error('The option argument for strata should be an array of 2 cells')
+      end
+    end
   else
     strata = {[],[]};
   end
@@ -144,6 +151,13 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
       clusters = {[],[]};
       cellref(end-1:end)=[];
     end
+    if ~iscell(clusters)
+      error('The option argument for clusters should be a cell array')
+    else
+      if numel(clusters) ~= 2
+        error('The option argument for clusters should be an array of 2 cells')
+      end
+    end
   else
     clusters = {[],[]};
   end
@@ -154,6 +168,13 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
     catch
       blocksize = {[],[]};
       cellref(end-1:end)=[];
+    end
+    if ~iscell(blocksize)
+      error('The option argument for blocksize should be a cell array')
+    else
+      if numel(blocksize) ~= 2
+        error('The option argument for blocksize should be an array of 2 cells')
+      end
     end
   else
     blocksize = {[],[]};
