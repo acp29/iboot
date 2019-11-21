@@ -82,10 +82,6 @@
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration.
-%  If used in conjunction with the 'Weights' option, the number of elements 
-%  in weights must be equal to the number of clusters. An exception is when 
-%  weights is set to 'auto', in which case weights are calculated to be 
-%  the inverse of the cluster size. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies
 %  a positive integer defining the block length for block bootstrapping
@@ -220,7 +216,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.7.0 (20/11/2019)
+%  ibootci v2.7.8.0 (20/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -517,14 +513,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         data{v} = data{v}(I);
       end
       ori_data = data; % recreate copy of the data
-      [~,~,K,g] = sse_calc (data, clusters, nvar);
-      if ischar(weights)
-        if strcmpi(weights,'auto')
-          % Automatically assign weights for unequal clusters sizes
-          weights = zeros(K,1);
-          for k = 1:K
-            weights(k) = 1/sum(g(:,k));
-          end
+      if ~isempty(weights)
+        if any(diff(weights))
+          error('Weights not implemented in two-stage bootstrap resampling for clustered data')
         end
       end
     end
@@ -535,15 +526,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         % Transpose row vector weights
         weights = weights.';
       end
-      if ~isempty(clusters)
-        if ~all(size(weights) == [K,1])
-          error('The number of elements in the weights vector does not match the number of clusters');
-        end 
-      else
-        if ~all(size(weights) == [n,1])
-          error('The weights vector is not the same dimensions as the data');
-        end         
-      end
+      if ~all(size(weights) == [n,1])
+        error('The weights vector is not the same dimensions as the data');
+      end         
     end
     if any(weights<0)
       error('Weights must be a vector of non-negative numbers')
@@ -655,7 +640,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       % Redefine data as cluster means
       % Cluster means will undergo balanced resampling with replacement
-      % Ordinary sampling with replacement is used for resampling residuals
+      % Ordinary resampling with replacement is used for residuals
       [data,Z,K,g] = clustmean(data,clusters,nvar);
       S.n(2) = K; % S.n is [number of observations, number of clusters]
       n = K;
