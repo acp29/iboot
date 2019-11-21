@@ -807,7 +807,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Analysis of dependence structure of the data
-  % Also resort data to match original input data
+  % Also re-sort data to match original input data
   if (nargout>2) 
     if ~isempty(data)
       % Calculate intraclass correlation coefficient (ICC)
