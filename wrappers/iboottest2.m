@@ -31,7 +31,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.7.0 (20/11/2019)
+%  iboottest2 v1.5.8.0 (29/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -191,15 +191,15 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   % Perform independent resampling from x and y
   state = warning;
   warning off;
-  [~,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},options{:});
-  [~,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},options{:});
+  [ciX,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},options{:});
+  [ciY,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},options{:});
 
   if C>0
     if ~isempty(weights{1})
-      [~,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},options{:});
+      [ciX,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},options{:});
     end
     if ~isempty(weights{2})
-      [~,bootstatY{1}] = ibootci(B,{bootfun,y},'alpha',SY.cal,'Weights',weights{2},'Strata',strata{2},options{:});
+      [ciY,bootstatY{1}] = ibootci(B,{bootfun,y},'alpha',SY.cal,'Weights',weights{2},'Strata',strata{2},options{:});
     end
   end
   warning(state);
