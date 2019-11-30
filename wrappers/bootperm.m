@@ -17,7 +17,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm v1.1.0.0 (10/09/2019)
+%  bootperm v1.1.1.0 (29/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -62,7 +62,7 @@ function p = bootperm(nboot,bootfun,x,m)
   func = @(z) null(bootfun,z,n);
 
   % Use ibootci to create bootstrap statistics
-  [~,bootstat] = ibootci(nboot,{func,z},'type','per');
+  [ci,bootstat] = ibootci(nboot,{func,z},'type','per');
 
   % Calculate p-value using ibootp
   stat = func(z);
