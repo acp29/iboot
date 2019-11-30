@@ -58,14 +58,16 @@
 %  defined by the function bootfun. The standard error of the bootstrap
 %  statistics is estimated using bootstrap, with nbootstd bootstrap data
 %  samples. nbootstd is a positive integer value. The default value of
-%  nbootstd is 200.
+%  nbootstd is 200. Setting nbootstd overides the second element in nboot.
+%  The nbootstd argument is ignored when the interval type is set to
+%  anything other than Studentized (bootstrap-t) intervals.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The dimensions of weights must be equal to that of the non-scalar input
 %  arguments to bootfun. The weights are used as bootstrap sampling
 %  probabilities. Note that weights are not implemented for Studentized-
-%  type intervals or bootstrap iteration. 
+%  type intervals or bootstrap iteration.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata) specifies a
 %  vector containing numeric identifiers of strata. The dimensions of
@@ -199,7 +201,7 @@
 %  Example 4: 95% confidence interval for the weighted arithmetic mean
 %    >> y = randn(20,1);
 %    >> w = [ones(5,1)*10/(20*5);ones(15,1)*10/(20*15)];
-%    >> [ci,~,S] = ibootci([5000,200],{'mean',y},'alpha',0.05);
+%    >> [ci,bootstat,S] = ibootci([5000,200],{'mean',y},'alpha',0.05);
 %    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w);
 %
 %  Example 5: 95% confidence interval for the median by smoothed bootstrap
@@ -216,12 +218,12 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.8.0 (20/11/2019)
+%  ibootci v2.7.9.0 (29/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
 %  Cite as:
-%  Andrew Penn (2019). ibootci (https://www.github.com/acp29/iboot), GitHub.  
+%  Andrew Penn (2019). ibootci (https://www.github.com/acp29/iboot), GitHub.
 %
 %  Copyright 2019 Andrew Charles Penn
 %  This program is free software: you can redistribute it and/or modify
@@ -301,6 +303,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     strata = [];
     clusters = [];
     blocksize = [];
+    nbootstd = [];
     type = 'bca';
     T1 = [];  % Initialize bootstat variable
 
@@ -347,9 +350,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           nboot = [nboot(1),nbootstd];
         end
       else
-        nbootstd = 200;
-        nboot = [nboot(1),nbootstd];
+        nbootstd = [];
       end
+    else
+      nbootstd = [];
     end
     if ~isempty(weights)
       try
@@ -410,7 +414,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   if isempty(T1)
-
     % Evaluate function variables
     iter = numel(nboot);
     if iter > 2
@@ -431,7 +434,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
       error('The type of bootstrap must be either per, bca or stud');
     end
-    
+
     % Evaluate data input
     nvar = size(data,2);
     if (min(size(data{1}))>1)
@@ -528,7 +531,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if ~all(size(weights) == [n,1])
         error('The weights vector is not the same dimensions as the data');
-      end         
+      end
     end
     if any(weights<0)
       error('Weights must be a vector of non-negative numbers')
@@ -563,7 +566,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     for v = 1:nvar
       x = data{v};
       if v == 1
-        simidx = randi(n,n,2);
+        simidx = ceil(n.*rand(n,2));  % For compatibility with R2007
       end
       M{v} = x(simidx);
     end
@@ -594,8 +597,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       B = nboot(1);
       C = nboot(2);
     end
-    if C>0
-      if (1/min(alpha,1-alpha)) > (0.5 * C)
+    if isempty(nbootstd) && (C==0) && any(strcmpi(type,{'stud','student'}))
+      error('Studentized (bootstrap-t) intervals require bootstrap interation')
+    end
+    if C>0 && ~any(strcmpi(type,{'stud','student'}))
+      if (1/min(alpha,1-alpha)) > (0.5*C)
         error('ibootci:extremeAlpha',...
              ['The calibrated alpha is too extreme for calibration so the result will be unreliable. \n',...
               'Try increasing the number of replicate samples in the second bootstrap.\n',...
@@ -606,7 +612,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     end
 
-    % Initialize output structure 
+    % Initialize output structure
     S = struct;
     S.bootfun = bootfun;
     S.nboot = nboot;
@@ -687,7 +693,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if C>0
         if ~isempty(strata)
-          [~, ~, ~, g] = sse_calc (data, strata, nvar);
+          [SSb, SSw, K, g] = sse_calc (data, strata, nvar);
         else
           g = ones(n,1);
         end
@@ -808,7 +814,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
   % Analysis of dependence structure of the data
   % Also re-sort data to match original input data
-  if (nargout>2) 
+  if (nargout>2)
     if ~isempty(data)
       % Calculate intraclass correlation coefficient (ICC)
       %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
@@ -822,7 +828,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         elseif ~isempty(clusters)
           groups = clusters;
         end
-        [~, ~, ~, ~, MSb, MSw, dk] = sse_calc (ori_data, groups, nvar);
+        [SSb, SSw, K, g, MSb, MSw, dk] = sse_calc (ori_data, groups, nvar);
         S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
       else
         S.ICC = NaN;
@@ -850,17 +856,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         end
         S.xcorr(1:min(S.n(1),99),:) = [];
       end
-      
+
       % Re-sort variables to match input data
       if ~isempty(strata)
-        [~,J] = sort(I);
+        [sorted,J] = sort(I);
         strata = strata(J,:);
         if ~isempty(idx)
           idx = idx(J,:);
         end
       end
       if ~isempty(clusters)
-        [~,J] = sort(I);
+        [sorted,J] = sort(I);
         clusters = clusters(J,:);
         if ~isempty(idx)
           idx = idx(J,:);
@@ -876,13 +882,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         idx(n+1:end,:) = [];
         idx(idx>n) = idx(idx>n)-n;
       end
-      
+
     else
       S.ICC = [];
       S.DEFF = [];
       S.xcorr = [];
     end
-    
+
     % Complete output structure
     S.stat = T0;         % Sample test statistic
     S.bias = bias;       % Bias of the test statistic
@@ -1031,7 +1037,7 @@ function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode
     idx = zeros(n,C);
     for k = 1:K
       tmp = (1:nk(k))'*ones(1,C);
-      tmp = tmp(reshape(randperm(Nk(k),Nk(k)),nk(k),C));
+      tmp = tmp(reshape(randperm(Nk(k)),nk(k),C));  % For compatibility with R2007
       tmp = tmp + ik(k) - 1;
       idx(ik(k): ik(k+1)-1,:) = tmp;
     end
@@ -1147,7 +1153,7 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, weights, strata, clust
       isempty(clusters) && isempty(blocksize)
     try
       % Use the Jackknife to calculate acceleration
-      [~, ~, U] = jack(x,func);
+      [SE, T, U] = jack(x,func);
       a = (1/6)*(sum(U.^3)/sum(U.^2)^(3/2));
     catch
       a = nan;
@@ -1335,7 +1341,7 @@ function T = bootclust (bootfun, K, g, runmode, Z, varargin)
   end
 
   % Ordinary resampling with replacement of residuals
-  idx = randsrc(n,reps,(1:n));
+  idx = ceil(n.*rand(n,reps));   % For compatibility with R2007
   for v = 1:nvar
     bootZ{v} = Z{v}(idx);
   end
