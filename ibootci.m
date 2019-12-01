@@ -218,7 +218,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.0 (29/11/2019)
+%  ibootci v2.7.9.1 (01/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -378,7 +378,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         clusters = options{clusters};
         if ~isempty(clusters)
           if ~isempty(strata)
-            warning('strata and clusters options are mutually exclusive; strata option ignored')
+            warning('ibootci:ignoredOpt',...
+                    'strata and clusters options are mutually exclusive; strata option ignored')
+            strata = [];
           end
         end
       catch
@@ -662,7 +664,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         blocksize = round(n^(1/3));  % set block length to ~ n^(1/3)
       end
       data = split_blocks(data,blocksize);
-      bootfun = @(varargin) auxfun(S.bootfun,S.nvar,varargin);
+      bootfun = @(varargin) auxfun(bootfun,S.nvar,varargin);
       nvar = S.nvar * blocksize;
     end
 
