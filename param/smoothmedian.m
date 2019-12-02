@@ -47,7 +47,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v6.5.0 and v7.4.0 on Windows XP).
 %
-%  smoothmedian v1.4.4 (20/08/2019)
+%  smoothmedian v1.4.5 (29/11/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -72,7 +72,7 @@ function p = smoothmedian(x,dim,Tol)
     error('Invalid number of input arguments')
   end
 
-  if ~ismatrix(x)
+  if numel(size(x)) > 2
     error('arrays of more than 2 dimensions are not supported')
   end
 
