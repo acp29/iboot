@@ -218,7 +218,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.1 (01/12/2019)
+%  ibootci v2.7.9.2 (03/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -896,7 +896,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.bias = bias;       % Bias of the test statistic
     S.bc_stat = T0-bias; % Bias-corrected test statistic
     S.SE = SE;           % Bootstrap standard error of the test statistic
-    S.ci = ci;           % Bootstrap confidence intervals of the test statistic
+    S.ci = ci.';         % Bootstrap confidence intervals of the test statistic
     S.prct = [m2,m1];    % Percentiles used to generate confidence intervals
     if any(diff(weights))
       S.weights = weights;
