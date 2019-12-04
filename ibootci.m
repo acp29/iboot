@@ -6,10 +6,11 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
-%  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights)
-%  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata)
-%  ci = ibootci(nboot,{bootfun,...},...,'Cluster',clusters)
-%  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize)
+%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr)
+%  ci = ibootci(nboot,{bootfun,...},...,'weights',weights)
+%  ci = ibootci(nboot,{bootfun,...},...,'strata',strata)
+%  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters)
+%  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(bootstat,S)
 %  [ci,bootstat] = ibootci(...)
@@ -62,14 +63,21 @@
 %  The nbootstd argument is ignored when the interval type is set to
 %  anything other than Studentized (bootstrap-t) intervals.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Weights',weights) specifies
+%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr) 
+%  computes the studentized bootstrap confidence interval of statistics 
+%  defined by the function bootfun. The standard error of the bootstrap 
+%  statistics is evaluated by the function stderr. stderr is a function 
+%  handle. stderr takes the same arguments as bootfun and returns the 
+%  standard error of the statistic computed by bootfun.
+%
+%  ci = ibootci(nboot,{bootfun,...},...,'weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The dimensions of weights must be equal to that of the non-scalar input
 %  arguments to bootfun. The weights are used as bootstrap sampling
 %  probabilities. Note that weights are not implemented for Studentized-
 %  type intervals or bootstrap iteration.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Strata',strata) specifies a
+%  ci = ibootci(nboot,{bootfun,...},...,'strata',strata) specifies a
 %  vector containing numeric identifiers of strata. The dimensions of
 %  strata must be equal to that of the non-scalar input arguments to
 %  bootfun. Bootstrap resampling is stratified so that every stratum is
@@ -77,7 +85,7 @@
 %  provided then they are within-stratum weights; the weighting of
 %  individual strata depends on their respective sample size.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Cluster',clusters) specifies
+%  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters) specifies
 %  a vector containing numeric identifiers for clusters. Whereas strata
 %  are fixed, clusters are resampled. This is achieved by two-stage
 %  bootstrap resampling of residuals with shrinkage correction [5,7,8].
@@ -85,7 +93,7 @@
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Block',blocksize) specifies
+%  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize) specifies
 %  a positive integer defining the block length for block bootstrapping
 %  data with serial dependence (e.g. stationary time series). The
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
@@ -110,12 +118,16 @@
 %  computed for each of the bootstrap replicate samples sets. If only
 %  a single bootstrap is requested, bootstat will return a vector: each
 %  column of bootstat contains the result of applying bootfun to one
-%  replicate sample from the first bootstrap. If bootstrap iteration
-%  is requested, bootstat will return a cell array containing the
-%  statistics computed by bootfun in the first and second bootstrap.
+%  replicate sample from the first bootstrap. If a function handle is 
+%  passed to stderr for Studentised bootstrap intervals, bootstat will 
+%  return a cell array containing the statistics computed using bootfun 
+%  and stderr in the first and second cells respectively. If bootstrap 
+%  iteration is requested, bootstat will return a cell array containing 
+%  the statistics computed by bootfun in the first and second bootstrap.
 %  For the second boostrap, each column of bootstat contains the
 %  results of applying bootfun to each replicate sample from the second
 %  bootstrap for one replicate sample from the first bootstrap.
+
 %
 %  [ci,bootstat,S] = ibootci(...) also returns a structure containing
 %  the settings used in the bootstrap and the resulting statistics
@@ -218,7 +230,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.2 (03/12/2019)
+%  ibootci v2.7.9.3 (04/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -317,10 +329,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     alpha = 1+find(strcmpi('alpha',options));
     type = 1+find(strcmpi('type',options));
     nbootstd = 1+find(strcmpi('nbootstd',options));
-    weights = 1+find(strcmpi('Weights',options));
-    strata = 1+find(cellfun(@(options) any(strcmpi({'Strata','Stratum','Stratified'},options)),options));
-    clusters = 1+find(cellfun(@(options) any(strcmpi({'Clusters','Cluster'},options)),options));
-    blocksize = 1+find(cellfun(@(options) any(strcmpi({'Block','Blocks','Blocksize'},options)),options));
+    stderr = 1+find(strcmpi('stderr',options));
+    weights = 1+find(strcmpi('weights',options));
+    strata = 1+find(cellfun(@(options) any(strcmpi({'strata','stratum','stratified'},options)),options));
+    clusters = 1+find(cellfun(@(options) any(strcmpi({'clusters','cluster'},options)),options));
+    blocksize = 1+find(cellfun(@(options) any(strcmpi({'block','blocks','blocksize'},options)),options));
     bootidx = 1+find(strcmpi('bootidx',options));
     if ~isempty(alpha)
       try
@@ -354,6 +367,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
     else
       nbootstd = [];
+    end
+    if ~isempty(stderr)
+      try
+        stderr = options{stderr};
+      catch
+        stderr = [];
+      end
+    else
+      stderr = [];
     end
     if ~isempty(weights)
       try
@@ -584,6 +606,21 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
                 'Slow mode. Faster if matrix input arguments to bootfun return a row vector.')
         runmode = 'slow';
       end
+      if strcmpi(runmode,'fast')
+        if ~isempty(stderr)
+          try
+            simSE = feval(stderr,M{:});
+            if size(simSE,1)>1
+              error('Invoke catch statement');
+            end
+            runmode = 'fast';
+          catch
+            warning('ibootci:slowMode',...
+                   'Slow mode. Faster if matrix input arguments to stderr return a row vector.')
+            runmode = 'slow';
+          end
+        end
+      end
     end
 
     % Set the bootstrap sample sizes
@@ -599,7 +636,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       B = nboot(1);
       C = nboot(2);
     end
-    if isempty(nbootstd) && (C==0) && any(strcmpi(type,{'stud','student'}))
+    if ~isempty(stderr)
+      if ~isa(stderr,'function_handle')
+        error('stderr must be a function name or function handle');
+      end
+      if C > 0
+        error('bootstrap iteration not compatible with the stderr option')
+      end
+      nboot(2) = 0;
+      C = nboot(2);
+    end
+    if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'})) 
       error('Studentized (bootstrap-t) intervals require bootstrap interation')
     end
     if C>0 && ~any(strcmpi(type,{'stud','student'}))
@@ -671,12 +718,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
-      if nargout < 5
+      if (nargout < 5) && isempty(stderr)
         [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
                              strata, blocksize, runmode, S);
       else
         [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0,...
                                   weights, strata, blocksize, runmode, S);
+        if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
+          X1 = cell(1,nvar);
+          for v = 1:nvar
+            X1{v} = data{v}(idx);
+          end
+        end
       end
     else
       X1 = cell(1,nvar);
@@ -716,7 +769,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     % Assign data to bootstat
     if isempty(T2)
-      bootstat = T1;
+      if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
+        bootstat = cell(2,1);
+        bootstat{1} = T1;
+      else 
+        bootstat = T1;
+      end
     else
       bootstat = cell(2,1);
       bootstat{1} = T1;
@@ -784,7 +842,19 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Use bootstrap-t method with variance stabilization for small samples
     % Polansky (2000) Can J Stat. 28(3):501-516
     se = std(T1,0);
-    SE1 = std(T2,0);
+    if ~isempty(stderr)
+      SE1 = zeros(1,B);
+      if strcmpi(runmode,'fast')
+        SE1 = feval(stderr,X1{:});
+      else 
+        for h=1:B 
+          x1 = cellfun(@(X1)X1(:,i),X1,'UniformOutput',false);    
+          SE1(:,h) = feval(bootfun,x1{:});
+        end
+      end
+    else
+      SE1 = std(T2,0);
+    end
     a = n^(-3/2) * se;
 
     % Calculate Studentized statistics
@@ -795,6 +865,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     UL = T0 - se * interp1(cdf,T,m1,'linear','extrap');
     LL = T0 - se * interp1(cdf,T,m2,'linear','extrap');
     ci = [LL;UL];
+    
+    % Put standard errors for into second cell of bootstat output  
+    if ~isempty(stderr) 
+      bootstat{2} = SE1;
+    end
 
   else
 
