@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.3.0 (18/10/2019)
+%  ibootp v1.5.4.0 (04/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -123,7 +123,11 @@ function  p = bootstud(m,bootstat,S)
   % Use bootstrap-t method with variance stabilization for small samples
   % Polansky (2000) Can J Stat. 28(3):501-516
   se = std(bootstat{1},0);
-  SE1 = std(bootstat{2},0);
+  if size(bootstat{2},1) > 1
+    SE1 = std(bootstat{2},0);
+  else
+    SE1 = bootstat{2};
+  end
   a = S.n^(-3/2) * se;  % additive correction factor
 
   % Calculate Studentized statistics
