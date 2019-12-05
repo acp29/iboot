@@ -31,7 +31,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.8.0 (29/11/2019)
+%  iboottest2 v1.5.8.1 (05/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -209,7 +209,11 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   if iscell(bootstatX)
     bootstatZ = cell(2,1);
     bootstatZ{1} = bootstatX{1} - bootstatY{1};
-    bootstatZ{2} = bootstatX{2} - bootstatY{2};
+    if size(bootstatX{2},1) > 1
+      bootstatZ{2} = bootstatX{2} - bootstatY{2};
+    else
+      bootstatZ{2} = sqrt(bootstatX{2}.^2 + bootstatY{2}.^2);  % propagation of error for stderr
+    end
   else
     bootstatZ = bootstatX - bootstatY;
   end
@@ -217,9 +221,10 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   % Create template settings structure and calculate the sample test statistic
   S = SX;
   T0 = SX.stat - SY.stat;
-  S.stat = T0;           % assign correct sample test statistic in S
-  S.alpha = alpha;       % reset alpha in S
-  S.n = SX.n + SY.n;     % calculate total sample size
+  S.stat = T0;                       % assign correct sample test statistic in S
+  S.alpha = alpha;                   % reset alpha in S
+  S.n = SX.n + SY.n;                 % calculate total sample size
+  S.SE = sqrt(SX.SE.^2 + SY.SE.^2);  % propagation of error (required if stderr option used)
 
   % Calculate confidence interval using ibootci
   [ci,bootstat,S,calcurve] = ibootci(bootstatZ, S);
