@@ -12,7 +12,6 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
-%  ci = ibootci(bootstat,S)
 %  [ci,bootstat] = ibootci(...)
 %  [ci,bootstat,S] = ibootci(...)
 %  [ci,bootstat,S,calcurve] = ibootci(...)
@@ -109,10 +108,6 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
-%
-%  ci = ibootci(bootstat,S) produces (calibrated) confidence intervals
-%  for the bootstrap replicate sample set statistics provided in bootstat.
-%  This usage also requires a complete settings structure (see below).
 %
 %  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets. If only
@@ -263,7 +258,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
   % Assign input arguments to function variables
   if isstruct(argin2)
-    % Special usage with structure input, e.g. ci = ibootci(bootstat,S)
+    %  Usage (undocumented):
+    %
+    %  ci = ibootci(bootstat,S) produces (calibrated) confidence intervals
+    %  for the bootstrap replicate sample set statistics provided in bootstat.
+    %  This usage also requires a complete settings structure.
     bootstat = argin1;
     if iscell(bootstat)
       T1 = bootstat{1};
