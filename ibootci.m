@@ -224,7 +224,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.4 (04/12/2019)
+%  ibootci v2.7.9.5 (05/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -263,6 +263,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     %  ci = ibootci(bootstat,S) produces (calibrated) confidence intervals
     %  for the bootstrap replicate sample set statistics provided in bootstat.
     %  This usage also requires a complete settings structure.
+    %
     bootstat = argin1;
     if iscell(bootstat)
       T1 = bootstat{1};
@@ -279,7 +280,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       B = numel(T1);
       C = 0;
     end
-    
     S = argin2;
     nboot = [B,C];
     if B ~= S.nboot(1)
