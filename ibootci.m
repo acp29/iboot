@@ -646,7 +646,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       C = nboot(2);
     end
     if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'})) 
-      error('Studentized (bootstrap-t) intervals require bootstrap interation')
+      error('Studentized (bootstrap-t) intervals require bootstrap interation or stderr')
     end
     if C>0 && ~any(strcmpi(type,{'stud','student'}))
       if (1/min(alpha,1-alpha)) > (0.5*C)
