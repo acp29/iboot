@@ -230,7 +230,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.3 (04/12/2019)
+%  ibootci v2.7.9.4 (04/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -841,18 +841,19 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
     % Use bootstrap-t method with variance stabilization for small samples
     % Polansky (2000) Can J Stat. 28(3):501-516
-    se = std(T1,0);
     if ~isempty(stderr)
+      se = feval(stderr,data{:});
       SE1 = zeros(1,B);
       if strcmpi(runmode,'fast')
         SE1 = feval(stderr,X1{:});
       else 
         for h=1:B 
-          x1 = cellfun(@(X1)X1(:,i),X1,'UniformOutput',false);    
-          SE1(:,h) = feval(bootfun,x1{:});
+          x1 = cellfun(@(X1)X1(:,h),X1,'UniformOutput',false);    
+          SE1(:,h) = feval(stderr,x1{:});
         end
       end
     else
+      se = std(T1,0);
       SE1 = std(T2,0);
     end
     a = n^(-3/2) * se;
