@@ -269,12 +269,18 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       T1 = bootstat{1};
       T2 = bootstat{2};
       B = numel(T1);
-      C = size(T2,1);
+      if size(T2,1) > 1
+        C = size(T2,1);
+      else
+        C = 0;
+        stderr = [];
+      end
     else
       T1 = bootstat;
       B = numel(T1);
       C = 0;
     end
+    
     S = argin2;
     nboot = [B,C];
     if B ~= S.nboot(1)
@@ -294,14 +300,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     type = S.type;
     S.coverage = 1-S.alpha;
     alpha = S.coverage;       % convert alpha to coverage
-    if C>0
+    if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
       U = zeros(1,B);
       for h = 1:B
         U(h) = interp_boot2(T2(:,h),T0,C);
       end
       U = U/C;
     end
-
+    
   elseif ~iscell(argin2)
     % Normal usage without options
     nboot = argin1;
@@ -840,24 +846,30 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
     % Use bootstrap-t method with variance stabilization for small samples
     % Polansky (2000) Can J Stat. 28(3):501-516
-    if ~isempty(stderr)
-      % Use stderr function if provided
-      se = feval(stderr,data{:});
-      SE1 = zeros(1,B);
-      if strcmpi(runmode,'fast')
-        SE1 = feval(stderr,X1{:});
-      else 
-        for h=1:B 
-          x1 = cellfun(@(X1)X1(:,h),X1,'UniformOutput',false);    
-          SE1(:,h) = feval(stderr,x1{:});
+    if C>0
+      se = std(T1,0);
+      SE1 = std(T2,0);
+    else
+      if ~isempty(stderr)
+        % Use stderr function if provided
+        se = feval(stderr,data{:});
+        SE1 = zeros(1,B);
+        if strcmpi(runmode,'fast')
+          SE1 = feval(stderr,X1{:});
+        else 
+          for h=1:B 
+            x1 = cellfun(@(X1)X1(:,h),X1,'UniformOutput',false);    
+            SE1(:,h) = feval(stderr,x1{:});
+          end        
         end
+      else
+        % The standard errors should already be defined
+        se = S.SE;
+        SE1 = bootstat{2};
       end
       SE = se;
       % Put standard errors for into second cell of bootstat output 
       bootstat{2} = SE1;
-    else
-      se = std(T1,0);
-      SE1 = std(T2,0);
     end
     a = n^(-3/2) * se;
 
