@@ -842,6 +842,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Use bootstrap-t method with variance stabilization for small samples
     % Polansky (2000) Can J Stat. 28(3):501-516
     if ~isempty(stderr)
+      % Use stderr function if provided
       se = feval(stderr,data{:});
       SE1 = zeros(1,B);
       if strcmpi(runmode,'fast')
@@ -852,6 +853,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           SE1(:,h) = feval(stderr,x1{:});
         end
       end
+      SE = se;
+      % Put standard errors for into second cell of bootstat output 
+      bootstat{2} = SE1;
     else
       se = std(T1,0);
       SE1 = std(T2,0);
@@ -866,11 +870,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     UL = T0 - se * interp1(cdf,T,m1,'linear','extrap');
     LL = T0 - se * interp1(cdf,T,m2,'linear','extrap');
     ci = [LL;UL];
-    
-    % Put standard errors for into second cell of bootstat output  
-    if ~isempty(stderr) 
-      bootstat{2} = SE1;
-    end
 
   else
 
