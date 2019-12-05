@@ -127,7 +127,6 @@
 %  For the second boostrap, each column of bootstat contains the
 %  results of applying bootfun to each replicate sample from the second
 %  bootstrap for one replicate sample from the first bootstrap.
-
 %
 %  [ci,bootstat,S] = ibootci(...) also returns a structure containing
 %  the settings used in the bootstrap and the resulting statistics
