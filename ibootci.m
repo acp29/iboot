@@ -912,10 +912,13 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
       % Estimate the design effect by resampling
       % Ratio of variance to that calculated by simple random sampling (SRS)
+      if matflag > 0
+        bootfun = @(varargin) S.bootfun(list2mat(varargin{:}));
+      end
       if ~isempty(clusters)
-        [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+        [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
       else
-        [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,S.bootfun,T0,ones(n,1),[],[],runmode,S);
+        [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
       end
       if (C > 0) || ~isempty(clusters)
         SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
