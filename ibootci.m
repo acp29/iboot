@@ -224,7 +224,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.5 (05/12/2019)
+%  ibootci v2.7.9.6 (07/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -925,6 +925,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Ratio of variance to that calculated by simple random sampling (SRS)
       if matflag > 0
         bootfun = @(varargin) S.bootfun(list2mat(varargin{:}));
+      else 
+        bootfun = S.bootfun;
       end
       if ~isempty(clusters)
         [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
