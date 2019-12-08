@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.4.0 (04/12/2019)
+%  ibootp v1.5.5.0 (08/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -97,7 +97,7 @@ function p = ibootp(m,bootstat,S,calcurve)
       else
         warning(sprintf(['P value is too small to calibrate for this bootstrap distribution. \n'...
           'Switching to p-value calculation by the bootstrap-t method. \n',...
-          'Try increasing the number of second bootstrap replicate samples in ibootci.']));
+          'Try increasing the number of second bootstrap replicate samples.']));
         % Use bootstrap-t method when p-value is small
         p = bootstud(m,bootstat,S);
         p = 2*min(p,1-p);
@@ -108,7 +108,7 @@ function p = ibootp(m,bootstat,S,calcurve)
   % Check if first bootstrap replicate sample set is large enough
   if 1/p > B/2 || isnan(p)
     warning(sprintf(['P value is too small for this bootstrap distribution. \n'...
-            'Try increasing the number of first bootstrap replicate samples in ibootci.']));
+            'Try increasing the number of first bootstrap replicate samples.']));
     if isnan(p)
       p = 0;
     end
