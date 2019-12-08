@@ -12,6 +12,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
+%  ci = ibootci(nboot,{bootfun,...},...,'deff',state)
 %  [ci,bootstat] = ibootci(...)
 %  [ci,bootstat,S] = ibootci(...)
 %  [ci,bootstat,S,calcurve] = ibootci(...)
@@ -109,6 +110,10 @@
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
 %
+%  ci = ibootci(nboot,{bootfun,...},...,'deff',state) calculates the 
+%  design effect by resampling. State can be 'on' or 'off'. Default is
+%  off.
+%
 %  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets. If only
 %  a single bootstrap is requested, bootstat will return a vector: each
@@ -139,7 +144,7 @@
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
-%    DEFF: Design effect (estimated by resampling)
+%    DEFF: Design effect estimated by resampling (if requested)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
@@ -224,7 +229,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.6 (07/12/2019)
+%  ibootci v2.7.9.7 (08/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -339,6 +344,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     clusters = 1+find(cellfun(@(options) any(strcmpi({'clusters','cluster'},options)),options));
     blocksize = 1+find(cellfun(@(options) any(strcmpi({'block','blocks','blocksize'},options)),options));
     bootidx = 1+find(strcmpi('bootidx',options));
+    deff = 1+find(strcmpi('deff',options));
     if ~isempty(alpha)
       try
         alpha = options{alpha};
@@ -438,6 +444,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       idx = [];
     end
+    if ~isempty(deff)
+      try
+        deff = options{deff};
+      catch
+        deff = 'off';
+      end
+    else
+      deff = 'off';
+    end
     T1 = [];  % Initialize bootstat variable
   end
 
@@ -461,6 +476,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
       error('The type of bootstrap must be either per, bca or stud');
+    end
+    if sum(strcmpi(deff,{'on','off'})) < 1
+      error('The deff input argument must be set to ''on'' or ''off''')
     end
 
     % Evaluate data input
@@ -928,17 +946,21 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       else 
         bootfun = S.bootfun;
       end
-      if ~isempty(clusters)
-        [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
+      if strcmpi(deff,'on')
+        if ~isempty(clusters)
+          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
+        else
+          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
+        end
+        if (C > 0) || ~isempty(clusters)
+          SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
+        else
+          SRSV = var(SRS1,0);
+        end
+        S.DEFF = SE^2/SRSV;
       else
-        [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
+        S.DEFF = [];
       end
-      if (C > 0) || ~isempty(clusters)
-        SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
-      else
-        SRSV = var(SRS1,0);
-      end
-      S.DEFF = SE^2/SRSV;
 
       % Examine dependence structure of each variable by autocorrelation
       if ~isempty(ori_data)
