@@ -112,7 +112,7 @@
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the 
 %  design effect by resampling. State can be 'on' or 'off'. Default is
-%  off.
+%  'off'.
 %
 %  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets. If only
