@@ -229,7 +229,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.7 (08/12/2019)
+%  ibootci v2.7.9.8 (09/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -1088,36 +1088,70 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
       c = ones(n,1)*B;
     end
 
-    % Since first bootstrap is large, use a memory
-    % efficient balanced resampling algorithm
-    % If strata is provided, resampling is stratified
-    for h = 1:B
-      for i = 1:n
-        k = sum(i>ck)+1;
-        j = sum((rand(1) >= cumsum((g(:,k).*c)./sum(g(:,k).*c))))+1;
-        if nargout < 4
-          idx(i,1) = j;
-        else
-          idx(i,h) = j;
-        end
-        c(j) = c(j)-1;
-      end
-      for v = 1:nvar
-        if nargout < 4
-          X1{v} = x{v}(idx);
-        else
-          X1{v} = x{v}(idx(:,h));
-        end
-      end
-      T1(h) = feval(bootfun,X1{:});
-      % Since second bootstrap is usually much smaller, perform rapid
-      % balanced resampling by a permutation algorithm
-      if C>0
-        [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
-                                 blocksize, runmode, S);
-      end
+    % Perform bootstrap resampling
+    try
+      pool = gcp('nocreate');
+    catch
+      pool = [];
     end
-    U = U/C;
+    if isempty(pool)
+      % Since first bootstrap is large, use a memory
+      % efficient balanced resampling algorithm
+      % If strata is provided, resampling is stratified
+      for h = 1:B
+        for i = 1:n
+          k = sum(i>ck)+1;
+          j = sum((rand(1) >= cumsum((g(:,k).*c)./sum(g(:,k).*c))))+1;
+          if nargout < 4
+            idx(i,1) = j;
+          else
+            idx(i,h) = j;
+          end
+          c(j) = c(j)-1;
+        end
+        for v = 1:nvar
+          if nargout < 4
+            X1{v} = x{v}(idx);
+          else
+            X1{v} = x{v}(idx(:,h));
+          end
+        end
+        T1(h) = feval(bootfun,X1{:});
+        % Since second bootstrap is usually much smaller, perform rapid
+        % balanced resampling by a permutation algorithm
+        if C>0
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
+                                   blocksize, runmode, S);
+        end
+      end
+      U = U/C;
+    else
+      % Matlab parallel mode
+      % Perform ordinary resampling with replacement
+      if nargout > 3
+        error('No bootidx when operating ibootci in parallel mode')
+      end
+      if ~isempty(strata)
+        error('Parallel mode is not implemented with stratified resampling')
+      end
+      if any(diff(weights))
+        error('Parallel mode is not implemented with resampling weights')
+      end
+      parfor h = 1:B
+        X1 = cell(1,nvar);
+        idx = ceil(n.*rand(n,1));
+        temp = x;
+        for v = 1:nvar
+          X1{v} = temp{v}(idx);
+        end
+        T1(h) = feval(bootfun,X1{:});
+        if C>0
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
+                                   blocksize, runmode, S);
+        end
+      end
+      U = U/C;
+    end
 
 end
 
