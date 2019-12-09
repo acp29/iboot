@@ -12,7 +12,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
-%  ci = ibootci(nboot,{bootfun,...},...,'deff',state)
+%  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state)
 %  [ci,bootstat] = ibootci(...)
 %  [ci,bootstat,S] = ibootci(...)
 %  [ci,bootstat,S,calcurve] = ibootci(...)
@@ -110,7 +110,7 @@
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'deff',state) estimates the 
+%  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the 
 %  design effect by resampling. State can be 'on' or 'off'. Default is
 %  off.
 %
