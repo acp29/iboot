@@ -110,7 +110,7 @@
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'deff',state) calculates the 
+%  ci = ibootci(nboot,{bootfun,...},...,'deff',state) estimates the 
 %  design effect by resampling. State can be 'on' or 'off'. Default is
 %  off.
 %
