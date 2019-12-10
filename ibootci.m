@@ -168,8 +168,8 @@
 %  a parallel pool prior to executing ibootci. This is particularly useful
 %  for the calculations of p-values using ibootci wrapper functions.
 %  Parallel usage is supported in MATLAB for most features except for: 
-%  resampling weights, stratified resampling or balanced resampling during 
-%  the first bootstrap,
+%  resampling weights, stratified resampling, or balanced resampling  
+%  during the first bootstrap.
 %
 %  Bibliography:
 %  [1] Efron, and Tibshirani (1993) An Introduction to the
