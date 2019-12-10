@@ -164,6 +164,13 @@
 %  [ci,bootstat,S,calcurve,bootidx] = ibootci(...) also returns bootidx,
 %  a matrix of indices from the first bootstrap.
 %
+%  Computations of confidence intervals can be accellerated by starting 
+%  a parallel pool prior to executing ibootci. This is particularly useful
+%  for the calculations of p-values using ibootci wrapper functions.
+%  Parallel usage is supported in MATLAB for most features except for: 
+%  resampling weights, stratified resampling or balanced resampling during 
+%  the first bootstrap,
+%
 %  Bibliography:
 %  [1] Efron, and Tibshirani (1993) An Introduction to the
 %        Bootstrap. New York, NY: Chapman & Hall
@@ -229,7 +236,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.7.9.8 (09/12/2019)
+%  ibootci v2.8.0.0 (10/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
