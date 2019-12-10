@@ -164,7 +164,7 @@
 %  [ci,bootstat,S,calcurve,bootidx] = ibootci(...) also returns bootidx,
 %  a matrix of indices from the first bootstrap.
 %
-%  Computations of confidence intervals can be accellerated by starting 
+%  Computations of confidence intervals can be accelerated by starting 
 %  a parallel pool prior to executing ibootci. This is particularly useful
 %  for the calculations of p-values using ibootci wrapper functions.
 %  Parallel usage is supported in MATLAB for most features except for: 
