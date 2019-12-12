@@ -167,9 +167,8 @@
 %  Computations of confidence intervals can be accelerated by starting 
 %  a parallel pool prior to executing ibootci. This is particularly useful
 %  for the calculations of p-values using ibootci wrapper functions.
-%  Parallel usage is supported in MATLAB for most features except for: 
-%  resampling weights, stratified resampling, or balanced resampling  
-%  during the first bootstrap.
+%  Parallel usage is supported in MATLAB for most features except for
+%  or balanced resampling during the first bootstrap.
 %
 %  Bibliography:
 %  [1] Efron, and Tibshirani (1993) An Introduction to the
@@ -236,7 +235,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.0.0 (10/12/2019)
+%  ibootci v2.8.1.0 (12/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -416,11 +415,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       try
         clusters = options{clusters};
         if ~isempty(clusters)
-          if ~isempty(strata)
-            warning('ibootci:ignoredOpt',...
-                    'strata and clusters options are mutually exclusive; strata option ignored')
-            strata = [];
-          end
+          strata = clusters;
         end
       catch
         clusters = [];
@@ -534,7 +529,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       n = rows;
     end
     ori_data = data; % Make a copy of the data
-    if ~isempty(strata)
+    if ~isempty(strata) || ~isempty(clusters)
       while size(strata,2) > 1
         % Calculate strata means for resampling more than two nested levels
         % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
@@ -552,29 +547,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       ori_data = data; % recreate copy of the data
     end
-    if ~isempty(clusters)
-      while size(clusters,2) > 1
-        % Calculate cluster means for resampling more than two nested levels
-        % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
-        [data,clusters] = unitmeans(data,clusters,nvar);
-      end
-      if numel(unique(clusters)) == 1
-        clusters = []; % Cannot perform cluster bootstrap
-      else
-        n = size(clusters,1);
-      end
-       % Sort clusters and data vectors so that strata components are grouped
-      [clusters,I] = sort(clusters);
-      for v = 1:nvar
-        data{v} = data{v}(I);
-      end
-      ori_data = data; % recreate copy of the data
-      if ~isempty(weights)
-        if any(diff(weights))
-          error('Weights not implemented in two-stage bootstrap resampling for clustered data')
-        end
-      end
-    end
+
     if isempty(weights)
       weights = ones(n,1);
     else
@@ -725,10 +698,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Redefine data as cluster means
       % Cluster means will undergo balanced resampling with replacement
       % Ordinary resampling with replacement is used for residuals
-      [data,Z,K,g] = clustmean(data,clusters,nvar);
+      [mu,Z,K,g] = clustmean(data,clusters,nvar);
+      data = Z;
       S.n(2) = K; % S.n is [number of observations, number of clusters]
-      n = K;
-      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,Z,varargin);
+      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
     end
 
     % Prepare for block resampling (if applicable)
@@ -979,16 +952,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
 
       % Re-sort variables to match input data
-      if ~isempty(strata)
+      if ~isempty(strata) || ~isempty(clusters)
         [sorted,J] = sort(I);
         strata = strata(J,:);
-        if ~isempty(idx)
-          idx = idx(J,:);
-        end
-      end
-      if ~isempty(clusters)
-        [sorted,J] = sort(I);
-        clusters = clusters(J,:);
         if ~isempty(idx)
           idx = idx(J,:);
         end
@@ -1022,7 +988,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       S.weights = [];
     end
-    S.strata = strata;
+    if isempty(clusters)
+      S.strata = strata;
+    else
+      S.strata = [];
+    end
     S.clusters = clusters;
     S.blocksize = blocksize;
 
@@ -1072,6 +1042,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
     else
       ck = n;
       g = ones(n,1);
+      K = 1;
+      nk = n;
     end
     g = logical(g);
 
@@ -1138,20 +1110,25 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
       if nargout > 3
         error('No bootidx when operating ibootci in parallel mode')
       end
-      if ~isempty(strata)
-        error('Parallel mode is not implemented with stratified resampling')
-      end
-      if any(diff(weights))
-        error('Parallel mode is not implemented with resampling weights')
+      % Prepare resampling weights 
+      w = zeros(n,K);
+      for k = 1:K
+        w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
       end
       parfor h = 1:B
+        idx = zeros(n,1);
         X1 = cell(1,nvar);
-        idx = ceil(n.*rand(n,1));
-        temp = x;
+        for i = 1:n
+          k = sum(i>ck)+1;
+          j = sum((rand(1) >= w(:,k)))+1;
+          idx(i,1) = j;
+        end
         for v = 1:nvar
-          X1{v} = temp{v}(idx);
+          X1{v} = x{v}(idx);
         end
         T1(h) = feval(bootfun,X1{:});
+        % Since second bootstrap is usually much smaller, perform rapid
+        % balanced resampling by a permutation algorithm
         if C>0
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
                                    blocksize, runmode, S);
@@ -1464,7 +1441,7 @@ end
 
 %--------------------------------------------------------------------------
 
-function T = bootclust (bootfun, K, g, runmode, Z, varargin)
+function T = bootclust (bootfun, K, g, runmode, mu, varargin)
 
   % Two-stage nonparametric bootstrap sampling with shrinkage
   % correction for clustered data [1].
@@ -1481,30 +1458,29 @@ function T = bootclust (bootfun, K, g, runmode, Z, varargin)
   %       13(1): 141-164
   %  [3] Gomes et al. (2012) Medical Decision Making.
   %       32(2): 350-361
-
+  
   % Calculate data dimensions
-  mu = varargin{1};
-  nvar = numel(mu);
-  reps = size(mu{1},2);
-  n = size(Z{1},1);
+  Z = varargin{1};
+  nvar = numel(Z);
+  [n,reps] = size(Z{1});
 
   % Preallocate arrays
-  bootZ = cell(1,nvar);
+  bootmu = cell(1,nvar);
   X = cell(1,nvar);
   for v = 1:nvar
     X{v} = zeros(n,reps);
   end
 
-  % Ordinary resampling with replacement of residuals
-  idx = ceil(n.*rand(n,reps));   % For compatibility with R2007
+  % Ordinary resampling with replacement of cluster means
+  idx = randi(K,K,reps);
   for v = 1:nvar
-    bootZ{v} = Z{v}(idx);
+    bootmu{v} = mu{v}(idx);
   end
 
-  % Combine resampled residuals and cluster means
+  % Combine residuals with resampled cluster means
   for v = 1:nvar
     for k = 1:K
-      X{v}(g(:,k),:) = bsxfun(@plus, bootZ{v}(g(:,k),:), mu{v}(k,:));
+      X{v}(g(:,k),:) = bsxfun(@plus, Z{v}(g(:,k),:), bootmu{v}(k,:));
     end
   end
 
