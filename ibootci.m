@@ -32,11 +32,11 @@
 %  calibrated to achieve second order accurate coverage by bootstrap
 %  iteration and interpolation [2]. Linear interpolation of the empirical
 %  cumulative distribution function of bootstat is then used to construct
-%  two-sided confidence intervals [3]. The resampling method used throughout
-%  is balanced resampling [4]. Default values for the number of first and
-%  second bootstrap replicate sample sets in nboot are 5000 and 200
-%  respectively. Note that this calibration procedure does not apply to
-%  Studentized-type intervals or Cluster or Weights bootstrap options.
+%  two-sided confidence intervals [3]. The resampling method used 
+%  throughout is balanced resampling [4]. Default values for the number of 
+%  first and second bootstrap replicate sample sets in nboot are 5000 and 
+%  200 respectively. Note that this calibration procedure does not apply 
+%  to Studentized-type intervals or Cluster or Weights bootstrap options.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha) computes the
 %  iterated bootstrap confidence interval of the statistic defined by the
@@ -136,7 +136,7 @@
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
 %    nvar: Number of data variables
-%    n: The length of each data variable (and number of clusters if applicable)
+%    n: The length of data variable(s) (and no. of clusters if applicable)
 %    type: Type of confidence interval (bca, per or stud)
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
@@ -205,7 +205,7 @@
 %    >> y1 = randn(20,1);
 %    >> y2 = randn(20,1);
 %    >> [ci1,bootstat,S,calcurve,bootidx] = ibootci([5000 200],{@mean,y1});
-%    >> [ci2,bootstat,S] = ibootci([5000 200],{@mean,y2},'bootidx',bootidx);
+%    >> ci2 = ibootci([5000 200],{@mean,y2},'bootidx',bootidx);
 %
 %  Example 3: 95% confidence intervals for the correlation coefficient
 %    >> z = mvnrnd([2,3],[1,1.5;1.5,3],20);
@@ -222,11 +222,13 @@
 %    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w);
 %
 %  Example 5: 95% confidence interval for the median by smoothed bootstrap
-%  (requires the smoothmedian function available at Matlab Central File Exchange)
+%  (requires the smoothmedian function available at Matlab Central File 
+%  Exchange)
 %    >> y = randn(20,1);
 %    >> ci = ibootci([5000 200],@smoothmedian,y);
 %
-%  Example 6: 95% confidence interval for the 25% trimmed (or interquartile) mean
+%  Example 6: 95% confidence interval for the 25% trimmed (or 
+%  interquartile) mean
 %    >> y = randn(20,1);
 %    >> func = @(x) trimmean(x,50)
 %    >> ci = ibootci([5000 200],func,y);
