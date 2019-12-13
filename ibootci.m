@@ -695,9 +695,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if nargout > 4
         error('No bootidx for two-stage resampling of clustered data.')
       end
-      % Redefine data as cluster means
-      % Cluster means will undergo balanced resampling with replacement
-      % Ordinary resampling with replacement is used for residuals
+      % Redefine data as intracluster residuals
+      % Residuals will undergo balanced resampling with replacement
+      % Ordinary resampling with replacement is used for cluster means
       [mu,Z,K,g] = clustmean(data,clusters,nvar);
       data = Z;
       S.n(2) = K; % S.n is [number of observations, number of clusters]
