@@ -1472,7 +1472,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   end
 
   % Ordinary resampling with replacement of cluster means
-  idx = randi(K,K,reps);
+  idx = ceil(K.*rand(K,reps));   % For compatibility with R2007
   for v = 1:nvar
     bootmu{v} = mu{v}(idx);
   end
