@@ -237,7 +237,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.1.0 (13/12/2019)
+%  ibootci v2.8.1.1 (19/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -536,6 +536,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         % Calculate strata means for resampling more than two nested levels
         % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
         [data,strata] = unitmeans(data,strata,nvar);
+      end
+      if ~isempty(clusters)
+        clusters = strata;
       end
       if numel(unique(strata)) == 1
         strata = []; % Cannot perform stratified resampling
