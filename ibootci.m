@@ -143,9 +143,9 @@
 %    cal: Nominal alpha level from calibration
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
+%    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect estimated by resampling (if requested)
-%    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    stat: Sample test statistic calculated by bootfun
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
@@ -237,7 +237,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.1.1 (19/12/2019)
+%  ibootci v2.8.1.2 (19/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -725,18 +725,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
-      if (nargout < 5) && isempty(stderr)
+      if (nargout < 5)
         [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
-                             strata, blocksize, runmode, S);
+                             strata, blocksize, runmode, S, stderr);
       else
-        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0,...
-                                  weights, strata, blocksize, runmode, S);
-        if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
-          X1 = cell(1,nvar);
-          for v = 1:nvar
-            X1{v} = data{v}(idx);
-          end
-        end
+        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
+                                  strata, blocksize, runmode, S, stderr);
+      end
+      if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
+        % When a function is provided in stderr, the U variable contains 
+        % standard errors of the bootstrap samples 
+        SE1 = U;
       end
     else
       X1 = cell(1,nvar);
@@ -746,11 +745,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       switch lower(runmode)
         case {'fast'}
           T1 = feval(bootfun,X1{:});
+          if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr)
+            SE1 = feval(stderr,X1{:});
+          end
         case {'slow'}
           T1 = zeros(1,nboot(1));
-          for i=1:nboot(1)
-            x1 = cellfun(@(X1)X1(:,i),X1,'UniformOutput',false);
-            T1(i) = feval(bootfun,x1{:});
+          for h = 1:nboot(1)
+            x1 = cellfun(@(X1)X1(:,h),X1,'UniformOutput',false);
+            T1(h) = feval(bootfun,x1{:});
+            if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr)
+              SE1(:,h) = feval(stderr,x1{:});
+            end
           end
       end
       if C>0
@@ -769,7 +774,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           [U(h), T2(:,h)] = boot2 (x1, nboot, n, nvar, bootfun, T0, g,...
                                    blocksize, runmode, S);
         end
-        U = U/C;
       else
         T2 = [];
       end
@@ -855,15 +859,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if ~isempty(stderr)
         % Use stderr function if provided
         se = feval(stderr,data{:});
-        SE1 = zeros(1,B);
-        if strcmpi(runmode,'fast')
-          SE1 = feval(stderr,X1{:});
-        else 
-          for h=1:B 
-            x1 = cellfun(@(X1)X1(:,h),X1,'UniformOutput',false);    
-            SE1(:,h) = feval(stderr,x1{:});
-          end        
-        end
       else
         % The standard errors should already be defined
         se = S.SE;
@@ -906,12 +901,22 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   % Also re-sort data to match original input data
   if (nargout>2)
     if ~isempty(data)
-      % Calculate intraclass correlation coefficient (ICC)
+        
+      % Examine dependence structure of each variable by autocorrelation
+      if ~isempty(ori_data)
+        S.xcorr = zeros(2*min(S.n(1),99)+1,S.nvar);
+        for v = 1:S.nvar
+          S.xcorr(:,v) = xcorr(ori_data{v},min(S.n(1),99),'coeff');
+        end
+        S.xcorr(1:min(S.n(1),99),:) = [];
+      end  
+        
+      % Calculate intraclass correlation coefficient (ICC) for each variable
       %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
       %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
       %  - McGraw & Wong (1996) Psychological Methods. 1(1):30-46
       if ~isempty(strata) || ~isempty(clusters)
-        % Intraclass correlation coefficient for the mean
+        % Intraclass correlation coefficient (based on the mean)
         % One-way random, single measures ICC(1,1)
         if ~isempty(strata)
           groups = strata;
@@ -933,9 +938,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if strcmpi(deff,'on')
         if ~isempty(clusters)
-          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
+          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr);
         else
-          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S);
+          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr);
         end
         if (C > 0) || ~isempty(clusters)
           SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
@@ -945,15 +950,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         S.DEFF = SE^2/SRSV;
       else
         S.DEFF = [];
-      end
-
-      % Examine dependence structure of each variable by autocorrelation
-      if ~isempty(ori_data)
-        S.xcorr = zeros(2*min(S.n(1),99)+1,S.nvar);
-        for v = 1:S.nvar
-          S.xcorr(:,v) = xcorr(ori_data{v},min(S.n(1),99),'coeff');
-        end
-        S.xcorr(1:min(S.n(1),99),:) = [];
       end
 
       % Re-sort variables to match input data
@@ -1008,7 +1004,7 @@ end
 %--------------------------------------------------------------------------
 
 function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
-                            weights, strata, blocksize, runmode, S)
+                            weights, strata, blocksize, runmode, S, stderr)
 
     % Initialize
     B = nboot(1);
@@ -1017,10 +1013,14 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
     T1 = zeros(1,B);
     if C>0
       T2 = zeros(C,B);
+      U = zeros(1,B);
+    elseif ~isempty(stderr)
+      T2 = [];
+      U = zeros(1,B);
     else
       T2 = [];
+      U = [];
     end
-    U = zeros(1,B);
     X1 = cell(1,nvar);
     if nargout < 4
       idx = zeros(n,1);
@@ -1106,9 +1106,10 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
         if C>0
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
                                    blocksize, runmode, S);
+        elseif ~isempty(stderr)
+          U(h) = stderr(X1{:});
         end
       end
-      U = U/C;
     else
       % Matlab parallel mode
       % Perform ordinary resampling with replacement
@@ -1137,9 +1138,10 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
         if C>0
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
                                    blocksize, runmode, S);
+        elseif ~isempty(stderr)
+          U(h) = stderr(X1{:});
         end
       end
-      U = U/C;
     end
 
 end
@@ -1229,6 +1231,7 @@ function  U = interp_boot2 (T2, T0, C)
                 (t2(2) - t2(1));
       end
     end
+    U = U/C;
 
 end
 
