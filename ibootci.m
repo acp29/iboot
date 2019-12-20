@@ -11,6 +11,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'strata',strata)
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize)
+%  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state)
 %  [ci,bootstat] = ibootci(...)
@@ -106,6 +107,16 @@
 %  regression of time series data by combining it with pairs bootstrap
 %  (i.e. by providing x and y vectors as data variables).
 %
+%  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
+%  additive random Gaussian noise of the specified bandwidth to the  
+%  bootstrap sample sets before evaluating bootfun. It is recommended to 
+%  run bootstrap using the appropriate resampling method first without 
+%  smoothing, and return the output structure S. Then re-run ibootci, 
+%  and apply smoothing with the bandwidth set to the standard error 
+%  (S.SE), which will be of the order n^(-1/2) [11]. Smoothing is not 
+%  compatible with bootstrap iteration. Note that smoothing is applied 
+%  to bootstrap samples generated from all data arguments. 
+%
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
@@ -143,6 +154,7 @@
 %    cal: Nominal alpha level from calibration
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
+%    bandwidth: Smoothing bandwidth
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect estimated by resampling (if requested)
@@ -195,6 +207,8 @@
 %        24(5):1914-1933
 %  [10] Lee and Lai (2009) Double block bootstrap confidence intervals
 %        for dependent data. Biometrika. 96(2):427-443
+%  [11] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap 
+%        Confidence Intervals. J R Statist Soc B. 59(4):821-838 
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -237,7 +251,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.1.3 (20/12/2019)
+%  ibootci v2.8.2.2 (20/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -351,6 +365,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     strata = 1+find(cellfun(@(options) any(strcmpi({'strata','stratum','stratified'},options)),options));
     clusters = 1+find(cellfun(@(options) any(strcmpi({'clusters','cluster'},options)),options));
     blocksize = 1+find(cellfun(@(options) any(strcmpi({'block','blocks','blocksize'},options)),options));
+    bandwidth = 1+find(cellfun(@(options) any(strcmpi({'smooth','smoothing','bandwidth'},options)),options));
     bootidx = 1+find(strcmpi('bootidx',options));
     deff = 1+find(strcmpi('deff',options));
     if ~isempty(alpha)
@@ -434,6 +449,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       blocksize = [];
     end
+    if ~isempty(bandwidth)
+      try
+        bandwidth = options{bandwidth};
+      catch
+        bandwidth = [];
+      end
+    else
+      bandwidth = [];
+    end
     if ~isempty(bootidx)
       try
         idx = options{bootidx};
@@ -480,6 +504,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
       error('The type of bootstrap must be either per, bca or stud');
+    end
+    if ~isa(bandwidth,'double')
+      error('Smoothing bandwidth must be double precision')
+      if (numel(bandwidth)~=1) || (bandwidth < 0) 
+        error('Smoothing bandwidth must be a positive scalar value')
+      end
     end
     if sum(strcmpi(deff,{'on','off'})) < 1
       error('The deff input argument must be set to ''on'' or ''off''')
@@ -657,6 +687,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       nboot(2) = 0;
       C = nboot(2);
     end
+    if ~isempty(bandwidth) && (C>0)
+      error('bootstrap iteration not compatible with smoothing')
+    end
     if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'})) 
       error('Studentized (bootstrap-t) intervals require bootstrap interation or stderr')
     end
@@ -681,6 +714,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.type = type;
     S.alpha = alpha;
     S.coverage = 1-alpha;
+    S.bandwidth = bandwidth;
 
     % Update bootfun for matrix data input argument
     if matflag > 0
@@ -731,10 +765,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if isempty(idx)
       if (nargout < 5)
         [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
-                             strata, blocksize, runmode, S, stderr);
+                             strata, blocksize, runmode, S, stderr, bandwidth);
       else
         [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
-                                  strata, blocksize, runmode, S, stderr);
+                                  strata, blocksize, runmode, S, stderr, bandwidth);
       end
       if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
         % When a function is provided in stderr, the U variable contains 
@@ -745,6 +779,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       X1 = cell(1,nvar);
       for v = 1:nvar
         X1{v} = data{v}(idx);
+      end
+      if ~isempty(bandwidth)
+        for v = 1:nvar
+          X1{v} = X1{v} + randn(n,1) * bandwidth;
+        end
       end
       switch lower(runmode)
         case {'fast'}
@@ -942,9 +981,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if strcmpi(deff,'on')
         if ~isempty(clusters)
-          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr);
+          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,[]);
         else
-          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr);
+          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,[]);
         end
         if (C > 0) || ~isempty(clusters)
           SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
@@ -1007,8 +1046,8 @@ end
 
 %--------------------------------------------------------------------------
 
-function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
-                            weights, strata, blocksize, runmode, S, stderr)
+function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights,...
+                            strata, blocksize, runmode, S, stderr, bandwidth)
 
     % Initialize
     B = nboot(1);
@@ -1104,6 +1143,11 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
             X1{v} = x{v}(idx(:,h));
           end
         end
+        if ~isempty(bandwidth)
+          for v = 1:nvar
+            X1{v} = X1{v} + randn(n,1) * bandwidth;
+          end
+        end
         T1(h) = feval(bootfun,X1{:});
         % Since second bootstrap is usually much smaller, perform rapid
         % balanced resampling by a permutation algorithm
@@ -1135,6 +1179,11 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0,...
         end
         for v = 1:nvar
           X1{v} = x{v}(idx);
+        end
+        if ~isempty(bandwidth)
+          for v = 1:nvar
+            X1{v} = X1{v} + randn(n,1) * bandwidth;
+          end
         end
         T1(h) = feval(bootfun,X1{:});
         % Since second bootstrap is usually much smaller, perform rapid
