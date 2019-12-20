@@ -237,7 +237,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.1.2 (19/12/2019)
+%  ibootci v2.8.1.3 (20/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -613,17 +613,24 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
                 'Slow mode. Faster if matrix input arguments to bootfun return a row vector.')
         runmode = 'slow';
       end
-      if strcmpi(runmode,'fast')
-        if ~isempty(stderr)
+      if ~isempty(stderr)
+        if ischar(bootfun)
+          % Convert character string of a function name to a function handle
+          stderr = str2func(stderr);
+        end
+        if ~isa(stderr,'function_handle')
+          error('stderr must be a function name or function handle');
+        end
+        if strcmpi(runmode,'fast')
           try
             simSE = feval(stderr,M{:});
             if size(simSE,1)>1
               error('Invoke catch statement');
             end
-            runmode = 'fast';
+              runmode = 'fast';
           catch
             warning('ibootci:slowMode',...
-                   'Slow mode. Faster if matrix input arguments to stderr return a row vector.')
+                    'Slow mode. Faster if matrix input arguments to stderr return a row vector.')
             runmode = 'slow';
           end
         end
@@ -644,9 +651,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       C = nboot(2);
     end
     if ~isempty(stderr)
-      if ~isa(stderr,'function_handle')
-        error('stderr must be a function name or function handle');
-      end
       if C > 0
         error('bootstrap iteration not compatible with the stderr option')
       end
