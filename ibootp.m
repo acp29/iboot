@@ -22,15 +22,11 @@
 %  using the Studentized bootstrap (bootstrap-t) with an additive
 %  correction factor to stabilize the variance.
 %
-%  Computations of p-values and confidence intervals can be 
-%  accellerated by starting a parallol pool prior to executing
-%  ibootci.
-%
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.6.0 (10/12/2019)
+%  ibootp v1.5.5.1 (21/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -110,10 +106,9 @@ function p = ibootp(m,bootstat,S,calcurve)
   end
 
   % Check if first bootstrap replicate sample set is large enough
-  if (1/p > B/2) || isnan(p)
+  if 1/p > B/2
     warning(sprintf(['P value is too small for this bootstrap distribution. \n'...
             'Try increasing the number of first bootstrap replicate samples.']));
-    p = 2/B;
   end
 
 end
@@ -130,7 +125,11 @@ function  p = bootstud(m,bootstat,S)
   else
     SE1 = bootstat{2};
   end
-  a = S.n^(-3/2) * se;  % additive correction factor
+  if isempty(S.bandwidth) 
+    a = S.n(1)^(-3/2) * se;  % additive correction factor
+  else
+    a = 0;
+  end
 
   % Calculate Studentized statistics
   T = (bootstat{1} - S.stat)./(SE1 + a);
