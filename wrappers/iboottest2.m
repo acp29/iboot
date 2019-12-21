@@ -31,7 +31,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.8.1 (05/12/2019)
+%  iboottest2 v1.5.8.2 (21/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -96,6 +96,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   strata = 1+find(sum([strcmpi('Strata',options);strcmpi('Stratum',options);strcmpi('Stratified',options)]));
   clusters = 1+find(sum([strcmpi('Cluster',options);strcmpi('Clusters',options)]));
   blocksize = 1+find(sum([strcmpi('Block',options);strcmpi('Blocks',options);strcmpi('Blocksize',options)]));
+  bandwidth = 1+find(sum([strcmpi('smooth',options);strcmpi('smoothing',options);strcmpi('bandwidth',options)]));
   cellref = [];
   if ~isempty(alpha)
     try
@@ -113,6 +114,9 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   end
   if (alpha <= 0) || (alpha >= 1)
     error('The alpha value must be a value between 0 and 1');
+  end
+  if ~isempty(bandwidth)
+    error('iboottest2 does not support ''smooth'' option')
   end
   if ~isempty(weights)
     try
