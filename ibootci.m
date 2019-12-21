@@ -113,9 +113,8 @@
 %  run bootstrap using the appropriate resampling method first without 
 %  smoothing, and return the output structure S. Then re-run ibootci, 
 %  and apply smoothing with the bandwidth set to the standard error 
-%  (S.SE), which will be of the order n^(-1/2) [11]. Smoothing is not 
-%  compatible with bootstrap iteration. Note that smoothing is applied 
-%  to bootstrap samples generated from all data arguments. 
+%  (S.SE), which will be of the order n^(-1/2) [11]. Note that smoothing 
+%  is applied to bootstrap samples generated from all data arguments. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -251,7 +250,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.2.2 (20/12/2019)
+%  ibootci v2.8.2.3 (21/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -507,14 +506,24 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     if ~isa(bandwidth,'double')
       error('Smoothing bandwidth must be double precision')
-      if (numel(bandwidth)~=1) || (bandwidth < 0) 
+    else
+      if (numel(bandwidth)~=1) 
         error('Smoothing bandwidth must be a positive scalar value')
+      else
+        if bandwidth <= 0
+          bandwidth = [];
+        end
       end
     end
     if sum(strcmpi(deff,{'on','off'})) < 1
       error('The deff input argument must be set to ''on'' or ''off''')
     end
-
+    if ~isempty(bandwidth)
+      if strcmpi(deff,'on')
+        error('Design effect calculation not compatible with smoothing')
+      end
+    end
+    
     % Evaluate data input
     nvar = size(data,2);
     if (min(size(data{1}))>1)
@@ -687,8 +696,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       nboot(2) = 0;
       C = nboot(2);
     end
-    if ~isempty(bandwidth) && (C>0)
-      error('bootstrap iteration not compatible with smoothing')
+    if ~isempty(bandwidth) && (C>0) && ~any(strcmpi(type,{'stud','student'}))
+      error('calibrated of interval coverage is not compatible with smoothing')
     end
     if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'})) 
       error('Studentized (bootstrap-t) intervals require bootstrap interation or stderr')
@@ -911,7 +920,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Put standard errors for into second cell of bootstat output 
       bootstat{2} = SE1;
     end
-    a = n^(-3/2) * se;
+    if isempty(bandwidth) 
+      a = n^(-3/2) * se;
+    else
+      a = 0;
+    end
 
     % Calculate Studentized statistics
     T = (T1-T0)./(SE1+a);
@@ -981,9 +994,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if strcmpi(deff,'on')
         if ~isempty(clusters)
-          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,[]);
+          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,bandwidth);
         else
-          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,[]);
+          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,bandwidth);
         end
         if (C > 0) || ~isempty(clusters)
           SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
