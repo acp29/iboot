@@ -250,7 +250,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.2.3 (21/12/2019)
+%  ibootci v2.8.2.4 (21/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -769,15 +769,23 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       nvar = S.nvar * blocksize;
     end
 
+    % Prepare bootstrap options stucture
+    opt = struct;
+    opt.weights = weights;
+    opt.strata = strata;
+    opt.clusters = clusters;
+    opt.blocksize = blocksize;
+    opt.bandwidth = bandwidth;
+    opt.stderr = stderr;
+    opt.runmode = runmode;
+    
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
       if (nargout < 5)
-        [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
-                             strata, blocksize, runmode, S, stderr, bandwidth);
+        [T1, T2, U] = boot1 (data, nboot, n, nvar, bootfun, T0, S, opt);
       else
-        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, weights,...
-                                  strata, blocksize, runmode, S, stderr, bandwidth);
+        [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, S, opt);
       end
       if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
         % When a function is provided in stderr, the U variable contains 
@@ -823,8 +831,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           for v = 1:nvar
             x1{v} = X1{v}(:,h);
           end
-          [U(h), T2(:,h)] = boot2 (x1, nboot, n, nvar, bootfun, T0, g,...
-                                   blocksize, runmode, S);
+          [U(h), T2(:,h)] = boot2 (x1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
       else
         T2 = [];
@@ -992,11 +999,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       else 
         bootfun = S.bootfun;
       end
+      opt.weights = ones(n,1);
+      opt.strata = [];
+      opt.blocksize = [];
       if strcmpi(deff,'on')
         if ~isempty(clusters)
-          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,bandwidth);
+          [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,S,opt);
         else
-          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,ones(n,1),[],[],runmode,S,stderr,bandwidth);
+          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,S,opt);
         end
         if (C > 0) || ~isempty(clusters)
           SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
@@ -1059,9 +1069,16 @@ end
 
 %--------------------------------------------------------------------------
 
-function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights,...
-                            strata, blocksize, runmode, S, stderr, bandwidth)
+function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
 
+    % Extract required options structure fields
+    weights = opt.weights;
+    strata = opt.strata;
+    blocksize = opt.blocksize;
+    bandwidth = opt.bandwidth;
+    stderr = opt.stderr;
+    runmode = opt.runmode;
+    
     % Initialize
     B = nboot(1);
     C = nboot(2);
@@ -1165,8 +1182,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights,...
         % Since second bootstrap is usually much smaller, perform rapid
         % balanced resampling by a permutation algorithm
         if C>0
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
-                                   blocksize, runmode, S);
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         elseif ~isempty(stderr)
           U(h) = stderr(X1{:});
         end
@@ -1202,8 +1218,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, weights,...
         % Since second bootstrap is usually much smaller, perform rapid
         % balanced resampling by a permutation algorithm
         if C>0
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g,...
-                                   blocksize, runmode, S);
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         elseif ~isempty(stderr)
           U(h) = stderr(X1{:});
         end
@@ -1214,8 +1229,12 @@ end
 
 %--------------------------------------------------------------------------
 
-function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, blocksize, runmode, S)
+function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt)
 
+    % Extract required options structure fields
+    blocksize = opt.blocksize;
+    runmode = opt.runmode;
+    
     % Note that weights are not implemented here with iterated bootstrap
 
     % Prepare for block resampling (if applicable)
