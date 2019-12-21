@@ -318,6 +318,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     nvar = S.nvar;
     idx = [];
     T0 = S.stat;
+    bandwidth = S.bandwidth;
     weights = S.weights;
     strata = S.strata;
     clusters = S.clusters;
