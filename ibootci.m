@@ -250,7 +250,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.2.4 (21/12/2019)
+%  ibootci v2.8.2.5 (21/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -331,7 +331,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       for h = 1:B
         U(h) = interp_boot2(T2(:,h),T0,C);
       end
-      U = U/C;
     end
     
   elseif ~iscell(argin2)
