@@ -507,7 +507,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isa(bandwidth,'double')
       error('Smoothing bandwidth must be double precision')
     else
-      if (numel(bandwidth)~=1) 
+      if (numel(bandwidth)~=1) && ~isempty(bandwidth)
         error('Smoothing bandwidth must be a positive scalar value')
       else
         if bandwidth <= 0
