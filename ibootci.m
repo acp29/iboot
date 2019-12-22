@@ -252,7 +252,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.2.6 (21/12/2019)
+%  ibootci v2.8.2.7 (21/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -328,6 +328,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     type = S.type;
     S.coverage = 1-S.alpha;
     alpha = S.coverage;       % convert alpha to coverage
+    % Convert bandwidth to variance (if applicable)
+    if ~isempty(bandwidth)
+      if (min(size(bandwidth)) > 1)
+        % Do nothing, bandwidth is already a covariance matrix
+      else
+        bandwidth = diag(bandwidth.^2) ;
+      end
+    end
+    % Perform calibration (if applicable)
     if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
       U = zeros(1,B);
       for h = 1:B
@@ -1005,12 +1014,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       opt.weights = ones(n,1);
       opt.strata = [];
+      opt.clusters = [];
       opt.blocksize = [];
+      opt.bandwidth = [];
       if strcmpi(deff,'on')
         if ~isempty(clusters)
           [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,S,opt);
         else
-          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n,S.nvar,bootfun,T0,S,opt);
+          [SRS1,SRS2] = boot1(ori_data,S.nboot,S.n(1),S.nvar,bootfun,T0,S,opt);
         end
         if (C > 0) || ~isempty(clusters)
           SRSV = var(SRS1,0)^2 / mean(var(SRS2,0));
