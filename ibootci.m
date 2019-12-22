@@ -729,7 +729,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if (min(size(bandwidth)) > 1)
         % Do nothing, bandwidth is already a covariance matrix
       else
-        bandwidth = bandwidth.^2;
+        bandwidth = diag(bandwidth.^2) ;
       end
     end
 
