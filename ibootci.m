@@ -109,12 +109,14 @@
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
 %  additive random Gaussian noise of the specified bandwidth to the  
-%  bootstrap sample sets before evaluating bootfun. It is recommended to 
-%  run bootstrap using the appropriate resampling method first without 
-%  smoothing, and return the output structure S. Then re-run ibootci, 
-%  and apply smoothing with the bandwidth set to the standard error 
-%  (S.SE), which will be of the order n^(-1/2) [11]. Note that smoothing 
-%  is applied to bootstrap samples generated from all data arguments. 
+%  bootstrap sample sets before evaluating bootfun. Recommended usage 
+%  for univariate data, is to run bootstrap using the appropriate 
+%  resampling method first without smoothing, and return the output 
+%  structure S. Then re-run ibootci and apply smoothing with the 
+%  bandwidth set to the standard error (S.SE), which will be of the 
+%  order n^(-1/2) [11]. For d-dimensional multivariate data, the 
+%  bandwidth can be an 1-by-d vector of bandwidths, or a d-by-d 
+%  covariance matrix. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -250,7 +252,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.2.5 (21/12/2019)
+%  ibootci v2.8.2.6 (21/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -504,16 +506,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
       error('The type of bootstrap must be either per, bca or stud');
     end
-    if ~isa(bandwidth,'double')
-      error('Smoothing bandwidth must be double precision')
-    else
-      if (numel(bandwidth)~=1) && ~isempty(bandwidth)
-        error('Smoothing bandwidth must be a positive scalar value')
-      else
-        if bandwidth <= 0
-          bandwidth = [];
-        end
-      end
+    if ~isa(alpha,'numeric')
+      error('The smoothing bandwidth(s) must be numeric')
     end
     if sum(strcmpi(deff,{'on','off'})) < 1
       error('The deff input argument must be set to ''on'' or ''off''')
@@ -591,7 +585,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       ori_data = data; % recreate copy of the data
     end
-
     if isempty(weights)
       weights = ones(n,1);
     else
@@ -729,6 +722,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if matflag > 0
       bootfun = @(varargin) bootfun(list2mat(varargin{:}));
     end
+    
+    % Convert bandwidth to variance (if applicable)
+    if ~isempty(bandwidth)
+      if (min(size(bandwidth)) > 1)
+        % Do nothing, bandwidth is already a covariance matrix
+      else
+        bandwidth = bandwidth.^2;
+      end
+    end
 
     % Convert alpha to coverage level (decimal format)
     alpha = 1-alpha;
@@ -798,8 +800,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         X1{v} = data{v}(idx);
       end
       if ~isempty(bandwidth)
+        noise = mvnrnd(zeros(1,nvar),bandwidth,n);
         for v = 1:nvar
-          X1{v} = X1{v} + randn(n,1) * bandwidth;
+          X1{v} = X1{v} + noise(:,v);
         end
       end
       switch lower(runmode)
@@ -897,7 +900,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.a = 0;
     case 'bca'
       % Bias correction and acceleration (BCa)
-      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,weights,strata,clusters,blocksize);
+      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,opt);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
@@ -1174,8 +1177,9 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           end
         end
         if ~isempty(bandwidth)
+          noise = mvnrnd(zeros(1,nvar),bandwidth,n);
           for v = 1:nvar
-            X1{v} = X1{v} + randn(n,1) * bandwidth;
+            X1{v} = X1{v} + noise(:,v);
           end
         end
         T1(h) = feval(bootfun,X1{:});
@@ -1210,8 +1214,9 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           X1{v} = x{v}(idx);
         end
         if ~isempty(bandwidth)
+          noise = mvnrnd(zeros(1,nvar),bandwidth,n);
           for v = 1:nvar
-            X1{v} = X1{v} + randn(n,1) * bandwidth;
+            X1{v} = X1{v} + noise(:,v);
           end
         end
         T1(h) = feval(bootfun,X1{:});
@@ -1366,16 +1371,23 @@ end
 
 %--------------------------------------------------------------------------
 
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, weights, strata, clusters, blocksize)
+function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, opt)
 
   % Note that alpha input argument is nominal coverage
 
+  % Extract required options structure fields
+  weights = opt.weights;
+  strata = opt.strata;
+  clusters = opt.clusters;
+  blocksize = opt.blocksize;
+  bandwidth = opt.bandwidth;
+    
   % Calculate bias correction z0
   z0 = norminv(sum(T1<T0)/B);
 
   % Calculate acceleration constant a
   if ~isempty(x) && ~any(diff(weights)) && isempty(strata) && ...
-      isempty(clusters) && isempty(blocksize)
+      isempty(clusters) && isempty(blocksize) && isempty(bandwidth)
     try
       % Use the Jackknife to calculate acceleration
       [SE, T, U] = jack(x,func);
