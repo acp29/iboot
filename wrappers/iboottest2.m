@@ -27,11 +27,13 @@
 %
 %  'Block': The same format as for weights.
 %
+%  'Smooth': The same format as for weights.
+%
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.8.2 (21/12/2019)
+%  iboottest2 v1.5.8.3 (26/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -115,9 +117,6 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   if (alpha <= 0) || (alpha >= 1)
     error('The alpha value must be a value between 0 and 1');
   end
-  if ~isempty(bandwidth)
-    error('iboottest2 does not support ''smooth'' option')
-  end
   if ~isempty(weights)
     try
       cellref = cat(2,cellref,[weights-1,weights]);
@@ -190,20 +189,38 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   else
     blocksize = {[],[]};
   end
+  if ~isempty(bandwidth)
+    try
+      cellref = cat(2,cellref,[bandwidth-1,bandwidth]);
+      bandwidth = options{bandwidth};
+    catch
+      bandwidth = {[],[]};
+      cellref(end-1:end)=[];
+    end
+    if ~iscell(bandwidth)
+      error('The option argument for smooth should be a cell array')
+    else
+      if numel(bandwidth) ~= 2
+        error('The option argument for smooth should be an array of 2 cells')
+      end
+    end
+  else
+    bandwidth = {[],[]};
+  end  
   options(cellref)=[];   % remove these evaluated options from the options array
 
   % Perform independent resampling from x and y
   state = warning;
   warning off;
-  [ciX,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},options{:});
-  [ciY,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},options{:});
+  [ciX,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},'Smooth',bandwidth{1},options{:});
+  [ciY,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},'Smooth',bandwidth{2},options{:});
 
   if C>0
     if ~isempty(weights{1})
-      [ciX,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},options{:});
+      [ciX,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Smooth',bandwidth{1},options{:});
     end
     if ~isempty(weights{2})
-      [ciY,bootstatY{1}] = ibootci(B,{bootfun,y},'alpha',SY.cal,'Weights',weights{2},'Strata',strata{2},options{:});
+      [ciY,bootstatY{1}] = ibootci(B,{bootfun,y},'alpha',SY.cal,'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Smooth',bandwidth{2},options{:});
     end
   end
   warning(state);
@@ -237,9 +254,10 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   S.ICC = [SX.ICC, SY.ICC];
   S.DEFF = [SX.DEFF, SY.DEFF];
   S.xcorr = {SX.xcorr, SY.xcorr};
-  S.strata = strata;
-  S.clusters = clusters;
+  S.strata = {SX.strata,SY.strata};
+  S.clusters = {SX.clusters,SY.clusters};
   S.blocksize = [SX.blocksize,SY.blocksize];
+  S.bandwidth = [SX.bandwidth,SY.bandwidth];
   S.weights = {SX.weights,SY.weights};
 
   % Calculate p-value using ibootp
