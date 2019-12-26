@@ -1,6 +1,7 @@
 %  Function File: ibootci
 %
-%  Bootstrap confidence interval
+%  Bootstrap confidence intervals for small samples and samples with  
+%  complex dependence structures
 %
 %  ci = ibootci(nboot,bootfun,...)
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
@@ -108,15 +109,17 @@
 %  (i.e. by providing x and y vectors as data variables).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
-%  additive random Gaussian noise of the specified bandwidth to the  
-%  bootstrap sample sets before evaluating bootfun. Recommended usage 
-%  for univariate data, is to run bootstrap using the appropriate 
-%  resampling method first without smoothing, and return the output 
-%  structure S. Then re-run ibootci and apply smoothing with the 
-%  bandwidth set to the standard error (S.SE), which will be of the 
-%  order n^(-1/2) [11]. For d-dimensional multivariate data, the 
-%  bandwidth can be an 1-by-d vector of bandwidths, or a d-by-d 
-%  covariance matrix. 
+%  additive random noise of the specified bandwidth to the bootstrap
+%  sample sets before evaluating bootfun. The kernel used is the 
+%  Student-t distribution, which can improve coverage in the tails   
+%  when bootstraping small samples. The kernel approximates a Gaussian 
+%  distribution for large samples. Recommended usage for univariate 
+%  data, is to run bootstrap using the appropriate resampling method 
+%  first without smoothing, and return the output structure S. Then 
+%  re-run ibootci and apply smoothing with the bandwidth set to the 
+%  standard error (S.SE), which will be of the order n^(-1/2) [11]. 
+%  For d-dimensional multivariate data, the bandwidth can be an 1-by-d 
+%  vector of bandwidths, or a d-by-d covariance matrix. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -179,7 +182,7 @@
 %
 %  Computations of confidence intervals can be accelerated by starting 
 %  a parallel pool prior to executing ibootci. This is particularly useful
-%  for the calculations of p-values using ibootci wrapper functions.
+%  for the calculation of p-values using ibootci wrapper functions.
 %  Parallel usage is supported in MATLAB for most features except for
 %  balanced resampling during the first bootstrap.
 %
@@ -252,7 +255,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.2.8 (22/12/2019)
+%  ibootci v2.8.3.0 (26/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -336,6 +339,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         bandwidth = diag(bandwidth.^2) ;
       end
     end
+    opt = struct;
+    opt.weights = weights;
+    opt.strata = strata;
+    opt.clusters = clusters;
+    opt.blocksize = blocksize;
+    opt.bandwidth = bandwidth;
     % Perform calibration (if applicable)
     if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
       U = zeros(1,B);
@@ -699,9 +708,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       nboot(2) = 0;
       C = nboot(2);
     end
-    if ~isempty(bandwidth) && (C>0) && ~any(strcmpi(type,{'stud','student'}))
-      error('calibrated of interval coverage is not compatible with smoothing')
-    end
+    %if ~isempty(bandwidth) && (C>0) && ~any(strcmpi(type,{'stud','student'}))
+    %  error('calibrated of interval coverage is not compatible with smoothing')
+    %end
     if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'})) 
       error('Studentized (bootstrap-t) intervals require bootstrap interation or stderr')
     end
@@ -733,13 +742,27 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       bootfun = @(varargin) bootfun(list2mat(varargin{:}));
     end
     
-    % Represent bandwidth as a covariance matrix
+    % Prepare bandwidth variable and correlation matrix
     if ~isempty(bandwidth)
       if (min(size(bandwidth)) > 1)
         % Do nothing, bandwidth is already a covariance matrix
       else
-        bandwidth = diag(bandwidth.^2) ;
+        % Format bandwidth input (scalar or vector) as covariance matrix
+        bandwidth = diag(bandwidth.^2);
       end
+      % Extract bandwidth and correlation matrix from covariance matrix
+      D = diag(sqrt(diag(bandwidth))).'; % standard deviation
+      R = inv(D) * bandwidth * inv(D);   % correlation matrix 
+      bandwidth = diag(D).';             % set standard deviation as bandwidth 
+      % Calculate degrees of freedom for Student-t distribution
+      if numel(S.n)>1
+        df = S.n(1)-S.n(2);
+      else
+        df = S.n(1) - 1;
+      end
+    else 
+      R = [];
+      df = [];
     end
 
     % Convert alpha to coverage level (decimal format)
@@ -788,6 +811,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.clusters = clusters;
     opt.blocksize = blocksize;
     opt.bandwidth = bandwidth;
+    opt.R = R;
+    opt.df = df;
     opt.stderr = stderr;
     opt.runmode = runmode;
     
@@ -809,8 +834,27 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       for v = 1:nvar
         X1{v} = data{v}(idx);
       end
+      if C>0
+        if ~isempty(strata)
+          [SSb, SSw, K, g] = sse_calc (data, strata, nvar);
+        else
+          g = ones(n,1);
+        end
+        T2 = zeros(C,B);
+        U = zeros(1,B);
+        for h = 1:B
+          x1 = cell(1,nvar);
+          for v = 1:nvar
+            x1{v} = X1{v}(:,h);
+          end
+          [U(h), T2(:,h)] = boot2 (x1, nboot, n, nvar, bootfun, T0, g, S, opt);
+        end
+      else
+        T2 = [];
+      end
       if ~isempty(bandwidth)
-        noise = mvnrnd(zeros(1,nvar),bandwidth,n);
+        % Apply smoothing
+        noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
         for v = 1:nvar
           X1{v} = X1{v} + noise(:,v);
         end
@@ -830,24 +874,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
               SE1(:,h) = feval(stderr,x1{:});
             end
           end
-      end
-      if C>0
-        if ~isempty(strata)
-          [SSb, SSw, K, g] = sse_calc (data, strata, nvar);
-        else
-          g = ones(n,1);
-        end
-        T2 = zeros(C,B);
-        U = zeros(1,B);
-        for h = 1:B
-          x1 = cell(1,nvar);
-          for v = 1:nvar
-            x1{v} = X1{v}(:,h);
-          end
-          [U(h), T2(:,h)] = boot2 (x1, nboot, n, nvar, bootfun, T0, g, S, opt);
-        end
-      else
-        T2 = [];
       end
     end
     % Assign data to bootstat
@@ -1017,6 +1043,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       opt.clusters = [];
       opt.blocksize = [];
       opt.bandwidth = [];
+      opt.R = [];
+      opt.df = [];
       if strcmpi(deff,'on')
         if ~isempty(clusters)
           [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,S,opt);
@@ -1091,6 +1119,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     strata = opt.strata;
     blocksize = opt.blocksize;
     bandwidth = opt.bandwidth;
+    R = opt.R;
+    df = opt.df;
     stderr = opt.stderr;
     runmode = opt.runmode;
     
@@ -1188,13 +1218,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
             X1{v} = x{v}(idx(:,h));
           end
         end
-        if ~isempty(bandwidth)
-          noise = mvnrnd(zeros(1,nvar),bandwidth,n);
-          for v = 1:nvar
-            X1{v} = X1{v} + noise(:,v);
-          end
-        end
-        T1(h) = feval(bootfun,X1{:});
         % Since second bootstrap is usually much smaller, perform rapid
         % balanced resampling by a permutation algorithm
         if C>0
@@ -1202,6 +1225,14 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         elseif ~isempty(stderr)
           U(h) = stderr(X1{:});
         end
+        if ~isempty(bandwidth)
+          % Apply smoothing
+          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
+          for v = 1:nvar
+            X1{v} = X1{v} + noise(:,v);
+          end
+        end
+        T1(h) = feval(bootfun,X1{:});
       end
     else
       % Matlab parallel mode
@@ -1225,13 +1256,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         for v = 1:nvar
           X1{v} = x{v}(idx);
         end
-        if ~isempty(bandwidth)
-          noise = mvnrnd(zeros(1,nvar),bandwidth,n);
-          for v = 1:nvar
-            X1{v} = X1{v} + noise(:,v);
-          end
-        end
-        T1(h) = feval(bootfun,X1{:});
         % Since second bootstrap is usually much smaller, perform rapid
         % balanced resampling by a permutation algorithm
         if C>0
@@ -1239,6 +1263,14 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         elseif ~isempty(stderr)
           U(h) = stderr(X1{:});
         end
+        if ~isempty(bandwidth)
+          % Apply smoothing
+          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
+          for v = 1:nvar
+            X1{v} = X1{v} + noise(:,v);
+          end
+        end
+        T1(h) = feval(bootfun,X1{:});
       end
     end
 
