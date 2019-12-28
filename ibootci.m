@@ -158,7 +158,7 @@
 %    cal: Nominal alpha level from calibration
 %    z0: Bias used to construct BCa intervals (0 if type is not bca)
 %    a: Acceleration used to construct BCa intervals (0 if type is not bca)
-%    bandwidth: Bandwidth for smooth bootstrap (Student-t kernel)
+%    bandwidth: Bandwidth for smooth bootstrap (Gaussian kernel)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect estimated by resampling (if requested)
@@ -255,7 +255,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.3.0 (26/12/2019)
+%  ibootci v2.8.3.1 (28/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -751,7 +751,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         bandwidth = diag(bandwidth.^2);
       end
       % Extract bandwidth and correlation matrix from covariance matrix
-      D = diag(sqrt(diag(bandwidth))).'; % standard deviation
+      D = diag(sqrt(diag(bandwidth))).'; % standard deviations
       R = inv(D) * bandwidth * inv(D);   % correlation matrix 
       bandwidth = diag(D).';             % set standard deviation as bandwidth 
       % Calculate degrees of freedom for Student-t distribution
@@ -1431,11 +1431,11 @@ function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, opt)
 
   % Calculate acceleration constant a
   if ~isempty(x) && ~any(diff(weights)) && isempty(strata) && ...
-      isempty(clusters) && isempty(blocksize) && isempty(bandwidth)
+      isempty(blocksize) && isempty(bandwidth)
     try
       % Use the Jackknife to calculate acceleration
       [SE, T, U] = jack(x,func);
-      a = (1/6)*(sum(U.^3)/sum(U.^2)^(3/2));
+      a = (1/6)*(sum(U.^3)/sum(U.^2)^(3/2))
     catch
       a = nan;
     end
