@@ -255,7 +255,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.3.1 (28/12/2019)
+%  ibootci v2.8.3.2 (28/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -584,6 +584,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     ori_data = data; % Make a copy of the data
     if ~isempty(strata) || ~isempty(clusters)
+      if size(clusters,1) ~= size(data{1},1)
+        error('Dimensions of clusters are inconsistent with the data')
+      end
+      if size(strata,1) ~= size(data{1},1)
+        error('Dimensions of strata are inconsistent with the data')
+      end
       while size(strata,2) > 1
         % Calculate strata means for resampling more than two nested levels
         % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
@@ -618,7 +624,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if any(weights<0)
       error('Weights must be a vector of non-negative numbers')
     end
-
     % Evaluate bootfun
     if ischar(bootfun)
       % Convert character string of a function name to a function handle
