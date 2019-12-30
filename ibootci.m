@@ -50,8 +50,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type) computes the bootstrap
 %  confidence interval of the statistic defined by the function bootfun.
 %  type is the confidence interval type, chosen from among the following:
-%    'per' or 'percentile': Percentile method.
-%    'bca': Bias corrected and accelerated percentile method. (Default)
+%    'per' or 'percentile': Percentile method (Default). 
 %    'stud' or 'student': Studentized (bootstrap-t) confidence interval.
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
@@ -152,12 +151,10 @@
 %    nboot: The number of first (and second) bootstrap replicate samples
 %    nvar: Number of data variables
 %    n: The length of data variable(s) (and no. of clusters if applicable)
-%    type: Type of confidence interval (bca, per or stud)
+%    type: Type of confidence interval (per or stud)
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
 %    cal: Nominal alpha level from calibration
-%    z0: Bias used to construct BCa intervals (0 if type is not bca)
-%    a: Acceleration used to construct BCa intervals (0 if type is not bca)
 %    bandwidth: Bandwidth for smooth bootstrap (Gaussian kernel)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
@@ -255,7 +252,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.3.2 (28/12/2019)
+%  ibootci v2.8.3.5 (30/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -328,6 +325,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     strata = S.strata;
     clusters = S.clusters;
     blocksize = S.blocksize;
+    deff = 'off';
     type = S.type;
     S.coverage = 1-S.alpha;
     alpha = S.coverage;       % convert alpha to coverage
@@ -346,7 +344,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.blocksize = blocksize;
     opt.bandwidth = bandwidth;
     % Perform calibration (if applicable)
-    if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
+    if C>0 && any(strcmpi(type,{'per','percentile'}))
       U = zeros(1,B);
       for h = 1:B
         U(h) = interp_boot2(T2(:,h),T0,C);
@@ -367,7 +365,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     blocksize = [];
     bandwidth = [];
     nbootstd = [];
-    type = 'bca';
+    deff = 'off';
+    type = 'per';
     T1 = [];  % Initialize bootstat variable
 
   else
@@ -401,10 +400,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       try
         type = options{type};
       catch
-        type = 'bca';
+        type = 'per';
       end
     else
-      type = 'bca';
+      type = 'per';
     end
     if any(strcmpi(type,{'stud','student'}))
       if ~isempty(nbootstd)
@@ -522,8 +521,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if (alpha <= 0) || (alpha >= 1)
       error('The alpha value must be a value between 0 and 1');
     end
-    if ~any(strcmpi(type,{'per','percentile','bca','stud','student'}))
-      error('The type of bootstrap must be either per, bca or stud');
+    if ~any(strcmpi(type,{'per','percentile','stud','student'}))
+      error('The type of bootstrap must be either per or stud');
     end
     if ~isa(alpha,'numeric')
       error('The smoothing bandwidth(s) must be numeric')
@@ -713,9 +712,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       nboot(2) = 0;
       C = nboot(2);
     end
-    %if ~isempty(bandwidth) && (C>0) && ~any(strcmpi(type,{'stud','student'}))
-    %  error('calibrated of interval coverage is not compatible with smoothing')
-    %end
     if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'})) 
       error('Studentized (bootstrap-t) intervals require bootstrap interation or stderr')
     end
@@ -913,7 +909,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Calibrate central two-sided coverage
-  if C>0 && any(strcmpi(type,{'per','percentile','bca'}))
+  if C>0 && any(strcmpi(type,{'per','percentile'}))
     % Create a calibration curve
     V = abs(2*U-1);
     [calcurve(:,2),calcurve(:,1)] = empcdf(V,1);
@@ -937,17 +933,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Percentile
       m1 = 0.5*(1+alpha);
       m2 = 0.5*(1-alpha);
-      S.z0 = 0;
-      S.a = 0;
-    case 'bca'
-      % Bias correction and acceleration (BCa)
-      [m1,m2,S] = BCa(B,bootfun,data,T1,T0,alpha,S,opt);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
       m2 = 0.5*(1+alpha);
-      S.z0 = 0;
-      S.a = 0;
   end
 
   % Linear interpolation for interval construction
@@ -988,7 +977,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
   else
 
-    % Calculate interval for percentile or BCa method
+    % Calculate interval for percentile method
     [cdf,t1] = empcdf(T1,1);
     UL = interp1(cdf,t1,m1,'linear','extrap');
     LL = interp1(cdf,t1,m2,'linear','extrap');
@@ -1371,97 +1360,6 @@ function  U = interp_boot2 (T2, T0, C)
       end
     end
     U = U/C;
-
-end
-
-%--------------------------------------------------------------------------
-
-function [SE, T, U] = jack (x, func)
-
-  % Ordinary Jackknife
-
-  if nargin < 2
-    error('Invalid number of input arguments');
-  end
-
-  if nargout > 3
-    error('Invalid number of output arguments');
-  end
-
-  % Perform 'leave one out' procedure and calculate the variance(s)
-  % of the test statistic.
-  nvar = size(x,2);
-  m = size(x{1},1);
-  ridx = diag(ones(m,1));
-  j = (1:m)';
-  M = cell(1,nvar);
-  for v = 1:nvar
-    M{v} = x{v}(j(:,ones(m,1)),:);
-    M{v}(ridx==1,:)=[];
-  end
-  T = zeros(m,1);
-  for i = 1:m
-    Mi = cell(1,nvar);
-    for v = 1:nvar
-      Mi{v} = M{v}(1:m-1);
-      M{v}(1:m-1)=[];
-    end
-    T(i,:) = feval(func,Mi{:});
-  end
-  Tori = mean(T,1);
-  Tori = Tori(ones(m,1),:);
-  U = ((m-1)*(Tori-T));
-  Var = (m-1)/m*sum((T-Tori).^2,1);
-
-  % Calculate standard error(s) of the functional parameter
-  SE = sqrt(Var);
-
-end
-
-%--------------------------------------------------------------------------
-
-function [m1, m2, S] = BCa (B, func, x, T1, T0, alpha, S, opt)
-
-  % Note that alpha input argument is nominal coverage
-
-  % Extract required options structure fields
-  weights = opt.weights;
-  strata = opt.strata;
-  clusters = opt.clusters;
-  blocksize = opt.blocksize;
-  bandwidth = opt.bandwidth;
-    
-  % Calculate bias correction z0
-  z0 = norminv(sum(T1<T0)/B);
-
-  % Calculate acceleration constant a
-  if ~isempty(x) && ~any(diff(weights)) && isempty(strata) && ...
-      isempty(blocksize) && isempty(bandwidth)
-    try
-      % Use the Jackknife to calculate acceleration
-      [SE, T, U] = jack(x,func);
-      a = (1/6)*(sum(U.^3)/sum(U.^2)^(3/2))
-    catch
-      a = nan;
-    end
-  else
-    a = nan;
-  end
-  % Check if calculation of the acceleration constant
-  % using the jackknife was possible (and successful)
-  if isnan(a)
-    % If not, directly calculate acceleration from
-    % the skewness of the bootstrap statistics
-    a = (1/6)*skewness(T1,1);
-  end
-
-  % Calculate BCa percentiles
-  z1 = norminv(0.5*(1+alpha));
-  m1 = normcdf(z0+((z0+z1)/(1-a*(z0+z1))));
-  z2 = norminv(0.5*(1-alpha));
-  m2 = normcdf(z0+((z0+z2)/(1-a*(z0+z2))));
-  S.z0 = z0;
-  S.a = a;
 
 end
 
