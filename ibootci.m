@@ -109,16 +109,15 @@
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
 %  additive random noise of the specified bandwidth to the bootstrap
-%  sample sets before evaluating bootfun. If using bootstrap iteration, 
-%  the kernel used is a Gaussian distribution. Otherwise, the kernel 
-%  used is the Student-t distribution, which can improve coverage in the    
-%  tails when bootstraping small samples without iteration. Recommended  
-%  usage for univariate data, is to run bootstrap using the appropriate   
-%  resampling method first without smoothing, and return the output   
-%  structure S. Then re-run ibootci and apply smoothing with the bandwidth   
-%  set to the standard error (S.SE), which will be of the order n^(-1/2)  
-%  [11]. For d-dimensional multivariate data, the bandwidth can be an 
-%  1-by-d vector of bandwidths, or a d-by-d covariance matrix. 
+%  sample sets before evaluating bootfun. The kernel used is the  
+%  Student-t distribution, which can improve coverage in the tails when 
+%  bootstraping small samples without iteration. Recommended usage for  
+%  univariate data, is to run bootstrap using the appropriate resampling 
+%  method first without smoothing, and return the output structure S. 
+%  Then re-run ibootci and apply smoothing with the bandwidth set to   
+%  the standard error (S.SE), which will be of the order n^(-1/2) [11].  
+%  d-dimensional multivariate data, the bandwidth can be an 1-by-d 
+%  vector of bandwidths, or a d-by-d covariance matrix. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -252,7 +251,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.3.7 (31/12/2019)
+%  ibootci v2.8.3.8 (31/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -745,6 +744,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     
     % Prepare bandwidth variable and correlation matrix
     if ~isempty(bandwidth)
+      if C>0 
+        error('Smoothing not available for iterated bootstrap')
+      end
       if (min(size(bandwidth)) > 1)
         % Do nothing, bandwidth is already a covariance matrix
       else
@@ -854,14 +856,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         T2 = [];
       end
       if ~isempty(bandwidth)
-        % Apply smoothing
-          if C>0 || ~isempty(stderr)
-            % Gaussian Kernel
-            noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
-          else
-            % Student-t Kernel 
-            noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
-          end
+        % Apply smoothing using Student-t kernel
+        noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
         for v = 1:nvar
           X1{v} = X1{v} + noise(:,v);
         end
@@ -1224,14 +1220,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
         if ~isempty(bandwidth)
-          % Apply smoothing
-          if C>0 || ~isempty(stderr)
-            % Gaussian Kernel
-            noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
-          else
-            % Student-t Kernel
-            noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
-          end
+          % Apply smoothing using Student-t kernel
+          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
           for v = 1:nvar
             X1{v} = X1{v} + noise(:,v);
           end
@@ -1269,14 +1259,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
         if ~isempty(bandwidth)
-          % Apply smoothing
-          if C>0 || ~isempty(stderr)
-            % Gaussian Kernel
-            noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
-          else
-            % Student-t Kernel
-            noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
-          end
+          % Apply smoothing using Student-t kernel
+          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
           for v = 1:nvar
             X1{v} = X1{v} + noise(:,v);
           end
