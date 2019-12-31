@@ -111,7 +111,7 @@
 %  additive random noise of the specified bandwidth to the bootstrap
 %  sample sets before evaluating bootfun. The kernel used is the  
 %  Student-t distribution, which can improve coverage in the tails when 
-%  bootstraping small samples without iteration. Recommended usage for  
+%  bootstrapping small samples without iteration. Recommended usage for  
 %  univariate data, is to run bootstrap using the appropriate resampling 
 %  method first without smoothing, and return the output structure S. 
 %  Then re-run ibootci and apply smoothing with the bandwidth set to   
