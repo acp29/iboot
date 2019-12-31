@@ -328,14 +328,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     type = S.type;
     S.coverage = 1-S.alpha;
     alpha = S.coverage;       % convert alpha to coverage
-    % Represent bandwidth as a covariance matrix
-    if ~isempty(bandwidth)
-      if (min(size(bandwidth)) > 1)
-        % Do nothing, bandwidth is already a covariance matrix
-      else
-        bandwidth = diag(bandwidth.^2) ;
-      end
-    end
     opt = struct;
     opt.weights = weights;
     opt.strata = strata;
