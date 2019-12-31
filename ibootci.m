@@ -855,11 +855,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       if ~isempty(bandwidth)
         % Apply smoothing
-          if C>0
+          if C>0 || ~isempty(stderr)
             % Gaussian Kernel
             noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
           else
-            % Student-t Kernel
+            % Student-t Kernel 
             noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
           end
         for v = 1:nvar
@@ -1225,7 +1225,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         end
         if ~isempty(bandwidth)
           % Apply smoothing
-          if C>0
+          if C>0 || ~isempty(stderr)
             % Gaussian Kernel
             noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
           else
@@ -1270,7 +1270,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         end
         if ~isempty(bandwidth)
           % Apply smoothing
-          if C>0
+          if C>0 || ~isempty(stderr)
             % Gaussian Kernel
             noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
           else
