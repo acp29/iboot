@@ -252,7 +252,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.3.6 (30/12/2019)
+%  ibootci v2.8.3.7 (31/12/2019)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -1222,8 +1222,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         % balanced resampling by a permutation algorithm
         if C>0
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-        elseif ~isempty(stderr)
-          U(h) = stderr(X1{:});
         end
         if ~isempty(bandwidth)
           % Apply smoothing
@@ -1239,6 +1237,9 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           end
         end
         T1(h) = feval(bootfun,X1{:});
+        if ~isempty(stderr)
+          U(h) = stderr(X1{:});
+        end
       end
     else
       % Matlab parallel mode
@@ -1266,8 +1267,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         % balanced resampling by a permutation algorithm
         if C>0
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-        elseif ~isempty(stderr)
-          U(h) = stderr(X1{:});
         end
         if ~isempty(bandwidth)
           % Apply smoothing
@@ -1283,6 +1282,9 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           end
         end
         T1(h) = feval(bootfun,X1{:});
+        if ~isempty(stderr)
+          U(h) = stderr(X1{:});
+        end
       end
     end
 
