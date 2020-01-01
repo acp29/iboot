@@ -108,16 +108,16 @@
 %  (i.e. by providing x and y vectors as data variables).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
-%  additive random noise of the specified bandwidth to the bootstrap
-%  sample sets before evaluating bootfun. The kernel used is the  
-%  Student-t distribution, which can improve coverage in the tails when 
-%  bootstrapping small samples without iteration. Recommended usage for  
-%  univariate data, is to run bootstrap using the appropriate resampling 
-%  method first without smoothing, and return the output structure S. 
-%  Then re-run ibootci and apply smoothing with the bandwidth set to   
-%  the standard error (S.SE), which will be of the order n^(-1/2) [11].  
-%  d-dimensional multivariate data, the bandwidth can be an 1-by-d 
-%  vector of bandwidths, or a d-by-d covariance matrix. 
+%  additive random Gaussian noise of the specified bandwidth to the 
+%  bootstrap sample sets before evaluating bootfun. Recommended usage 
+%  for univariate data, is to run bootstrap using the appropriate 
+%  resampling method first without smoothing, and return the output 
+%  structure S. Then re-run ibootci and apply smoothing with the 
+%  bandwidth set to the standard error (S.SE), which will be of the 
+%  order n^(-1/2), suitable for improving coverage of confidence
+%  intervals when sample sizes are small [11]. For d-dimensional 
+%  multivariate data, the bandwidth can be an 1-by-d vector of 
+%  bandwidths, or a d-by-d covariance matrix. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -154,7 +154,7 @@
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
 %    cal: Nominal alpha level from calibration
-%    bandwidth: Bandwidth for smooth bootstrap (Gaussian/Student-t kernel)
+%    bandwidth: Bandwidth for smooth bootstrap (Gaussian kernel)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect estimated by resampling (if requested)
@@ -251,7 +251,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.3.8 (31/12/2019)
+%  ibootci v2.8.4.0 (01/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -851,8 +851,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         T2 = [];
       end
       if ~isempty(bandwidth)
-        % Apply smoothing using Student-t kernel
-        noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
+        % Apply smoothing using Gaussian kernel
+        noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
         for v = 1:nvar
           X1{v} = X1{v} + noise(:,v);
         end
@@ -1215,8 +1215,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
         if ~isempty(bandwidth)
-          % Apply smoothing using Student-t kernel
-          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
+          % Apply smoothing using Gaussian kernel
+          noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
           for v = 1:nvar
             X1{v} = X1{v} + noise(:,v);
           end
@@ -1254,8 +1254,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
         if ~isempty(bandwidth)
-          % Apply smoothing using Student-t kernel
-          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
+          % Apply smoothing using Gaussian kernel
+          noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
           for v = 1:nvar
             X1{v} = X1{v} + noise(:,v);
           end
