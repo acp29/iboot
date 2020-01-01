@@ -462,6 +462,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isempty(bandwidth)
       try
         bandwidth = options{bandwidth};
+        if ~all(bandwidth(:))
+          bandwidth = [];
+        end
       catch
         bandwidth = [];
       end
