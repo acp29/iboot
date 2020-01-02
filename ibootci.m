@@ -1,7 +1,7 @@
 %  Function File: ibootci
 %
-%  Bootstrap confidence intervals for small samples and samples with  
-%  complex dependence structures
+%  Two-sided bootstrap confidence intervals for small samples and  
+%  samples with complex dependence structures
 %
 %  ci = ibootci(nboot,bootfun,...)
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
@@ -154,7 +154,7 @@
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
 %    cal: Nominal alpha level from calibration
-%    bandwidth: Bandwidth for smooth bootstrap (Gaussian kernel)
+%    bandwidth: Bandwidth for smooth bootstrap (Gaussian/Student-t kernel)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect estimated by resampling (if requested)
@@ -251,7 +251,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.0 (01/01/2020)
+%  ibootci v2.8.4.1 (02/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -851,8 +851,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         T2 = [];
       end
       if ~isempty(bandwidth)
-        % Apply smoothing using Gaussian kernel
-        noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
+        % Apply smoothing using Gaussian/Student-t kernel
+        noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
         for v = 1:nvar
           X1{v} = X1{v} + noise(:,v);
         end
@@ -1215,8 +1215,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
         if ~isempty(bandwidth)
-          % Apply smoothing using Gaussian kernel
-          noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
+          % Apply smoothing using Gaussian/Student-t kernel
+          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
           for v = 1:nvar
             X1{v} = X1{v} + noise(:,v);
           end
@@ -1254,8 +1254,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
         if ~isempty(bandwidth)
-          % Apply smoothing using Gaussian kernel
-          noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
+          % Apply smoothing using Gaussian/Student-t kernel
+          noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);
           for v = 1:nvar
             X1{v} = X1{v} + noise(:,v);
           end
