@@ -54,6 +54,7 @@
 %    'stud' or 'student': Studentized (bootstrap-t) confidence interval.
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
+%    'cper': Bias-corrected percentile method [7].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  computes the Studentized bootstrap confidence interval of the statistic
@@ -89,7 +90,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters) specifies
 %  a vector containing numeric identifiers for clusters. Whereas strata
 %  are fixed, clusters are resampled. This is achieved by two-stage
-%  bootstrap resampling of residuals with shrinkage correction [5,7,8].
+%  bootstrap resampling of residuals with shrinkage correction [5,8,9].
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration.
@@ -99,8 +100,8 @@
 %  data with serial dependence (e.g. stationary time series). The
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
 %  without standardization making them equivariant under monotone
-%  transformations [9]. The double bootstrap resampling and calibration
-%  procedure makes interval coverage less sensitive to block length [10].
+%  transformations [10]. The double bootstrap resampling and calibration
+%  procedure makes interval coverage less sensitive to block length [11].
 %  If the blocksize is set to 'auto' (recommended), the block length is
 %  calculated automatically. Note that balanced resampling is not
 %  maintained for block bootstrap. Block bootstrap can also be used for
@@ -115,7 +116,7 @@
 %  structure S. Then re-run ibootci and apply smoothing with the 
 %  bandwidth set to the standard error (S.SE), which will be of the 
 %  order n^(-1/2), suitable for improving coverage of confidence
-%  intervals when sample sizes are small [11]. For d-dimensional 
+%  intervals when sample sizes are small [12]. For d-dimensional 
 %  multivariate data, the bandwidth can be an 1-by-d vector of 
 %  bandwidths, or a d-by-d covariance matrix. 
 %
@@ -154,6 +155,7 @@
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
 %    cal: Nominal alpha level from calibration
+%    z0: Bias correction (0 if type is not 'cper')
 %    bandwidth: Bandwidth for smooth bootstrap (Gaussian/Student-t kernel)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
@@ -196,18 +198,20 @@
 %        application. Chapter 3: pg 97-100
 %  [6] Polansky (2000) Stabilizing bootstrap-t confidence intervals
 %        for small samples. Can J Stat. 28(3):501-516
-%  [7] Gomes et al. (2012) Developing appropriate methods for cost-
+%  [7] Efron (1982) The jackknife, the bootstrap and other resampling
+%        plans. CBMS 38, SIAM-NSF.
+%  [8] Gomes et al. (2012) Developing appropriate methods for cost-
 %        effectiveness analysis of cluster randomized trials.
 %        Medical Decision Making. 32(2): 350-361
-%  [8] Ng, Grieve and Carpenter (2013) Two-stage nonparametric
+%  [9] Ng, Grieve and Carpenter (2013) Two-stage nonparametric
 %        bootstrap sampling with shrinkage correction for clustered
 %        data. The Stata Journal. 13(1): 141-164
-%  [9] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise
+%  [10] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise
 %        Bootstrap for Stationary Observations. The Annals of Statistics.
 %        24(5):1914-1933
-%  [10] Lee and Lai (2009) Double block bootstrap confidence intervals
+%  [11] Lee and Lai (2009) Double block bootstrap confidence intervals
 %        for dependent data. Biometrika. 96(2):427-443
-%  [11] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap 
+%  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap 
 %        Confidence Intervals. J R Statist Soc B. 59(4):821-838 
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
@@ -251,7 +255,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.1 (02/01/2020)
+%  ibootci v2.8.4.2 (02/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -335,7 +339,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.blocksize = blocksize;
     opt.bandwidth = bandwidth;
     % Perform calibration (if applicable)
-    if C>0 && any(strcmpi(type,{'per','percentile'}))
+    if C>0 && any(strcmpi(type,{'per','percentile','cper'}))
       U = zeros(1,B);
       for h = 1:B
         U(h) = interp_boot2(T2(:,h),T0,C);
@@ -515,7 +519,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if (alpha <= 0) || (alpha >= 1)
       error('The alpha value must be a value between 0 and 1');
     end
-    if ~any(strcmpi(type,{'per','percentile','stud','student'}))
+    if ~any(strcmpi(type,{'per','percentile','stud','student','cper'}))
       error('The type of bootstrap must be either per or stud');
     end
     if ~isa(alpha,'numeric')
@@ -906,7 +910,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Calibrate central two-sided coverage
-  if C>0 && any(strcmpi(type,{'per','percentile'}))
+  if C>0 && any(strcmpi(type,{'per','percentile','cper'}))
     % Create a calibration curve
     V = abs(2*U-1);
     [calcurve(:,2),calcurve(:,1)] = empcdf(V,1);
@@ -930,10 +934,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Percentile
       m1 = 0.5*(1+alpha);
       m2 = 0.5*(1-alpha);
+      S.z0 = 0;
+    case 'cper'
+      % Bias corrected intervals
+      [m1,m2,S] = BC(B,bootfun,data,T1,T0,alpha,S);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
       m2 = 0.5*(1+alpha);
+      S.z0 = 0;
   end
 
   % Linear interpolation for interval construction
@@ -1359,6 +1368,24 @@ function  U = interp_boot2 (T2, T0, C)
       end
     end
     U = U/C;
+
+end
+
+%--------------------------------------------------------------------------
+
+function [m1, m2, S] = BC (B, func, x, T1, T0, alpha, S)
+
+  % Note that alpha input argument is nominal coverage
+    
+  % Calculate bias correction z0
+  z0 = norminv(sum(T1<T0)/B);
+
+  % Calculate Bias-corrected percentiles
+  z1 = norminv(0.5*(1+alpha));
+  m1 = normcdf(2*z0+z1);
+  z2 = norminv(0.5*(1-alpha));
+  m2 = normcdf(2*z0+z2);
+  S.z0 = z0;
 
 end
 
