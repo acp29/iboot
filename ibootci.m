@@ -759,9 +759,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         error('Smoothing not available for iterated bootstrap')
       end
       if nvar < 2
-        bandwidth = std(ori_data{1}) / sqrt(S.n(1));
+        bandwidth = sqrt(var(ori_data{1})/S.n(1));
       else
-        bandwidth = cov(cell2mat(ori_data)) / S.n(1);
+        bandwidth = cov(cell2mat(ori_data))/S.n(1);
       end
       if (min(size(bandwidth)) > 1)
         % Do nothing, bandwidth is already a covariance matrix
