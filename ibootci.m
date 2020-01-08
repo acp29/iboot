@@ -111,15 +111,16 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
 %  additive random Gaussian noise of the specified bandwidth to the 
 %  bootstrap sample sets before evaluating bootfun. Recommended usage 
-%  for univariate data, is to run bootstrap using the appropriate 
-%  resampling method first without smoothing, and return the output 
-%  structure S. Then re-run ibootci and apply smoothing with the 
-%  bandwidth set to the standard error (S.SE), which will be of the 
-%  order n^(-1/2), suitable for improving coverage of confidence
-%  intervals when sample sizes are small [12]. For d-dimensional 
-%  multivariate data, the bandwidth can be an 1-by-d vector of 
-%  bandwidths, or a d-by-d covariance matrix. For the univariate 
-%  case, smoothing includes shrinkage correction [13].  
+%  for univariate data, is to set the the bandwidth within the order 
+%  n^(-1/2) to improve coverage of confidence intervals when the sample 
+%  sizes is small [12]. For d-dimensional multivariate data, the  
+%  bandwidth can be an 1-by-d vector of bandwidths, or a d-by-d 
+%  covariance matrix. If bandwidth is set to 'auto', it will be 
+%  estimated from the data: to the standard error of the mean for
+%  univariate data, or the covariance matrix divided by the sample  
+%  size for multivariate data [13]. For the univariate case, 
+%  inflation of the variance is prevented by including shrinkage 
+%  correction procedure [14,15].  
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -214,7 +215,13 @@
 %        for dependent data. Biometrika. 96(2):427-443
 %  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap 
 %        Confidence Intervals. J R Statist Soc B. 59(4):821-838 
-%  [13] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist. 
+%  [13] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs. 
+%        Smoothing. Proceedings of the Section on Statistics & the 
+%        Environment. Alexandria, VA: American Statistical Association.
+%        pp. 2924?2930
+%  [14] Jones (1991) On correcting for variance inflation in kernel
+%        density estimation. Comput Stat Data An. 11, 3-15
+%  [15] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist. 
 %        Math. Vol. 47, No. 1, 65-80
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
@@ -258,7 +265,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.5 (08/01/2020)
+%  ibootci v2.8.4.6 (08/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -471,6 +478,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         bandwidth = options{bandwidth};
         if ~all(bandwidth(:))
           bandwidth = [];
+        elseif any(strcmpi(bandwidth,{'auto','on'}))
+          % do nothing
         end
       catch
         bandwidth = [];
@@ -525,8 +534,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~any(strcmpi(type,{'per','percentile','stud','student','cper'}))
       error('The type of bootstrap must be either per or stud');
     end
-    if ~isa(alpha,'numeric')
-      error('The smoothing bandwidth(s) must be numeric')
+    if ~isa(bandwidth,'numeric') && ~any(strcmpi(bandwidth,{'auto','on'}))
+      error('The smoothing bandwidth(s) must be numeric, or set to ''auto'' or ''on''')
     end
     if sum(strcmpi(deff,{'on','off'})) < 1
       error('The deff input argument must be set to ''on'' or ''off''')
@@ -748,6 +757,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isempty(bandwidth)
       if C>0 
         error('Smoothing not available for iterated bootstrap')
+      end
+      if nvar < 2
+        bandwidth = std(ori_data{1}) / sqrt(S.n(1));
+      else
+        bandwidth = cov(cell2mat(ori_data)) / S.n(1);
       end
       if (min(size(bandwidth)) > 1)
         % Do nothing, bandwidth is already a covariance matrix
