@@ -118,7 +118,8 @@
 %  order n^(-1/2), suitable for improving coverage of confidence
 %  intervals when sample sizes are small [12]. For d-dimensional 
 %  multivariate data, the bandwidth can be an 1-by-d vector of 
-%  bandwidths, or a d-by-d covariance matrix. 
+%  bandwidths, or a d-by-d covariance matrix. For the univariate 
+%  case, smoothing includes shrinkage correction [13].  
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -213,6 +214,8 @@
 %        for dependent data. Biometrika. 96(2):427-443
 %  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap 
 %        Confidence Intervals. J R Statist Soc B. 59(4):821-838 
+%  [13] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist. 
+%        Math. Vol. 47, No. 1, 65-80
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
 %    >> y = randn(20,1);
@@ -255,7 +258,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.3 (06/01/2020)
+%  ibootci v2.8.4.4 (08/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -756,11 +759,17 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       D = diag(sqrt(diag(bandwidth))).'; % standard deviations
       R = inv(D) * bandwidth * inv(D);   % correlation matrix 
       bandwidth = diag(D).';             % set standard deviation as bandwidth 
-      % Calculate degrees of freedom for Student-t distribution
+      % Calculate degrees of freedom 
       if numel(S.n)>1
         df = S.n(1)-S.n(2);
       else
         df = S.n(1) - 1;
+      end
+      % Check size of bandwidth (available for nvar < 2)
+      if nvar < 2
+        if bandwidth > std(data{1},0)
+          error('The bandwidth should not exceed the sample standard deviation')
+        end
       end
     else 
       R = [];
@@ -855,11 +864,34 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         T2 = [];
       end
       if ~isempty(bandwidth)
-          % Apply smoothing
-          noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth); % Gaussian kernel
-          %noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);            % Student-t kernel
+        % Apply smoothing
+        noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n*B),bandwidth); % Gaussian kernel
+        noise = reshape(noise,n,B);
+        % Calculate mean and variance of the original sample
+        xbar = zeros(1,nvar);
+        xvar = zeros(1,nvar);
+        for v=1:nvar
+          xbar(v) = mean(data{v});
+          xvar(v) = var(data{v},0);
+        end
         for v = 1:nvar
-          X1{v} = X1{v} + noise(:,v);
+          if nvar < 2
+            % Bootstrap smoothing with shrinkage correction to maintain 
+            % the sample variance
+            % 
+            % Fryer (1976) Some errors associated with the non-parametric
+            %   estimation of density functions. J. Inst. Maths Applics. 
+            %   18, 371-380
+            %
+            % Wang (1995) OPTIMIZING THE SMOOTHED BOOTSTRAP  
+            %   Ann. Inst. Statist. Math. Vol. 47, No. 1, 65-80
+            %               
+            % Tymoteusz Wolodzko 2019-11-07
+            % https://www.rdocumentation.org/packages/kernelboot/versions/0.1.6/topics/kernelboot            
+            X1{v} = (X1{v} - xbar) .* sqrt(1 - bandwidth^2/xvar) + xbar + noise(:,v);
+          else
+            X1{v} = X1{v} + noise(:,v);
+          end
         end
       end
       switch lower(runmode)
@@ -1146,6 +1178,13 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     else
       idx = zeros(n,B);
     end
+    % Calculate mean and variance of the original sample
+    xbar = zeros(1,nvar);
+    xvar = zeros(1,nvar,1);
+    for v=1:nvar
+      xbar(v) = mean(x{v});
+      xvar(v) = var(x{v},0);
+    end
 
     % If applicable, prepare for stratified resampling
     if ~isempty(strata)
@@ -1227,9 +1266,24 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         if ~isempty(bandwidth)
           % Apply smoothing
           noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth); % Gaussian kernel
-          %noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);            % Student-t kernel
           for v = 1:nvar
-            X1{v} = X1{v} + noise(:,v);
+            if nvar < 2
+              % Bootstrap smoothing with shrinkage correction to maintain 
+              % the sample variance
+              % 
+              % Fryer (1976) Some errors associated with the non-parametric
+              %   estimation of density functions. J. Inst. Maths Applics. 
+              %   18, 371-380
+              %
+              % Wang (1995) OPTIMIZING THE SMOOTHED BOOTSTRAP  
+              %   Ann. Inst. Statist. Math. Vol. 47, No. 1, 65-80
+              %               
+              % Tymoteusz Wolodzko 2019-11-07
+              % https://www.rdocumentation.org/packages/kernelboot/versions/0.1.6/topics/kernelboot            
+              X1{v} = (X1{v} - xbar) .* sqrt(1 - bandwidth^2/xvar) + xbar + noise(:,v);
+            else
+              X1{v} = X1{v} + noise(:,v);
+            end
           end
         end
         T1(h) = feval(bootfun,X1{:});
@@ -1267,9 +1321,24 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         if ~isempty(bandwidth)
           % Apply smoothing
           noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth); % Gaussian kernel
-          %noise = bsxfun(@times,mvtrnd(R,df,n),bandwidth);            % Student-t kernel
           for v = 1:nvar
-            X1{v} = X1{v} + noise(:,v);
+            if nvar < 2
+              % Bootstrap smoothing with shrinkage correction to maintain 
+              % the sample variance
+              % 
+              % Fryer (1976) Some errors associated with the non-parametric
+              %   estimation of density functions. J. Inst. Maths Applics. 
+              %   18, 371-380
+              %
+              % Wang (1995) OPTIMIZING THE SMOOTHED BOOTSTRAP  
+              %   Ann. Inst. Statist. Math. Vol. 47, No. 1, 65-80
+              %               
+              % Tymoteusz Wolodzko 2019-11-07
+              % https://www.rdocumentation.org/packages/kernelboot/versions/0.1.6/topics/kernelboot            
+              X1{v} = (X1{v} - xbar) .* sqrt(1 - bandwidth^2/xvar) + xbar + noise(:,v);
+            else
+              X1{v} = X1{v} + noise(:,v);
+            end
           end
         end
         T1(h) = feval(bootfun,X1{:});
