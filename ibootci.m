@@ -1709,7 +1709,7 @@ function x_shrunk = shrunk_smooth (x,bandwidth,xbar,xvar,noise)
   % https://www.rdocumentation.org/packages/kernelboot/versions/0.1.6/topics/kernelboot 
   
   % Correction by shrinking x residuals 
-  %x_shrunk = (x - xbar) .* sqrt(1 - bandwidth^2/xvar) +...
+  %x_shrunk = (x - xbar) .* sqrt(1 - bandwidth^2 / xvar) +...
   %           xbar + noise;  
 
   % Correction by shrinking both x residuals and the bandwidth
