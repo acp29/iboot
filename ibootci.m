@@ -265,7 +265,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.6 (08/01/2020)
+%  ibootci v2.8.4.7 (09/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -755,8 +755,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     
     % Prepare bandwidth variable and correlation matrix
     if ~isempty(bandwidth)
-      if C>0 
-        error('Smoothing not available for iterated bootstrap')
+      if ~isempty(blocksize)
+        error('Incompatible combination of options.')
       end
       if nvar < 2
         bandwidth = sqrt(var(ori_data{1})/S.n(1));
