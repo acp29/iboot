@@ -119,7 +119,7 @@
 %  estimated from the data: to the standard error of the mean for
 %  univariate data, or the covariance matrix divided by the sample  
 %  size for multivariate data [13]. For the univariate case, 
-%  inflation of the variance is prevented by including shrinkage 
+%  inflation of the variance is prevented by including a shrinkage 
 %  correction procedure [14,15].  
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
