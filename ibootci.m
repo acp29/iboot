@@ -109,18 +109,13 @@
 %  (i.e. by providing x and y vectors as data variables).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
-%  additive random Gaussian noise of the specified bandwidth to the 
-%  bootstrap sample sets before evaluating bootfun. Recommended usage 
-%  for univariate data, is to set the the bandwidth within the order 
-%  n^(-1/2) to improve coverage of confidence intervals when the sample 
-%  sizes is small [12]. For d-dimensional multivariate data, the  
-%  bandwidth can be an 1-by-d vector of bandwidths, or a d-by-d 
-%  covariance matrix. If bandwidth is set to 'auto', it will be 
-%  estimated from the data: to the standard error of the mean for
-%  univariate data, or the covariance matrix divided by the sample  
-%  size for multivariate data [13]. For the univariate case, 
-%  inflation of the variance is prevented by including a shrinkage 
-%  correction procedure [14,15].  
+%  additive random Gaussian noise of the specified bandwidth (or 
+%  covariance matrix) to the bootstrap sample sets before evaluating 
+%  bootfun [12]. If bandwidth is set to 'auto', it will be estimated 
+%  from the data: to the standard error of the mean for univariate 
+%  data, or the covariance matrix divided by the sample size for 
+%  multivariate data [13]. Inflation of the variance is prevented by 
+%  including a shrinkage correction procedure [14,15]. 
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
@@ -265,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.7 (09/01/2020)
+%  ibootci v2.8.4.8 (10/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -540,11 +535,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if sum(strcmpi(deff,{'on','off'})) < 1
       error('The deff input argument must be set to ''on'' or ''off''')
     end
-    if ~isempty(bandwidth)
-      if strcmpi(deff,'on')
-        error('Design effect calculation not compatible with smoothing')
-      end
-    end
     
     % Evaluate data input
     nvar = size(data,2);
@@ -758,10 +748,12 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if ~isempty(blocksize)
         error('Incompatible combination of options.')
       end
-      if nvar < 2
-        bandwidth = sqrt(var(ori_data{1})/S.n(1));
-      else
-        bandwidth = cov(cell2mat(ori_data))/S.n(1);
+      if ~isnumeric(bandwidth)
+        if nvar < 2
+          bandwidth = sqrt(var(ori_data{1})/S.n(1));
+        else
+          bandwidth = cov(cell2mat(ori_data))/S.n(1);
+        end
       end
       if (min(size(bandwidth)) > 1)
         % Do nothing, bandwidth is already a covariance matrix
@@ -884,13 +876,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         noise = cell(1,2);
         for v = 1:nvar
           noise{v} = reshape(temp(:,v),n,B);
-        end
-        if nvar < 2
-          X1{v} = shrunk_smooth (X1{v}, bandwidth, xbar, xvar, noise{v});
-        else
-          for v = 1:nvar
-            X1{v} = X1{v} + noise{v};
-          end
+          X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise{v});
         end
       end
       switch lower(runmode)
@@ -1074,9 +1060,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       opt.strata = [];
       opt.clusters = [];
       opt.blocksize = [];
-      opt.bandwidth = [];
-      opt.R = [];
-      opt.df = [];
       if strcmpi(deff,'on')
         if ~isempty(clusters)
           [SRS1,SRS2] = boot1(ori_data,[B,min(B,200)],S.n(1),S.nvar,bootfun,T0,S,opt);
@@ -1265,12 +1248,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
           noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
-          if nvar < 2
-            X1{v} = shrunk_smooth (X1{v}, bandwidth, xbar, xvar, noise);
-          else
-            for v = 1:nvar
-              X1{v} = X1{v} + noise(:,v);
-            end
+          for v = 1:nvar
+            X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
           end
         end
         T1(h) = feval(bootfun,X1{:});
@@ -1308,12 +1287,8 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
           noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
-          if nvar < 2
-            X1{v} = shrunk_smooth (X1{v}, bandwidth, xbar, xvar, noise);
-          else
-            for v = 1:nvar
-              X1{v} = X1{v} + noise(:,v);
-            end
+          for v = 1:nvar
+            X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
           end
         end
         T1(h) = feval(bootfun,X1{:});
