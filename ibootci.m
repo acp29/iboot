@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.8 (10/01/2020)
+%  ibootci v2.8.4.9 (14/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -872,7 +872,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           xvar(v) = var(data{v},1);
         end
         % Apply smoothing using a Gaussian kernel
-        temp = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n*B),bandwidth);
+        temp = bsxfun(@times,randn(n*B,nvar)*chol(R),bandwidth);
         noise = cell(1,2);
         for v = 1:nvar
           noise{v} = reshape(temp(:,v),n,B);
@@ -1247,7 +1247,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         end
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
-          noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
+          noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
           for v = 1:nvar
             X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
           end
@@ -1286,7 +1286,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         end
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
-          noise = bsxfun(@times,mvnrnd(zeros(1,nvar),R,n),bandwidth);
+          noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
           for v = 1:nvar
             X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
           end
