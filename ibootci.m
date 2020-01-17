@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.5.0 (17/01/2020)
+%  ibootci v2.8.4.9 (14/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -659,7 +659,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if isempty(runmode)
       try
         sim = feval(bootfun,M{:});
-        if size(sim,1)>1 || sum(size(sim))<3
+        if any(size(sim)~=[1,2])
           error('Invoke catch statement');
         end
         runmode = 'fast';
