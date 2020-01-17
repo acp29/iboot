@@ -659,7 +659,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if isempty(runmode)
       try
         sim = feval(bootfun,M{:});
-        if size(sim,1)>1
+        if size(sim,1)>1 || sum(size(sim))<3
           error('Invoke catch statement');
         end
         runmode = 'fast';
