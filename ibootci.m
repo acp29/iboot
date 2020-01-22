@@ -1,6 +1,6 @@
 %  Function File: ibootci
 %
-%  Two-sided bootstrap confidence intervals for small samples and  
+%  Two-sided bootstrap confidence intervals for small samples and
 %  samples with complex dependence structures
 %
 %  ci = ibootci(nboot,bootfun,...)
@@ -34,10 +34,10 @@
 %  calibrated to achieve second order accurate coverage by bootstrap
 %  iteration and interpolation [2]. Linear interpolation of the empirical
 %  cumulative distribution function of bootstat is then used to construct
-%  two-sided confidence intervals [3]. The resampling method used 
-%  throughout is balanced resampling [4]. Default values for the number of 
-%  first and second bootstrap replicate sample sets in nboot are 5000 and 
-%  200 respectively. Note that this calibration procedure does not apply 
+%  two-sided confidence intervals [3]. The resampling method used
+%  throughout is balanced resampling [4]. Default values for the number of
+%  first and second bootstrap replicate sample sets in nboot are 5000 and
+%  200 respectively. Note that this calibration procedure does not apply
 %  to Studentized-type intervals or Cluster or Weights bootstrap options.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha) computes the
@@ -50,7 +50,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type) computes the bootstrap
 %  confidence interval of the statistic defined by the function bootfun.
 %  type is the confidence interval type, chosen from among the following:
-%    'per' or 'percentile': Percentile method (Default). 
+%    'per' or 'percentile': Percentile method (Default).
 %    'stud' or 'student': Studentized (bootstrap-t) confidence interval.
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
@@ -65,11 +65,11 @@
 %  The nbootstd argument is ignored when the interval type is set to
 %  anything other than Studentized (bootstrap-t) intervals.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr) 
-%  computes the studentized bootstrap confidence interval of statistics 
-%  defined by the function bootfun. The standard error of the bootstrap 
-%  statistics is evaluated by the function stderr. stderr is a function 
-%  handle. stderr takes the same arguments as bootfun and returns the 
+%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr)
+%  computes the studentized bootstrap confidence interval of statistics
+%  defined by the function bootfun. The standard error of the bootstrap
+%  statistics is evaluated by the function stderr. stderr is a function
+%  handle. stderr takes the same arguments as bootfun and returns the
 %  standard error of the statistic computed by bootfun.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'weights',weights) specifies
@@ -109,19 +109,19 @@
 %  (i.e. by providing x and y vectors as data variables).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
-%  additive random Gaussian noise of the specified bandwidth (or 
-%  covariance matrix) to the bootstrap sample sets before evaluating 
-%  bootfun [12]. If bandwidth is set to 'auto', it will be estimated 
-%  from the data: to the standard error of the mean for univariate 
-%  data, or the covariance matrix divided by the sample size for 
-%  multivariate data [13]. Inflation of the variance is prevented by 
-%  including a shrinkage correction procedure [14,15]. 
+%  additive random Gaussian noise of the specified bandwidth (or
+%  covariance matrix) to the bootstrap sample sets before evaluating
+%  bootfun [12]. If bandwidth is set to 'auto', it will be estimated
+%  from the data: to the standard error of the mean for univariate
+%  data, or the covariance matrix divided by the sample size for
+%  multivariate data [13]. Inflation of the variance is prevented by
+%  including a shrinkage correction procedure [14,15].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
 %  bootstrap computations using the indices from bootidx for the first
 %  bootstrap.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the 
+%  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the
 %  design effect by resampling. State can be 'on' or 'off'. Default is
 %  'off'.
 %
@@ -129,11 +129,11 @@
 %  computed for each of the bootstrap replicate samples sets. If only
 %  a single bootstrap is requested, bootstat will return a vector: each
 %  column of bootstat contains the result of applying bootfun to one
-%  replicate sample from the first bootstrap. If a function handle is 
-%  passed to stderr for Studentised bootstrap intervals, bootstat will 
-%  return a cell array containing the statistics computed using bootfun 
-%  and stderr in the first and second cells respectively. If bootstrap 
-%  iteration is requested, bootstat will return a cell array containing 
+%  replicate sample from the first bootstrap. If a function handle is
+%  passed to stderr for Studentised bootstrap intervals, bootstat will
+%  return a cell array containing the statistics computed using bootfun
+%  and stderr in the first and second cells respectively. If bootstrap
+%  iteration is requested, bootstat will return a cell array containing
 %  the statistics computed by bootfun in the first and second bootstrap.
 %  For the second boostrap, each column of bootstat contains the
 %  results of applying bootfun to each replicate sample from the second
@@ -175,7 +175,7 @@
 %  [ci,bootstat,S,calcurve,bootidx] = ibootci(...) also returns bootidx,
 %  a matrix of indices from the first bootstrap.
 %
-%  Computations of confidence intervals can be accelerated by starting 
+%  Computations of confidence intervals can be accelerated by starting
 %  a parallel pool prior to executing ibootci. This is particularly useful
 %  for the calculation of p-values using ibootci wrapper functions.
 %  Parallel usage is supported in MATLAB for most features except for
@@ -208,15 +208,15 @@
 %        24(5):1914-1933
 %  [11] Lee and Lai (2009) Double block bootstrap confidence intervals
 %        for dependent data. Biometrika. 96(2):427-443
-%  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap 
-%        Confidence Intervals. J R Statist Soc B. 59(4):821-838 
-%  [13] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs. 
-%        Smoothing. Proceedings of the Section on Statistics & the 
+%  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap
+%        Confidence Intervals. J R Statist Soc B. 59(4):821-838
+%  [13] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs.
+%        Smoothing. Proceedings of the Section on Statistics & the
 %        Environment. Alexandria, VA: American Statistical Association.
 %        pp. 2924?2930
 %  [14] Jones (1991) On correcting for variance inflation in kernel
 %        density estimation. Comput Stat Data An. 11, 3-15
-%  [15] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist. 
+%  [15] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist.
 %        Math. Vol. 47, No. 1, 65-80
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
@@ -245,12 +245,12 @@
 %    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w);
 %
 %  Example 5: 95% confidence interval for the median by smoothed bootstrap
-%  (requires the smoothmedian function available at Matlab Central File 
+%  (requires the smoothmedian function available at Matlab Central File
 %  Exchange)
 %    >> y = randn(20,1);
 %    >> ci = ibootci([5000 200],@smoothmedian,y);
 %
-%  Example 6: 95% confidence interval for the 25% trimmed (or 
+%  Example 6: 95% confidence interval for the 25% trimmed (or
 %  interquartile) mean
 %    >> y = randn(20,1);
 %    >> func = @(x) trimmean(x,50)
@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.4.9 (14/01/2020)
+%  ibootci v2.8.5.0 (21/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -350,7 +350,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         U(h) = interp_boot2(T2(:,h),T0,C);
       end
     end
-    
+
   elseif ~iscell(argin2)
     % Normal usage without options
     nboot = argin1;
@@ -527,7 +527,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       error('The alpha value must be a value between 0 and 1');
     end
     if ~any(strcmpi(type,{'per','percentile','stud','student','cper'}))
-      error('The type of bootstrap must be either per or stud');
+      error('The type of bootstrap must be either per, cper or stud');
     end
     if ~isa(bandwidth,'numeric') && ~any(strcmpi(bandwidth,{'auto','on'}))
       error('The smoothing bandwidth(s) must be numeric, or set to ''auto'' or ''on''')
@@ -535,7 +535,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if sum(strcmpi(deff,{'on','off'})) < 1
       error('The deff input argument must be set to ''on'' or ''off''')
     end
-    
+
     % Evaluate data input
     nvar = size(data,2);
     if (min(size(data{1}))>1)
@@ -712,7 +712,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       nboot(2) = 0;
       C = nboot(2);
     end
-    if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'})) 
+    if isempty(nbootstd) && isempty(stderr) && (C==0) && any(strcmpi(type,{'stud','student'}))
       error('Studentized (bootstrap-t) intervals require bootstrap interation or stderr')
     end
     if C>0 && ~any(strcmpi(type,{'stud','student'}))
@@ -742,7 +742,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if matflag > 0
       bootfun = @(varargin) bootfun(list2mat(varargin{:}));
     end
-    
+
     % Prepare bandwidth variable and correlation matrix
     if ~isempty(bandwidth)
       if ~isempty(blocksize)
@@ -763,15 +763,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       end
       % Extract bandwidth and correlation matrix from covariance matrix
       D = diag(sqrt(diag(bandwidth))).'; % standard deviations
-      R = inv(D) * bandwidth * inv(D);   % correlation matrix 
-      bandwidth = diag(D).';             % set standard deviation as bandwidth 
-      % Calculate degrees of freedom 
+      R = inv(D) * bandwidth * inv(D);   % correlation matrix
+      bandwidth = diag(D).';             % set standard deviation as bandwidth
+      % Calculate degrees of freedom
       if numel(S.n)>1
         df = S.n(1)-S.n(2);
       else
         df = S.n(1) - 1;
       end
-    else 
+    else
       R = [];
       df = [];
     end
@@ -826,7 +826,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.df = df;
     opt.stderr = stderr;
     opt.runmode = runmode;
-    
+
     % Perform bootstrap
     % Bootstrap resampling
     if isempty(idx)
@@ -835,9 +835,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       else
         [T1, T2, U, idx] = boot1 (data, nboot, n, nvar, bootfun, T0, S, opt);
       end
-      if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
-        % When a function is provided in stderr, the U variable contains 
-        % standard errors of the bootstrap samples 
+      if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr)
+        % When a function is provided in stderr, the U variable contains
+        % standard errors of the bootstrap samples
         SE1 = U;
       end
     else
@@ -898,10 +898,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     % Assign data to bootstat
     if isempty(T2)
-      if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr) 
+      if any(strcmpi(type,{'stud','student'})) && ~isempty(stderr)
         bootstat = cell(2,1);
         bootstat{1} = T1;
-      else 
+      else
         bootstat = T1;
       end
     else
@@ -969,8 +969,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Use bootstrap-t method with variance stabilization for small samples
     % Polansky (2000) Can J Stat. 28(3):501-516
     if C>0
-      se = std(T1,0);
-      SE1 = std(T2,0);
+      se = nanstd(T1,0);
+      SE1 = nanstd(T2,0);
     else
       if ~isempty(stderr)
         % Use stderr function if provided
@@ -981,16 +981,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         SE1 = bootstat{2};
       end
       SE = se;
-      % Put standard errors for into second cell of bootstat output 
+      % Put standard errors for into second cell of bootstat output
       bootstat{2} = SE1;
     end
-    if isempty(bandwidth) 
-      a = n^(-3/2) * se;
-    else
-      a = 0;
-    end
+    a = n^(-3/2) * se;
+
 
     % Calculate Studentized statistics
+    ridx = isnan(T1); T1(ridx)=[]; SE1(ridx)=[];
     T = (T1-T0)./(SE1+a);
     [cdf,T] = empcdf(T,1);
 
@@ -1021,7 +1019,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   % Also re-sort data to match original input data
   if (nargout>2)
     if ~isempty(data)
-        
+
       % Examine dependence structure of each variable by autocorrelation
       if ~isempty(ori_data)
         S.xcorr = zeros(2*min(S.n(1),99)+1,S.nvar);
@@ -1029,8 +1027,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           S.xcorr(:,v) = xcorr(ori_data{v},min(S.n(1),99),'coeff');
         end
         S.xcorr(1:min(S.n(1),99),:) = [];
-      end  
-        
+      end
+
       % Calculate intraclass correlation coefficient (ICC) for each variable
       %  - Smeeth and Ng (2002) Control Clin Trials. 23(4):409-21
       %  - Huang (2018) Educ Psychol Meas. 78(2):297-318
@@ -1053,7 +1051,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Ratio of variance to that calculated by simple random sampling (SRS)
       if matflag > 0
         bootfun = @(varargin) S.bootfun(list2mat(varargin{:}));
-      else 
+      else
         bootfun = S.bootfun;
       end
       opt.weights = ones(n,1);
@@ -1138,7 +1136,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     df = opt.df;
     stderr = opt.stderr;
     runmode = opt.runmode;
-    
+
     % Initialize
     B = nboot(1);
     C = nboot(2);
@@ -1245,6 +1243,9 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         if C>0
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
+        if ~isempty(stderr)
+          U(h) = stderr(X1{:});
+        end
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
           noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
@@ -1253,9 +1254,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           end
         end
         T1(h) = feval(bootfun,X1{:});
-        if ~isempty(stderr)
-          U(h) = stderr(X1{:});
-        end
       end
     else
       % Matlab parallel mode
@@ -1263,7 +1261,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
       if nargout > 3
         error('No bootidx when operating ibootci in parallel mode')
       end
-      % Prepare resampling weights 
+      % Prepare resampling weights
       w = zeros(n,K);
       for k = 1:K
         w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
@@ -1284,6 +1282,9 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         if C>0
           [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
         end
+        if ~isempty(stderr)
+          U(h) = stderr(X1{:});
+        end
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
           noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
@@ -1292,9 +1293,6 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
           end
         end
         T1(h) = feval(bootfun,X1{:});
-        if ~isempty(stderr)
-          U(h) = stderr(X1{:});
-        end
       end
     end
 
@@ -1307,7 +1305,7 @@ function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt)
     % Extract required options structure fields
     blocksize = opt.blocksize;
     runmode = opt.runmode;
-    
+
     % Note that weights are not implemented here with iterated bootstrap
 
     % Prepare for block resampling (if applicable)
@@ -1398,7 +1396,7 @@ end
 function [m1, m2, S] = BC (B, func, x, T1, T0, alpha, S)
 
   % Note that alpha input argument is nominal coverage
-    
+
   % Calculate bias correction z0
   z0 = norminv(sum(T1<T0)/B);
 
@@ -1558,7 +1556,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   %       13(1): 141-164
   %  [3] Gomes et al. (2012) Medical Decision Making. 32(2): 350-361
   %  [4] Gomes et al. (2012) Health Econ. 21(9):1101-18
-  
+
   % Calculate data dimensions
   Z = varargin{1};
   nvar = numel(Z);
@@ -1667,30 +1665,30 @@ end
 
 function x_shrunk = shrunk_smooth (x,bandwidth,xbar,xvar,noise)
 
-  % Bootstrap smoothing with shrinkage correction to maintain 
+  % Bootstrap smoothing with shrinkage correction to maintain
   % the sample variance
-  % 
+  %
   % Fryer (1976) Some errors associated with the non-parametric
-  %   estimation of density functions. J. Inst. Maths Applics. 
+  %   estimation of density functions. J. Inst. Maths Applics.
   %   18, 371-380
   %
   % Jones (1991) On correcting for variance inflation in kernel
   %   density estimation. Comput Stat Data An. 11, 3-15
   %
-  % Wang (1995) OPTIMIZING THE SMOOTHED BOOTSTRAP  
+  % Wang (1995) OPTIMIZING THE SMOOTHED BOOTSTRAP
   %   Ann. Inst. Statist. Math. Vol. 47, No. 1, 65-80
-  %               
+  %
   % Tymoteusz Wolodzko 2019-11-07
-  % https://www.rdocumentation.org/packages/kernelboot/versions/0.1.6/topics/kernelboot 
-  
-  % Correction by shrinking x residuals 
+  % https://www.rdocumentation.org/packages/kernelboot/versions/0.1.6/topics/kernelboot
+
+  % Correction by shrinking x residuals
   %x_shrunk = (x - xbar) .* sqrt(1 - bandwidth^2 / xvar) +...
-  %           xbar + noise;  
+  %           xbar + noise;
 
   % Correction by shrinking both x residuals and the bandwidth
   x_shrunk = sqrt(xvar) * (x - xbar + noise) ./...
-             sqrt(bandwidth^2 + xvar) + xbar; 
-      
+             sqrt(bandwidth^2 + xvar) + xbar;
+
 end
 
 %--------------------------------------------------------------------------
