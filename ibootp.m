@@ -117,19 +117,16 @@ function  p = bootstud(m,bootstat,S)
 
   % Use bootstrap-t method with variance stabilization for small samples
   % Polansky (2000) Can J Stat. 28(3):501-516
-  se = std(bootstat{1},0);
+  se = nanstd(bootstat{1},0);
   if size(bootstat{2},1) > 1
-    SE1 = std(bootstat{2},0);
+    SE1 = nanstd(bootstat{2},0);
   else
     SE1 = bootstat{2};
   end
-  if isempty(S.bandwidth) 
-    a = S.n(1)^(-3/2) * se;  % additive correction factor
-  else
-    a = 0;
-  end
+  a = S.n(1)^(-3/2) * se;  % additive correction factor
 
   % Calculate Studentized statistics
+  ridx = isnan(T); T(ridx)=[]; SE1(ridx)=[];
   T = (bootstat{1} - S.stat)./(SE1 + a);
   t = (S.stat - m)/se;
 
