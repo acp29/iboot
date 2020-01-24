@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.5.1 (24/01/2020)
+%  ibootci v2.8.5.0 (21/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -984,11 +984,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       % Put standard errors for into second cell of bootstat output
       bootstat{2} = SE1;
     end
-    if isempty(bandwidth) 
-      a = n^(-3/2) * se;
-    else
-      a = 0;
-    end
+    a = n^(-3/2) * se;
+
 
     % Calculate Studentized statistics
     ridx = isnan(T1); T1(ridx)=[]; SE1(ridx)=[];
@@ -1243,18 +1240,18 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         end
         % Since second bootstrap is usually much smaller, perform rapid
         % balanced resampling by a permutation algorithm
+        if C>0
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
+        end
+        if ~isempty(stderr)
+          U(h) = stderr(X1{:});
+        end
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
           noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
           for v = 1:nvar
             X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
           end
-        end
-        if C>0
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-        end
-        if ~isempty(stderr)
-          U(h) = stderr(X1{:});
         end
         T1(h) = feval(bootfun,X1{:});
       end
@@ -1282,18 +1279,18 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
         end
         % Since second bootstrap is usually much smaller, perform rapid
         % balanced resampling by a permutation algorithm
+        if C>0
+          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
+        end
+        if ~isempty(stderr)
+          U(h) = stderr(X1{:});
+        end
         if ~isempty(bandwidth)
           % Apply smoothing using a Gaussian kernel
           noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
           for v = 1:nvar
             X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
           end
-        end
-        if C>0
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-        end
-        if ~isempty(stderr)
-          U(h) = stderr(X1{:});
         end
         T1(h) = feval(bootfun,X1{:});
       end
