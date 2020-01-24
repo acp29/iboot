@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.5.6 (02/01/2020)
+%  ibootp v1.5.5.7 (24/01/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -123,10 +123,13 @@ function  p = bootstud(m,bootstat,S)
   else
     SE1 = bootstat{2};
   end
-  a = S.n(1)^(-3/2) * se;  % additive correction factor
-
+  if isempty(S.bandwidth) 
+    a = S.n(1)^(-3/2) * se;  % additive correction factor
+  else
+    a = 0;
+  end
   % Calculate Studentized statistics
-  ridx = isnan(T); T(ridx)=[]; SE1(ridx)=[];
+  ridx = isnan(bootstat{1}); bootstat{1}(ridx)=[]; SE1(ridx)=[];
   T = (bootstat{1} - S.stat)./(SE1 + a);
   t = (S.stat - m)/se;
 
