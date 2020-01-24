@@ -123,11 +123,8 @@ function  p = bootstud(m,bootstat,S)
   else
     SE1 = bootstat{2};
   end
-  if isempty(S.bandwidth) 
-    a = S.n(1)^(-3/2) * se;  % additive correction factor
-  else
-    a = 0;
-  end
+  a = S.n(1)^(-3/2) * se;  % additive correction factor
+
   % Calculate Studentized statistics
   ridx = isnan(bootstat{1}); bootstat{1}(ridx)=[]; SE1(ridx)=[];
   T = (bootstat{1} - S.stat)./(SE1 + a);
