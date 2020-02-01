@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.5.7 (24/01/2020)
+%  ibootp v1.5.5.8 (01/02/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -117,9 +117,12 @@ function  p = bootstud(m,bootstat,S)
 
   % Use bootstrap-t method with variance stabilization for small samples
   % Polansky (2000) Can J Stat. 28(3):501-516
-  se = nanstd(bootstat{1},0);
+  se = std(bootstat{1}(~isnan(bootstat{1})),0);
   if size(bootstat{2},1) > 1
-    SE1 = nanstd(bootstat{2},0);
+    SE1 = zeros(1,B);
+    for h = 1:B
+      SE1(1,h) = std(bootstat{2}(~isnan(bootstat{2}(:,h)),h),0);
+    end
   else
     SE1 = bootstat{2};
   end
