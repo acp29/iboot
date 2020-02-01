@@ -72,11 +72,9 @@ function p = ibootp(m,bootstat,S,calcurve)
       % Bias correction to P-value if applicable
       z1 = norminv(p);
       p = normcdf(2*S.z0+z1);
-
     case {'stud','student'}
       % Use bootstrap-t method
       p = bootstud(m,bootstat,S);
-
   end
 
   % Convert to equal-sided two-tailed test
