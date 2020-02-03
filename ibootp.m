@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.5.8 (01/02/2020)
+%  ibootp v1.5.5.9 (03/02/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -115,12 +115,9 @@ function  p = bootstud(m,bootstat,S)
 
   % Use bootstrap-t method with variance stabilization for small samples
   % Polansky (2000) Can J Stat. 28(3):501-516
-  se = std(bootstat{1}(~isnan(bootstat{1})),0);
+  se = nanfun(@std,bootstat{1});
   if size(bootstat{2},1) > 1
-    SE1 = zeros(1,B);
-    for h = 1:B
-      SE1(1,h) = std(bootstat{2}(~isnan(bootstat{2}(:,h)),h),0);
-    end
+    SE1 = nanfun(@std,bootstat{2});
   else
     SE1 = bootstat{2};
   end
@@ -134,6 +131,23 @@ function  p = bootstud(m,bootstat,S)
   % Calculate p value from empirical distribution of the Studentized bootstrap statistics
   [cdf,T] = empcdf(T,0);
   p = 1-interp1(T,cdf,t,'linear');
+
+end
+
+%--------------------------------------------------------------------------
+
+function Y = nanfun (func, X)
+
+  % Math functions, ignoring NaNs.
+  [m,n] = size(X);
+  if m > 1
+    Y = zeros(1,n);
+    for i = 1:n
+      Y(i) = feval(func, X(~isnan(X(:,i)),i));
+    end
+  else
+    Y = feval(func, X(~isnan(X)));
+  end
 
 end
 
