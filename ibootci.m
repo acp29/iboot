@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.5.1 (01/02/2020)
+%  ibootci v2.8.5.2 (03/02/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -365,6 +365,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     blocksize = [];
     bandwidth = [];
     nbootstd = [];
+    stderr = [];
     deff = 'off';
     type = 'per';
     T1 = [];  % Initialize bootstat variable
@@ -915,16 +916,16 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if C>0
     % Double bootstrap bias estimation
     % See Davison and Hinkley (1997) pg 103-107
-    b = mean(T1)-T0;
-    c = mean(mean(T2))-2*mean(T1)+T0;
+    b = nanfun(@mean,T1) - T0;
+    c = mean(nanfun(@mean,T2)) - 2*nanfun(@mean,T1)+T0;
     bias = b-c;
     % Double bootstrap multiplicative correction of the variance
-    SE = sqrt(var(T1,0)^2 / mean(var(T2,0)));
+    SE = sqrt(nanfun(@var,T1)^2 / mean(nanfun(@var,T2)));
   else
     % Single bootstrap bias estimation
-    bias = mean(T1)-T0;
+    bias = nanfun(@mean,T1) - T0;
     % Single bootstrap variance estimation
-    SE = std(T1,0);
+    SE = nanfun(@std,T1);
   end
 
   % Calibrate central two-sided coverage
@@ -969,11 +970,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Use bootstrap-t method with variance stabilization for small samples
     % Polansky (2000) Can J Stat. 28(3):501-516
     if C>0
-      se = std(T1(~isnan(T1)),0);
-      SE1 = zeros(1,B);
-      for h = 1:B
-        SE1(1,h) = std(T2(~isnan(T2(:,h)),h),0);
-      end
+      se = nanfun(@std,T1);
+      SE1 = nanfun(@std,T2);
     else
       if ~isempty(stderr)
         % Use stderr function if provided
@@ -1661,6 +1659,23 @@ function data = list2mat (varargin)
 
   % Convert comma-separated list input to matrix
   data = cell2mat(varargin);
+
+end
+
+%--------------------------------------------------------------------------
+
+function Y = nanfun (func, X)
+
+  % Math functions, ignoring NaNs.
+  [m,n] = size(X);
+  if m > 1
+    Y = zeros(1,n);
+    for i = 1:n
+      Y(i) = feval(func, X(~isnan(X(:,i)),i));
+    end
+  else
+    Y = feval(func, X(~isnan(X)));
+  end
 
 end
 
