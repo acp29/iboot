@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.5.2 (03/02/2020)
+%  ibootci v2.8.5.3 (04/02/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -1023,11 +1023,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
       % Examine dependence structure of each variable by autocorrelation
       if ~isempty(ori_data)
-        S.xcorr = zeros(2*min(S.n(1),99)+1,S.nvar);
+        S.xcorr = zeros(min(S.n(1),99),S.nvar);
         for v = 1:S.nvar
-          S.xcorr(:,v) = xcorr(ori_data{v},min(S.n(1),99),'coeff');
+          S.xcorr(:,v) = autocorr(ori_data{v},99);
         end
-        S.xcorr(1:min(S.n(1),99),:) = [];
       end
 
       % Calculate intraclass correlation coefficient (ICC) for each variable
@@ -1709,6 +1708,29 @@ function x_shrunk = shrunk_smooth (x,bandwidth,xbar,xvar,noise)
 
 end
 
+%--------------------------------------------------------------------------
+
+function r = autocorr (x, maxlag)
+
+  % Efficient calculation of autocorrelation by fast fourier transform
+  [m,n] = size(x);
+  if nargin > 1
+    if ~isa(maxlag,'numeric') || maxlag < 1 || maxlag ~= abs(maxlag)
+      error('maxlag must be an integer >= 1')
+    end
+  else
+    maxlag = m;
+  end
+  if n > 1
+    error('x must be a vector')
+  end
+  X = fft(x,2^nextpow2(2*m-1));
+  r = ifft(abs(X).^2);
+  r(min(m,maxlag)+1:end) = [];
+  r = r./r(1);
+
+end
+  
 %--------------------------------------------------------------------------
 
 function [F, x] = empcdf (y, c)
