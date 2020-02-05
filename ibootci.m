@@ -1022,11 +1022,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if ~isempty(data)
 
       % Examine dependence structure of each variable by autocorrelation
-      if ~isempty(ori_data)
-        S.xcorr = zeros(min(S.n(1),99),S.nvar);
-        for v = 1:S.nvar
-          S.xcorr(:,v) = autocorr(ori_data{v},99);
+      if ~isempty(blocksize)
+        if ~isempty(ori_data)
+          S.xcorr = zeros(min(S.n(1),99),S.nvar);
+          for v = 1:S.nvar
+            S.xcorr(:,v) = autocorr(ori_data{v},99);
+          end
         end
+      else
+        S.xcorr = [];
       end
 
       % Calculate intraclass correlation coefficient (ICC) for each variable
@@ -1044,7 +1048,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         [SSb, SSw, K, g, MSb, MSw, dk] = sse_calc (ori_data, groups, nvar);
         S.ICC = (MSb-MSw)/(MSb+(dk-1)*MSw);
       else
-        S.ICC = NaN;
+        S.ICC = [];
       end
 
       % Estimate the design effect by resampling
