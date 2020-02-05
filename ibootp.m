@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.5.9 (03/02/2020)
+%  ibootp v1.5.6.0 (04/02/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -65,10 +65,17 @@ function p = ibootp(m,bootstat,S,calcurve)
 
   % Calculate one-sided P value
   switch lower(S.type)
-    case {'per','percentile','cper'}
+    case {'per','percentile'}
       % Find P-value from the cdf of the bootstrap distribution by linear interpolation
       [cdf,t1] = empcdf(T1,0);
       p = 1-interp1(t1,cdf,m,'linear');
+    case {'cper'}
+      % Find P-value from the cdf of the bootstrap distribution by linear interpolation
+      [cdf,t1] = empcdf(T1,0);
+      p = 1-interp1(t1,cdf,m,'linear');
+      % Create distribution functions 
+      stdnormcdf = @(x) 0.5*(1+erf(x/sqrt(2)));
+      stdnorminv = @(p) sqrt(2)*erfinv(2*p-1);
       % Bias correction to P-value if applicable
       z1 = norminv(p);
       p = normcdf(2*S.z0+z1);
