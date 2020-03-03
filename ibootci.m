@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.5.3 (04/02/2020)
+%  ibootci v2.8.5.4 (03/03/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -932,7 +932,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if C>0 && any(strcmpi(type,{'per','percentile','cper'}))
     % Create a calibration curve
     V = abs(2*U-1);
-    [calcurve(:,2),calcurve(:,1)] = empcdf(V,1);
+    [calcurve(:,2),calcurve(:,1)] = empcdf(V,0);
     alpha = interp1(calcurve(:,2),calcurve(:,1),alpha);
   else
     calcurve = [];
@@ -991,7 +991,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     % Calculate Studentized statistics
     ridx = isnan(T1); T1(ridx)=[]; SE1(ridx)=[];
     T = (T1-T0)./(SE1+a);
-    [cdf,T] = empcdf(T,1);
+    [cdf,T] = empcdf(T,0);
 
     % Calculate intervals from empirical distribution of the Studentized bootstrap statistics
     UL = T0 - se * interp1(cdf,T,m1,'linear','extrap');
@@ -1001,7 +1001,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   else
 
     % Calculate interval for percentile method
-    [cdf,t1] = empcdf(T1,1);
+    [cdf,t1] = empcdf(T1,0);
     UL = interp1(cdf,t1,m1,'linear','extrap');
     LL = interp1(cdf,t1,m2,'linear','extrap');
     ci = [LL;UL];
