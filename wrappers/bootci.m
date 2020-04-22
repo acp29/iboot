@@ -14,14 +14,14 @@
 %  ci = bootci(nboot,bootfun,...) computes the 95% bootstrap confidence
 %  interval of the statistic computed by bootfun. nboot is a scalar value
 %  indicating the number of replicate bootstrap samples. bootfun is a
-%  function handle specified with @, or a string indicating the function
-%  name. The third and later input arguments are data (column vectors, or
-%  a matrix), that are used to create inputs for bootfun. bootci creates
-%  each first level bootstrap by balanced resampling from the rows of the
-%  data argument(s) (which must be the same size) [1-3]. Linear interpolation
-%  of the empirical cumulative distribution function of bootstat is then
-%  used to construct two-sided confidence intervals [4]. Default values for
-%  the number of bootstrap replicate sample sets in nboot is 5000.
+%  function handle (e.g. specified with @), or a string indicating the 
+%  function name. The third and later input arguments are data (column 
+%  vectors, or a matrix), that are used to create inputs for bootfun. 
+%  bootci creates each first level bootstrap by balanced resampling from 
+%  the rows of the data argument(s) (which must be the same size) [1-3]. 
+%  Linear interpolation of the empirical cumulative distribution function 
+%  of bootstat is then used to construct two-sided confidence intervals 
+%  [4]. The default value for nboot is 5000.
 %
 %  ci = bootci(nboot,{bootfun,...},...,'alpha',alpha) computes the
 %  bootstrap confidence interval of the statistic defined by the function
@@ -59,10 +59,10 @@
 %
 %  ci = bootci(nboot,{bootfun,...},...,'weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
-%  The dimensions of weights must be equal to that of the non-scalar input
-%  arguments to bootfun. The weights are used as bootstrap sampling
-%  probabilities. Note that weights are not implemented for Studentized-
-%  type intervals.
+%  The length of weights must be equal to first dimension of the non-
+%  scalar input argument(s) to bootfun. The weights are used as bootstrap 
+%  sampling probabilities. Note that weights are not implemented for 
+%  Studentized-type intervals.
 %
 %  [ci,bootstat] = bootci(...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets.
