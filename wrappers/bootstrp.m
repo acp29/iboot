@@ -40,7 +40,7 @@
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
 %  Cite as:
-%  Andrew Penn (2019). bootci (https://www.github.com/acp29/iboot), GitHub.
+%  Andrew Penn (2019). bootstrp (https://www.github.com/acp29/iboot), GitHub.
 %
 %  Copyright 2019 Andrew Charles Penn
 %  This program is free software: you can redistribute it and/or modify
