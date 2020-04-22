@@ -13,12 +13,12 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters)
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize)
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth)
-%  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx)
+%  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam)
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state)
 %  [ci,bootstat] = ibootci(...)
 %  [ci,bootstat,S] = ibootci(...)
 %  [ci,bootstat,S,calcurve] = ibootci(...)
-%  [ci,bootstat,S,calcurve,bootidx] = ibootci(...)
+%  [ci,bootstat,S,calcurve,bootsam] = ibootci(...)
 %
 %  ci = ibootci(nboot,bootfun,...) computes the 95% iterated (double)
 %  bootstrap confidence interval of the statistic computed by bootfun.
@@ -74,10 +74,10 @@
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
-%  The dimensions of weights must be equal to that of the non-scalar input
-%  arguments to bootfun. The weights are used as bootstrap sampling
-%  probabilities. Note that weights are not implemented for Studentized-
-%  type intervals or bootstrap iteration.
+%  The length of weights must be equal to first dimension of the non-
+%  scalar input argument(s) to bootfun. The weights are used as bootstrap 
+%  sampling probabilities. Note that weights are not implemented for 
+%  Studentized-type intervals or bootstrap iteration.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'strata',strata) specifies a
 %  vector containing numeric identifiers of strata. The dimensions of
@@ -117,8 +117,8 @@
 %  multivariate data [13]. Inflation of the variance is prevented by
 %  including a shrinkage correction procedure [14,15].
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'bootidx',bootidx) performs
-%  bootstrap computations using the indices from bootidx for the first
+%  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam) performs
+%  bootstrap computations using the indices from bootsam for the first
 %  bootstrap.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the
@@ -172,8 +172,10 @@
 %  curve for central coverage. The first column is nominal coverage and
 %  the second column is actual coverage.
 %
-%  [ci,bootstat,S,calcurve,bootidx] = ibootci(...) also returns bootidx,
-%  a matrix of indices from the first bootstrap.
+%  [ci,bootstat,S,calcurve,bootsam] = ibootci(...) also returns bootsam,
+%  a matrix of indices from the first bootstrap. Each column in bootsam 
+%  corresponds to one bootstrap sample and contains the row indices of 
+%  the values drawn from the nonscalar data to create that sample.
 %
 %  Computations of confidence intervals can be accelerated by starting
 %  a parallel pool prior to executing ibootci. This is particularly useful
@@ -227,8 +229,8 @@
 %  Example 2: 95% confidence intervals for the means of paired/matched data
 %    >> y1 = randn(20,1);
 %    >> y2 = randn(20,1);
-%    >> [ci1,bootstat,S,calcurve,bootidx] = ibootci([5000 200],{@mean,y1});
-%    >> ci2 = ibootci([5000 200],{@mean,y2},'bootidx',bootidx);
+%    >> [ci1,bootstat,S,calcurve,bootsam] = ibootci([5000 200],{@mean,y1});
+%    >> ci2 = ibootci([5000 200],{@mean,y2},'bootsam',bootsam);
 %
 %  Example 3: 95% confidence intervals for the correlation coefficient
 %    >> z = mvnrnd([2,3],[1,1.5;1.5,3],20);
@@ -386,7 +388,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     clusters = 1+find(cellfun(@(options) any(strcmpi({'clusters','cluster'},options)),options));
     blocksize = 1+find(cellfun(@(options) any(strcmpi({'block','blocks','blocksize'},options)),options));
     bandwidth = 1+find(cellfun(@(options) any(strcmpi({'smooth','smoothing','bandwidth'},options)),options));
-    bootidx = 1+find(strcmpi('bootidx',options));
+    bootsam = 1+find(strcmpi('bootsam',options));
     deff = 1+find(strcmpi('deff',options));
     if ~isempty(alpha)
       try
@@ -483,16 +485,16 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       bandwidth = [];
     end
-    if ~isempty(bootidx)
+    if ~isempty(bootsam)
       try
-        idx = options{bootidx};
+        idx = options{bootsam};
       catch
-        error('Could not find bootidx')
+        error('Could not find bootsam')
       end
       if size(data{1},1) ~= size(idx,1)
-        error('Dimensions of data and bootidx are inconsistent')
+        error('Dimensions of data and bootsam are inconsistent')
       end
-      % Set nboot(1) according to the size of bootidx
+      % Set nboot(1) according to the size of bootsam
       nboot(1) = size(idx,2);
     else
       idx = [];
@@ -792,7 +794,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         error('Bootstrapping clustered data is not implemented with bootstrap iteration.')
       end
       if nargout > 4
-        error('No bootidx for two-stage resampling of clustered data.')
+        error('No bootsam for two-stage resampling of clustered data.')
       end
       % Redefine data as intracluster residuals
       % Residuals will undergo balanced resampling with replacement
@@ -1263,7 +1265,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
       % Matlab parallel mode
       % Perform ordinary resampling with replacement
       if nargout > 3
-        error('No bootidx when operating ibootci in parallel mode')
+        error('No bootsam when operating ibootci in parallel mode')
       end
       % Prepare resampling weights
       w = zeros(n,K);
