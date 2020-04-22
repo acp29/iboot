@@ -101,7 +101,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function [ci,bootstat,S,calcurve,idx] = bootci(argin1,argin2,varargin)
+function [ci,bootstat] = bootci(argin1,argin2,varargin)
 
   % Evaluate the number of function arguments
   if nargin<2
