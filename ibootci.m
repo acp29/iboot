@@ -260,7 +260,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.5.4 (03/03/2020)
+%  ibootci v2.8.5.5 (22/04/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -1401,13 +1401,13 @@ function [m1, m2, S] = BC (B, func, x, T1, T0, alpha, S)
 
   % Note that alpha input argument is nominal coverage
 
-  % Calculate bias correction z0
-  z0 = norminv(sum(T1<T0)/B);
-
-  % Create distribution functions 
+  % Create distribution functions
   stdnormcdf = @(x) 0.5*(1+erf(x/sqrt(2)));
   stdnorminv = @(p) sqrt(2)*erfinv(2*p-1);
-  
+
+  % Calculate bias correction z0
+  z0 = stdnorminv(sum(T1<T0)/B);
+
   % Calculate Bias-corrected percentiles
   z1 = stdnorminv(0.5*(1+alpha));
   m1 = stdnormcdf(2*z0+z1);
@@ -1738,7 +1738,7 @@ function r = autocorr (x, maxlag)
   r = r./r(1);
 
 end
-  
+
 %--------------------------------------------------------------------------
 
 function [F, x] = empcdf (y, c)
