@@ -8,22 +8,24 @@
 %  [bootstat,bootsam] = bootstrp(...)
 %
 %  bootstat = bootstrp(nboot,bootfun,...) draws nboot bootstrap data
-%  samples and returns the statistic computed by bootfun in bootstat.
-%  bootfun is a function handle (e.g. specified with @), or a string 
-%  indicating the function name. The third and later input arguments 
-%  are data (column vectors, or a matrix), that are used to create 
-%  inputs for bootfun.
+%  resamples and returns the statistic computed by bootfun in bootstat
+%  [1]. bootfun is a function handle (e.g. specified with @), or a 
+%  string indicating the function name. The third and later input  
+%  arguments are data (column vectors, or a matrix), that are used 
+%  to create inputs for bootfun. The resampling method used throughout
+%  is balanced resampling [2].
 %
 %  bootstat = bootstrp(...,'Weights',weights) specifies observation 
 %  weights. weights must be a vector of non-negative numbers. The 
 %  length of weights must be equal to first dimension of the 
 %  non-scalar input argument(s) to bootfun. The weights are used as 
-%  bootstrap sampling probabilities. 
+%  bootstrap sampling probabilities. Balanced resampling is extended
+%  to resampling with weights [3].
 %
 %  [bootstat,bootsam] = bootstrp(...) also returns bootidx, a matrix of 
 %  indices from the bootstrap. Each column in bootsam corresponds 
 %  to one bootstrap sample and contains the row indices of the values 
-%  drawn from the nonscalar data to create that sample.
+%  drawn from the nonscalar data to create that sample. 
 %
 %  Bibliography:
 %  [1] Efron, and Tibshirani (1993) An Introduction to the
