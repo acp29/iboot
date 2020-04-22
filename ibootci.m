@@ -24,13 +24,13 @@
 %  bootstrap confidence interval of the statistic computed by bootfun.
 %  nboot is a scalar, or vector of upto two positive integers indicating
 %  the number of replicate samples for the first and second bootstraps.
-%  bootfun is a function handle specified with @, or a string indicating
-%  the function name. The third and later input arguments are data (column
-%  vectors, or a matrix), that are used to create inputs for bootfun.
-%  ibootci creates each first level bootstrap by block resampling from the
-%  rows of the data argument(s) (which must be the same size) [1]. If a
-%  positive integer for the number of second bootstrap replicates is
-%  provided, then nominal central coverage of two-sided intervals is
+%  bootfun is a function handle (e.g. specified with @), or a string 
+%  indicating the function name. The third and later input arguments are
+%  data (column vectors, or a matrix), that are used to create inputs for
+%  bootfun. ibootci creates each first level bootstrap by block resampling 
+%  from the rows of the data argument(s) (which must be the same size) [1].
+%  If a positive integer is provided for the number of second bootstrap 
+%  replicates, then nominal central coverage of two-sided intervals is
 %  calibrated to achieve second order accurate coverage by bootstrap
 %  iteration and interpolation [2]. Linear interpolation of the empirical
 %  cumulative distribution function of bootstat is then used to construct
