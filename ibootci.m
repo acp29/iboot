@@ -75,9 +75,10 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The length of weights must be equal to first dimension of the non-
-%  scalar input argument(s) to bootfun. The weights are used as bootstrap 
-%  sampling probabilities. Note that weights are not implemented for 
-%  Studentized-type intervals or bootstrap iteration.
+%  scalar input argument(s) to bootfun. Balanced resampling is extended 
+%  to resampling with weights [8], which are used as bootstrap sampling 
+%  probabilities. Note that weights are not implemented for Studentized-
+%  type intervals or bootstrap iteration.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'strata',strata) specifies a
 %  vector containing numeric identifiers of strata. The dimensions of
@@ -90,7 +91,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters) specifies
 %  a vector containing numeric identifiers for clusters. Whereas strata
 %  are fixed, clusters are resampled. This is achieved by two-stage
-%  bootstrap resampling of residuals with shrinkage correction [5,8,9].
+%  bootstrap resampling of residuals with shrinkage correction [5,9,10].
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration.
@@ -100,10 +101,10 @@
 %  data with serial dependence (e.g. stationary time series). The
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
 %  without standardization making them equivariant under monotone
-%  transformations [10]. The double bootstrap resampling and calibration
-%  procedure makes interval coverage less sensitive to block length [11].
-%  If the blocksize is set to 'auto' (recommended), the block length is
-%  calculated automatically. Note that balanced resampling is not
+%  transformations [11]. The double bootstrap resampling and calibration
+%  procedure makes interval coverage less sensitive to the choice of block 
+%  length [12]. If the blocksize is set to 'auto' (recommended), the block 
+%  length is calculated automatically. Note that balanced resampling is not
 %  maintained for block bootstrap. Block bootstrap can also be used for
 %  regression of time series data by combining it with pairs bootstrap
 %  (i.e. by providing x and y vectors as data variables).
@@ -111,11 +112,11 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
 %  additive random Gaussian noise of the specified bandwidth (or
 %  covariance matrix) to the bootstrap sample sets before evaluating
-%  bootfun [12]. If bandwidth is set to 'auto', it will be estimated
+%  bootfun [13]. If bandwidth is set to 'auto', it will be estimated
 %  from the data: to the standard error of the mean for univariate
 %  data, or the covariance matrix divided by the sample size for
-%  multivariate data [13]. Inflation of the variance is prevented by
-%  including a shrinkage correction procedure [14,15].
+%  multivariate data [14]. Inflation of the variance is prevented by
+%  including a shrinkage correction procedure [15,16].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam) performs
 %  bootstrap computations using the indices from bootsam for the first
@@ -199,26 +200,28 @@
 %        for small samples. Can J Stat. 28(3):501-516
 %  [7] Efron (1982) The jackknife, the bootstrap and other resampling
 %        plans. CBMS 38, SIAM-NSF.
-%  [8] Gomes et al. (2012) Developing appropriate methods for cost-
+%  [8] Booth, Hall and Wood (1993) Balanced Importance Resampling
+%        for the Bootstrap. The Annals of Statistics. 21(1):286-298
+%  [9] Gomes et al. (2012) Developing appropriate methods for cost-
 %        effectiveness analysis of cluster randomized trials.
 %        Medical Decision Making. 32(2): 350-361
-%  [9] Ng, Grieve and Carpenter (2013) Two-stage nonparametric
+%  [10] Ng, Grieve and Carpenter (2013) Two-stage nonparametric
 %        bootstrap sampling with shrinkage correction for clustered
 %        data. The Stata Journal. 13(1): 141-164
-%  [10] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise
+%  [11] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise
 %        Bootstrap for Stationary Observations. The Annals of Statistics.
 %        24(5):1914-1933
-%  [11] Lee and Lai (2009) Double block bootstrap confidence intervals
+%  [12] Lee and Lai (2009) Double block bootstrap confidence intervals
 %        for dependent data. Biometrika. 96(2):427-443
-%  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap
+%  [13] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap
 %        Confidence Intervals. J R Statist Soc B. 59(4):821-838
-%  [13] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs.
+%  [14] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs.
 %        Smoothing. Proceedings of the Section on Statistics & the
 %        Environment. Alexandria, VA: American Statistical Association.
 %        pp. 2924?2930
-%  [14] Jones (1991) On correcting for variance inflation in kernel
+%  [15] Jones (1991) On correcting for variance inflation in kernel
 %        density estimation. Comput Stat Data An. 11, 3-15
-%  [15] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist.
+%  [16] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist.
 %        Math. Vol. 47, No. 1, 65-80
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
