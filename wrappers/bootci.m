@@ -60,9 +60,10 @@
 %  ci = bootci(nboot,{bootfun,...},...,'weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The length of weights must be equal to first dimension of the non-
-%  scalar input argument(s) to bootfun. The weights are used as bootstrap 
-%  sampling probabilities. Note that weights are not implemented for 
-%  Studentized-type intervals.
+%  scalar input argument(s) to bootfun. Balanced resampling is extended 
+%  to resampling with weights [6], which are used as bootstrap sampling 
+%  probabilities. Note that weights are not implemented for Studentized-
+%  type intervals.
 %
 %  [ci,bootstat] = bootci(...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets.
@@ -78,6 +79,8 @@
 %        76(374): 312-319
 %  [5] Polansky (2000) Stabilizing bootstrap-t confidence intervals
 %        for small samples. Can J Stat. 28(3):501-516
+%  [6] Booth, Hall and Wood (1993) Balanced Importance Resampling
+%        for the Bootstrap. The Annals of Statistics. 21(1):286-298
 %
 %  bootci v2.8.5.5 (22/04/2020)
 %  Author: Andrew Charles Penn
