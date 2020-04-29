@@ -15,6 +15,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth)
 %  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam)
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state)
+%  ci = ibootci(nboot,{bootfun,...},...,'Options',paropt)
 %  [ci,bootstat] = ibootci(...)
 %  [ci,bootstat,S] = ibootci(...)
 %  [ci,bootstat,S,calcurve] = ibootci(...)
@@ -24,12 +25,12 @@
 %  bootstrap confidence interval of the statistic computed by bootfun.
 %  nboot is a scalar, or vector of upto two positive integers indicating
 %  the number of replicate samples for the first and second bootstraps.
-%  bootfun is a function handle (e.g. specified with @), or a string 
+%  bootfun is a function handle (e.g. specified with @), or a string
 %  indicating the function name. The third and later input arguments are
 %  data (column vectors, or a matrix), that are used to create inputs for
-%  bootfun. ibootci creates each first level bootstrap by block resampling 
+%  bootfun. ibootci creates each first level bootstrap by block resampling
 %  from the rows of the data argument(s) (which must be the same size) [1].
-%  If a positive integer is provided for the number of second bootstrap 
+%  If a positive integer is provided for the number of second bootstrap
 %  replicates, then nominal central coverage of two-sided intervals is
 %  calibrated to achieve second order accurate coverage by bootstrap
 %  iteration and interpolation [2]. Linear interpolation of the empirical
@@ -55,6 +56,8 @@
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
 %    'cper': Bias-corrected percentile method [7].
+%    For the bias-corrected and acceleration (BCa) method, use the bootci
+%    wrapper function.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  computes the Studentized bootstrap confidence interval of the statistic
@@ -75,8 +78,8 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'weights',weights) specifies
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The length of weights must be equal to first dimension of the non-
-%  scalar input argument(s) to bootfun. Balanced resampling is extended 
-%  to resampling with weights [8], which are used as bootstrap sampling 
+%  scalar input argument(s) to bootfun. Balanced resampling is extended
+%  to resampling with weights [8], which are used as bootstrap sampling
 %  probabilities. Note that weights are not implemented for Studentized-
 %  type intervals or bootstrap iteration.
 %
@@ -102,8 +105,8 @@
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
 %  without standardization making them equivariant under monotone
 %  transformations [11]. The double bootstrap resampling and calibration
-%  procedure makes interval coverage less sensitive to the choice of block 
-%  length [12]. If the blocksize is set to 'auto' (recommended), the block 
+%  procedure makes interval coverage less sensitive to the choice of block
+%  length [12]. If the blocksize is set to 'auto' (recommended), the block
 %  length is calculated automatically. Note that balanced resampling is not
 %  maintained for block bootstrap. Block bootstrap can also be used for
 %  regression of time series data by combining it with pairs bootstrap
@@ -125,6 +128,21 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the
 %  design effect by resampling. State can be 'on' or 'off'. Default is
 %  'off'.
+%
+%  ci = ibootci(nboot,{bootfun,...},...,'Options',paropt) specifies
+%  options that govern if and how to perform bootstrap iterations using
+%  multiple processors (if the Parallel Computing Toolbox or Octave
+%  Forge package is available). This argument is a structure with the
+%  following recognised fields:
+%
+%   'UseParallel' — If true, compute bootstrap iterations in parallel.
+%                   Default is false for serial computation.
+%   'nproc'       — The number of processors to use by Octave. Default
+%                   is the number of available processors. If you choose
+%                   In Matlab, nproc is ignored and the number of parallel
+%                   workers should be predefined beforehand by starting
+%                   a parallel pool, else it will use the preferred number
+%                   of workers.
 %
 %  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets. If only
@@ -174,15 +192,16 @@
 %  the second column is actual coverage.
 %
 %  [ci,bootstat,S,calcurve,bootsam] = ibootci(...) also returns bootsam,
-%  a matrix of indices from the first bootstrap. Each column in bootsam 
-%  corresponds to one bootstrap sample and contains the row indices of 
+%  a matrix of indices from the first bootstrap. Each column in bootsam
+%  corresponds to one bootstrap sample and contains the row indices of
 %  the values drawn from the nonscalar data to create that sample.
 %
-%  Computations of confidence intervals can be accelerated by starting
-%  a parallel pool prior to executing ibootci. This is particularly useful
-%  for the calculation of p-values using ibootci wrapper functions.
-%  Parallel usage is supported in MATLAB for most features except for
-%  balanced resampling during the first bootstrap.
+%  If the Parallel Computing MATLAB Toolbox or OCTAVE forge package
+%  is installed, bootstrap resampling can be accelerated by parallel
+%  processing. This is particularly useful for the calculation of
+%  p-values using the ibootci wrapper functions. Note that bootstrap
+%  resampling is not balanced in the first bootstrap when operating
+%  ibootci in parallel.
 %
 %  Bibliography:
 %  [1] Efron, and Tibshirani (1993) An Introduction to the
@@ -265,7 +284,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.5.5 (22/04/2020)
+%  ibootci v2.8.6.0 (29/04/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -295,6 +314,11 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
   if nargout>5
    error('Too many output arguments');
+  end
+
+  % Initialize nproc (Matlab only)
+  if ~isoctave
+    nproc = 1;
   end
 
   % Assign input arguments to function variables
@@ -348,6 +372,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.clusters = clusters;
     opt.blocksize = blocksize;
     opt.bandwidth = bandwidth;
+    opt.paropt = paropt;
     % Perform calibration (if applicable)
     if C>0 && any(strcmpi(type,{'per','percentile','cper'}))
       U = zeros(1,B);
@@ -373,6 +398,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     stderr = [];
     deff = 'off';
     type = 'per';
+    paropt = struct;
+    paropt.UseParallel = false;
+    paropt.nproc = nproc;
     T1 = [];  % Initialize bootstat variable
 
   else
@@ -391,6 +419,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     clusters = 1+find(cellfun(@(options) any(strcmpi({'clusters','cluster'},options)),options));
     blocksize = 1+find(cellfun(@(options) any(strcmpi({'block','blocks','blocksize'},options)),options));
     bandwidth = 1+find(cellfun(@(options) any(strcmpi({'smooth','smoothing','bandwidth'},options)),options));
+    paropt = 1+find(strcmpi('Options',options));
     bootsam = 1+find(strcmpi('bootsam',options));
     deff = 1+find(strcmpi('deff',options));
     if ~isempty(alpha)
@@ -511,7 +540,54 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     else
       deff = 'off';
     end
+    if ~isempty(paropt)
+      try
+        paropt = options{paropt};
+        if isstruct(paropt)
+          if isfield(paropt,'UseParallel')
+            if ~islogical(paropt.UseParallel)
+              error('value of parallel option field ''UseParallel'' must be logical')
+            end
+          else
+            paropt.UseParallel = false;
+          end
+          if isfield(paropt,'nproc') && isoctave
+            if ~isa(paropt.nproc,'numeric') || numel(paropt.nproc)~=1
+              error('value of parallel option field ''nproc'' must be scalar')
+            end
+            if paropt.nproc ~= fix(paropt.nproc)
+              error('value of parallel option field ''nproc'' must be an integer')
+            end
+            if paropt.nproc < 1
+              error('value of parallel option field ''nproc'' must greater than 0')
+            end
+            if paropt.nproc > nproc
+              error('nproc cannot be > the number of physical cores')
+            end
+          else
+            paropt.nproc = nproc;
+          end
+        else
+          error('parallel options must be contained in a structure')
+        end
+      catch
+        error(lasterr);
+      end
+    else
+      paropt = struct;
+      paropt.UseParallel = false;
+      paropt.nproc = nproc;
+    end
     T1 = [];  % Initialize bootstat variable
+  end
+
+  % Check for parallel computing capabilities
+  if paropt.UseParallel && ~isparallel
+    if isoctave
+      error('Requested options require OCTAVE Forge Parallel Computing package')
+    else
+      error('Requested options require MATLAB Parallel Computing Toolbox')
+    end
   end
 
   if isempty(T1)
@@ -658,7 +734,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     for v = 1:nvar
       x = data{v};
       if v == 1
-        simidx = ceil(n.*rand(n,2));  % For compatibility with R2007
+        simidx = ceil(n.*rand(n,2));  % For compatibility with MATLAB R2007
       end
       M{v} = x(simidx);
     end
@@ -832,6 +908,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.df = df;
     opt.stderr = stderr;
     opt.runmode = runmode;
+    opt.paropt = paropt;
 
     % Perform bootstrap
     % Bootstrap resampling
@@ -1128,655 +1205,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.clusters = clusters;
     S.blocksize = blocksize;
 
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
-
-    % Extract required options structure fields
-    weights = opt.weights;
-    strata = opt.strata;
-    blocksize = opt.blocksize;
-    bandwidth = opt.bandwidth;
-    R = opt.R;
-    df = opt.df;
-    stderr = opt.stderr;
-    runmode = opt.runmode;
-
-    % Initialize
-    B = nboot(1);
-    C = nboot(2);
-    N = n*B;
-    T1 = zeros(1,B);
-    if C>0
-      T2 = zeros(C,B);
-      U = zeros(1,B);
-    elseif ~isempty(stderr)
-      T2 = [];
-      U = zeros(1,B);
-    else
-      T2 = [];
-      U = [];
-    end
-    X1 = cell(1,nvar);
-    if nargout < 4
-      idx = zeros(n,1);
-    else
-      idx = zeros(n,B);
-    end
-    % Calculate mean and variance of the original sample
-    xbar = zeros(1,nvar);
-    xvar = zeros(1,nvar,1);
-    for v=1:nvar
-      xbar(v) = mean(x{v});
-      xvar(v) = var(x{v},1);
-    end
-
-    % If applicable, prepare for stratified resampling
-    if ~isempty(strata)
-      % Get strata IDs
-      gid = unique(strata);  % strata ID
-      K = numel(gid);        % number of strata
-      % Create strata matrix
-      g = zeros(n,K);
-      for k = 1:K
-        g(:,k) = (strata == gid(k));
-      end
-      % Get strata sample and bootstrap sample set dimensions
-      nk = sum(g).';   % strata sample sizes
-      ck = cumsum(nk); % cumulative sum of strata sample sizes
-      ik = [1;ck];     % strata boundaries
-      Nk = nk*B;       % size of strata bootstrap sample set
-      Ck = cumsum(Nk); % cumulative sum of strata bootstrap sample set sizes
-    else
-      ck = n;
-      g = ones(n,1);
-      K = 1;
-      nk = n;
-    end
-    g = logical(g);
-
-    % Prepare weights for resampling
-    if any(diff(weights))
-      if ~isempty(strata)
-        % Calculate within-stratum weights
-        c = zeros(n,1);
-        for k = 1:K
-          c = c + round(Nk(k) * g(:,k).*weights./sum(g(:,k).*weights));
-          c(ik(k):ik(k+1),1) = cumsum(c(ik(k):ik(k+1),1));
-          c(ik(k+1)) = Ck(k);
-        end
-      else
-        % Calculate weights (no groups)
-        c = cumsum(round(N * weights./sum(weights)));
-        c(end) = N;
-      end
-      c = [c(1);diff(c)];
-    else
-      c = ones(n,1)*B;
-    end
-
-    % Perform bootstrap resampling
-    try
-      pool = gcp('nocreate');
-    catch
-      pool = [];
-    end
-    if isempty(pool)
-      % Since first bootstrap is large, use a memory
-      % efficient balanced resampling algorithm
-      % If strata is provided, resampling is stratified
-      for h = 1:B
-        for i = 1:n
-          k = sum(i>ck)+1;
-          j = sum((rand(1) >= cumsum((g(:,k).*c)./sum(g(:,k).*c))))+1;
-          if nargout < 4
-            idx(i,1) = j;
-          else
-            idx(i,h) = j;
-          end
-          c(j) = c(j)-1;
-        end
-        for v = 1:nvar
-          if nargout < 4
-            X1{v} = x{v}(idx);
-          else
-            X1{v} = x{v}(idx(:,h));
-          end
-        end
-        % Since second bootstrap is usually much smaller, perform rapid
-        % balanced resampling by a permutation algorithm
-        if C>0
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-        end
-        if ~isempty(stderr)
-          U(h) = stderr(X1{:});
-        end
-        if ~isempty(bandwidth)
-          % Apply smoothing using a Gaussian kernel
-          noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
-          for v = 1:nvar
-            X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
-          end
-        end
-        T1(h) = feval(bootfun,X1{:});
-      end
-    else
-      % Matlab parallel mode
-      % Perform ordinary resampling with replacement
-      if nargout > 3
-        error('No bootsam when operating ibootci in parallel mode')
-      end
-      % Prepare resampling weights
-      w = zeros(n,K);
-      for k = 1:K
-        w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
-      end
-      parfor h = 1:B
-        idx = zeros(n,1);
-        X1 = cell(1,nvar);
-        for i = 1:n
-          k = sum(i>ck)+1;
-          j = sum((rand(1) >= w(:,k)))+1;
-          idx(i,1) = j;
-        end
-        for v = 1:nvar
-          X1{v} = x{v}(idx);
-        end
-        % Since second bootstrap is usually much smaller, perform rapid
-        % balanced resampling by a permutation algorithm
-        if C>0
-          [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-        end
-        if ~isempty(stderr)
-          U(h) = stderr(X1{:});
-        end
-        if ~isempty(bandwidth)
-          % Apply smoothing using a Gaussian kernel
-          noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
-          for v = 1:nvar
-            X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
-          end
-        end
-        T1(h) = feval(bootfun,X1{:});
-      end
-    end
-
-end
-
-%--------------------------------------------------------------------------
-
-function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt)
-
-    % Extract required options structure fields
-    blocksize = opt.blocksize;
-    runmode = opt.runmode;
-
-    % Note that weights are not implemented here with iterated bootstrap
-
-    % Prepare for block resampling (if applicable)
-    if ~isempty(blocksize)
-      x1 = cat_blocks(S.nvar,X1{:});
-      blocksize = round(blocksize/2);
-      X1 = split_blocks(x1,blocksize);
-      nvar = S.nvar * blocksize;
-      g = ones(n,1);
-    end
-
-    % Initialize
-    C = nboot(2);
-
-    % If applicable, prepare for stratified resampling
-    K = size(g,2);    % number of strata
-    nk = sum(g).';    % strata sample sizes
-    ck = cumsum(nk);  % cumulative sum of strata sample sizes
-    ik = [1;ck+1];    % strata boundaries (different definition to boot1)
-    Nk = nk*C;        % size of strata bootstrap sample set
-
-    % Rapid balanced resampling by permutation
-    % If strata is provided, resampling is stratified
-    idx = zeros(n,C);
-    for k = 1:K
-      tmp = (1:nk(k))'*ones(1,C);
-      tmp = tmp(reshape(randperm(Nk(k)),nk(k),C));  % For compatibility with R2007
-      tmp = tmp + ik(k) - 1;
-      idx(ik(k): ik(k+1)-1,:) = tmp;
-    end
-    X2 = cell(1,nvar);
-    for v = 1:nvar
-      X2{v} = X1{v}(idx);
-    end
-    switch lower(runmode)
-      case {'fast'}
-        % Vectorized calculation of second bootstrap statistics
-        T2 = feval(bootfun,X2{:});
-      case {'slow'}
-        % Calculation of second bootstrap statistics using a loop
-        T2 = zeros(1,C);
-        for i=1:C
-          x2 = cellfun(@(X2)X2(:,i),X2,'UniformOutput',false);
-          T2(i) = feval(bootfun,x2{:});
-        end
-    end
-    U = interp_boot2(T2,T0,C);
-
-end
-
-%--------------------------------------------------------------------------
-
-function  U = interp_boot2 (T2, T0, C)
-
-    U = sum(T2<=T0);
-    if U < 1
-      U = 0;
-    elseif U == C
-      U = C;
-    else
-      % Quick linear interpolation to approximate asymptotic calibration
-      t2 = zeros(1,2);
-      I = (T2<=T0);
-      if any(I)
-        t2(1) = max(T2(I));
-      else
-        t2(1) = min(T2);
-      end
-      I = (T2>T0);
-      if any(I)
-        t2(2) = min(T2(I));
-      else
-        t2(2) = max(T2);
-      end
-      if (t2(2)-t2(1) == 0)
-        U = t2(1);
-      else
-        U = ((t2(2)-T0)*U + (T0-t2(1))*(U+1)) /...
-                (t2(2) - t2(1));
-      end
-    end
-    U = U/C;
-
-end
-
-%--------------------------------------------------------------------------
-
-function [m1, m2, S] = BC (B, func, x, T1, T0, alpha, S)
-
-  % Note that alpha input argument is nominal coverage
-
-  % Create distribution functions
-  stdnormcdf = @(x) 0.5*(1+erf(x/sqrt(2)));
-  stdnorminv = @(p) sqrt(2)*erfinv(2*p-1);
-
-  % Calculate bias correction z0
-  z0 = stdnorminv(sum(T1<T0)/B);
-
-  % Calculate Bias-corrected percentiles
-  z1 = stdnorminv(0.5*(1+alpha));
-  m1 = stdnormcdf(2*z0+z1);
-  z2 = stdnorminv(0.5*(1-alpha));
-  m2 = stdnormcdf(2*z0+z2);
-  S.z0 = z0;
-
-end
-
-%--------------------------------------------------------------------------
-
-function [SSb, SSw, K, g, MSb, MSw, dk] = sse_calc (x, groups, nvar)
-
-  % Calculate error components of groups
-
-  % Initialize
-  gid = unique(groups);  % group ID
-  K = numel(gid);        % number of groups
-  n = numel(x{1});
-  g = zeros(n,K);
-  bSQ = zeros(K,nvar);
-  wSQ = zeros(n,nvar);
-  center = zeros(K,nvar);
-  % Calculate within and between group variances
-  for k = 1:K
-    % Create group matrix
-    g(:,k) = (groups == gid(k));
-    for v = 1:nvar
-      center(k,v) = sum(g(:,k) .* x{v}) / sum(g(:,k));
-      wSQ(:,v) = wSQ(:,v) + g(:,k).*(x{v}-center(k,v)).^2;
-    end
-  end
-  for v = 1:nvar
-    bSQ(:,v) = (center(:,v) - mean(center(:,v))).^2;
-  end
-  SSb = sum(bSQ);         % Between-group SSE
-  SSw = sum(wSQ);         % Within-group SSE
-  g = logical(g);         % Logical array defining groups
-
-  % Calculate mean squared error (MSE) and representative cluster size
-  if nargout > 4
-    nk = sum(g).';
-    MSb = (sum(nk.*bSQ))/(K-1);
-    MSw = SSw/(n-K);
-    dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function [y, g] = unitmeans (x, clusters, nvar)
-
-  % Calculate unit (cluster) means
-
-  % Calculate number of levels of subsampling
-  L = size(clusters,2);
-
-  % Get IDs of unique clusters in lowest level
-  gid = unique(clusters(:,L));
-  K = numel(gid);
-
-  % Initialize output variables
-  g = zeros(K,L-1);
-  y = cell(1,nvar);
-  for v = 1:nvar
-    y{v} = zeros(K,1);
-  end
-
-  % Calculate cluster means
-  for k = 1:K
-
-    % Find last level cluster members
-    idx = find(clusters(:,L) == gid(k));
-
-    % Compute cluster means
-    for v = 1:nvar
-      y{v}(k) = mean(x{v}(idx));
-    end
-
-    % Check data nesting
-    if numel(unique(clusters(idx,L-1))) > 1
-      error('Impossible hierarchical data structure')
-    end
-
-    % Redefine clusters
-    g(k,:) = clusters(idx(1),1:L-1);
-
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function [mu, Z, K, g] = clustmean (x, clusters, nvar)
-
-  % Calculates shrunken cluster means and residuals for cluster bootstrap
-  % See also bootclust function below
-
-  % Center and scale data
-  z = cell(1,nvar);
-  for v = 1:nvar
-    z{v} = (x{v} - mean(x{v})) / std(x{v});
-  end
-
-  % Calculate sum-of-squared error components
-  [SSb, SSw, K, g] = sse_calc (z, clusters, nvar);
-  SSb = sum(SSb);
-  SSw = sum(SSw);
-
-  % Calculate cluster means in the original sample
-  mu = cell(1,nvar);
-  for v = 1:nvar
-    for k = 1:K
-      mu{v}(k,:) = mean(x{v}(g(:,k),:));
-    end
-  end
-
-  % Calculate shrunken cluster means from the original sample
-  nk = sum(g).';
-  dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
-  c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(dk.*(dk-1).*SSb))));
-  for v = 1:nvar
-    mu{v} = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v});
-  end
-
-  % Calculate residuals from the sample and cluster means
-  Z = cell(1,nvar);
-  for v = 1:nvar
-    for k = 1:K
-      Z{v}(g(:,k),:) = bsxfun(@minus, x{v}(g(:,k),:), mu{v}(k,:));
-      Z{v}(g(:,k),:) = Z{v}(g(:,k),:) ./ sqrt(1-dk^-1);
-    end
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function T = bootclust (bootfun, K, g, runmode, mu, varargin)
-
-  % Two-stage nonparametric bootstrap sampling with shrinkage
-  % correction for clustered data [1-4].
-  %
-  % By resampling residuals, this bootstrap method can be used when
-  % cluster sizes are unequal. However, cluster samples are assumed
-  % to be taken from populations with equal variance. Not compatible
-  % with bootstrap-t or bootstrap iteration.
-  %
-  % Reference5:
-  %  [1] Davison and Hinkley (1997) Bootstrap Methods and their
-  %       application. Chapter 3: pg 97-100
-  %  [2] Ng, Grieve and Carpenter (2013) The Stata Journal.
-  %       13(1): 141-164
-  %  [3] Gomes et al. (2012) Medical Decision Making. 32(2): 350-361
-  %  [4] Gomes et al. (2012) Health Econ. 21(9):1101-18
-
-  % Calculate data dimensions
-  Z = varargin{1};
-  nvar = numel(Z);
-  [n,reps] = size(Z{1});
-
-  % Preallocate arrays
-  bootmu = cell(1,nvar);
-  X = cell(1,nvar);
-  for v = 1:nvar
-    X{v} = zeros(n,reps);
-  end
-
-  % Ordinary resampling with replacement of cluster means
-  idx = ceil(K.*rand(K,reps));   % For compatibility with R2007
-  for v = 1:nvar
-    bootmu{v} = mu{v}(idx);
-  end
-
-  % Combine residuals with resampled cluster means
-  for v = 1:nvar
-    for k = 1:K
-      X{v}(g(:,k),:) = bsxfun(@plus, Z{v}(g(:,k),:), bootmu{v}(k,:));
-    end
-  end
-
-  % Calculate bootstrap statistic(s)
-  switch lower(runmode)
-    case {'fast'}
-      T = feval(bootfun,X{:});
-    case {'slow'}
-      T = zeros(1,reps);
-      for i = 1:reps
-        x = cellfun(@(X) X(:,i),X,'UniformOutput',false);
-        T(i) = feval(bootfun,x{:});
-      end
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function y = split_blocks (x, l)
-
-  % Calculate data and block dimensions
-  n = size(x{1},1);
-  nvar = numel(x);
-
-  % Create a matrix of circular, overlapping blocks
-  % Ref: Politis and Romano (1991) Technical report No. 370
-  y = cell(1,nvar);
-  for v = 1:nvar
-    y{v} = zeros(n,l);
-    temp = cat(1,x{v},x{v}(1:l-1));
-    for i = 1:n
-      y{v}(i,:) = temp(i:i+l-1);
-    end
-  end
-  y = cell2mat(y);
-  y = num2cell(y,1);
-
-end
-
-%--------------------------------------------------------------------------
-
-function y = cat_blocks (nvar, varargin)
-
-  % Get data dimensions
-  x = (varargin);
-  N = numel(x);
-  l = N/nvar;
-  [n, reps] = size(x{1});
-
-  % Concatenate blocks
-  y = cell(1,nvar);
-  for v = 1:nvar
-    y{v} = zeros(N,reps);
-    for i = 1:l
-      y{v}(i:l:n*l,:) = x{(v-1)*l+i};
-    end
-    y{v} = y{v}(1:n,:);
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function T = auxfun (bootfun, nvar, varargin)
-
-  % Auxiliary function for block bootstrap
-  X = varargin{1};
-  Y = cat_blocks(nvar,X{:});
-  T = bootfun(Y{:});
-
-end
-
-%--------------------------------------------------------------------------
-
-function data = list2mat (varargin)
-
-  % Convert comma-separated list input to matrix
-  data = cell2mat(varargin);
-
-end
-
-%--------------------------------------------------------------------------
-
-function Y = nanfun (func, X)
-
-  % Math functions, ignoring NaNs.
-  [m,n] = size(X);
-  if m > 1
-    Y = zeros(1,n);
-    for i = 1:n
-      Y(i) = feval(func, X(~isnan(X(:,i)),i));
-    end
-  else
-    Y = feval(func, X(~isnan(X)));
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function x_shrunk = shrunk_smooth (x,bandwidth,xbar,xvar,noise)
-
-  % Bootstrap smoothing with shrinkage correction to maintain
-  % the sample variance
-  %
-  % Fryer (1976) Some errors associated with the non-parametric
-  %   estimation of density functions. J. Inst. Maths Applics.
-  %   18, 371-380
-  %
-  % Jones (1991) On correcting for variance inflation in kernel
-  %   density estimation. Comput Stat Data An. 11, 3-15
-  %
-  % Wang (1995) OPTIMIZING THE SMOOTHED BOOTSTRAP
-  %   Ann. Inst. Statist. Math. Vol. 47, No. 1, 65-80
-  %
-  % Tymoteusz Wolodzko 2019-11-07
-  % https://www.rdocumentation.org/packages/kernelboot/versions/0.1.6/topics/kernelboot
-
-  % Correction by shrinking x residuals
-  %x_shrunk = (x - xbar) .* sqrt(1 - bandwidth^2 / xvar) +...
-  %           xbar + noise;
-
-  % Correction by shrinking both x residuals and the bandwidth
-  x_shrunk = sqrt(xvar) * (x - xbar + noise) ./...
-             sqrt(bandwidth^2 + xvar) + xbar;
-
-end
-
-%--------------------------------------------------------------------------
-
-function r = autocorr (x, maxlag)
-
-  % Efficient calculation of autocorrelation by fast fourier transform
-  [m,n] = size(x);
-  if nargin > 1
-    if ~isa(maxlag,'numeric') || maxlag < 1 || maxlag ~= abs(maxlag)
-      error('maxlag must be an integer >= 1')
-    end
-  else
-    maxlag = m;
-  end
-  if n > 1
-    error('x must be a vector')
-  end
-  X = fft(x,2^nextpow2(2*m-1));
-  r = ifft(abs(X).^2);
-  r(min(m,maxlag)+1:end) = [];
-  r = r./r(1);
-
-end
-
-%--------------------------------------------------------------------------
-
-function [F, x] = empcdf (y, c)
-
-  % Calculate empirical cumulative distribution function of y
-  %
-  % Set c to:
-  %  1 to have a complete distribution with F ranging from 0 to 1
-  %  0 to avoid duplicate values in x
-  %
-  % Unlike ecdf, empcdf uses a denominator of N+1
-
-  % Check input argument
-  if ~isa(y,'numeric')
-    error('y must be numeric')
-  end
-  if all(size(y)>1)
-    error('y must be a vector')
-  end
-  if size(y,2)>1
-    y = y.';
-  end
-
-  % Create empirical CDF
-  x = sort(y);
-  N = sum(~isnan(y));
-  [x,F] = unique(x,'rows','last');
-  F = F/(N+1);
-
-  % Apply option to complete the CDF
-  if c > 0
-    x = [x(1);x;x(end)];
-    F = [0;F;1];
   end
 
 end

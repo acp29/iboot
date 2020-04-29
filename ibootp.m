@@ -26,7 +26,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootp v1.5.6.0 (04/02/2020)
+%  ibootp v1.5.7.0 (29/04/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -73,12 +73,12 @@ function p = ibootp(m,bootstat,S,calcurve)
       % Find P-value from the cdf of the bootstrap distribution by linear interpolation
       [cdf,t1] = empcdf(T1,0);
       p = 1-interp1(t1,cdf,m,'linear');
-      % Create distribution functions 
+      % Create distribution functions
       stdnormcdf = @(x) 0.5*(1+erf(x/sqrt(2)));
       stdnorminv = @(p) sqrt(2)*erfinv(2*p-1);
       % Bias correction to P-value if applicable
-      z1 = norminv(p);
-      p = normcdf(2*S.z0+z1);
+      z1 = stdnorminv(p);
+      p = stdnormcdf(2*S.z0+z1);
     case {'stud','student'}
       % Use bootstrap-t method
       p = bootstud(m,bootstat,S);
@@ -112,85 +112,6 @@ function p = ibootp(m,bootstat,S,calcurve)
     warning(sprintf(['P value is too small for this bootstrap distribution. \n'...
             'Try increasing the number of first bootstrap replicate samples.']));
     p = 2/B;
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function  p = bootstud(m,bootstat,S)
-
-  % Use bootstrap-t method with variance stabilization for small samples
-  % Polansky (2000) Can J Stat. 28(3):501-516
-  se = nanfun(@std,bootstat{1});
-  if size(bootstat{2},1) > 1
-    SE1 = nanfun(@std,bootstat{2});
-  else
-    SE1 = bootstat{2};
-  end
-  a = S.n(1)^(-3/2) * se;  % additive correction factor
-
-  % Calculate Studentized statistics
-  ridx = isnan(bootstat{1}); bootstat{1}(ridx)=[]; SE1(ridx)=[];
-  T = (bootstat{1} - S.stat)./(SE1 + a);
-  t = (S.stat - m)/se;
-
-  % Calculate p value from empirical distribution of the Studentized bootstrap statistics
-  [cdf,T] = empcdf(T,0);
-  p = 1-interp1(T,cdf,t,'linear');
-
-end
-
-%--------------------------------------------------------------------------
-
-function Y = nanfun (func, X)
-
-  % Math functions, ignoring NaNs.
-  [m,n] = size(X);
-  if m > 1
-    Y = zeros(1,n);
-    for i = 1:n
-      Y(i) = feval(func, X(~isnan(X(:,i)),i));
-    end
-  else
-    Y = feval(func, X(~isnan(X)));
-  end
-
-end
-
-%--------------------------------------------------------------------------
-
-function [F,x] = empcdf (y,c)
-
-  % Calculate empirical cumulative distribution function of y
-  %
-  % Set c to:
-  %  1 to have a complete distribution with F ranging from 0 to 1
-  %  0 to avoid duplicate values in x
-  %
-  % Unlike ecdf, empcdf uses a denominator of N+1
-
-  % Check input argument
-  if ~isa(y,'numeric')
-    error('y must be numeric')
-  end
-  if all(size(y)>1)
-    error('y must be a vector')
-  end
-  if size(y,2)>1
-    y = y.';
-  end
-
-  % Create empirical CDF
-  x = sort(y);
-  N = sum(~isnan(y));
-  [x,F] = unique(x,'rows','last');
-  F = F/(N+1);
-
-  % Apply option to complete the CDF
-  if c > 0
-    x = [x(1);x;x(end)];
-    F = [0;F;1];
   end
 
 end
