@@ -3,12 +3,25 @@ function retval = isparallel
   % Private function file required for ibootci
 
   % Check we have parallel computing capabilities
-  software = ver;
-  software = {software.Name};
-  if isempty(cell2mat(regexpi(software,'^parallel')))
-    retval = false;
+  str = '^parallel';
+  if isoctave
+    software = pkg('list');
+    names = cellfun(@(S) S.name, software, 'UniformOutput', false);
+    status = cellfun(@(S) S.loaded, software, 'UniformOutput', false);
+    index = find(~cellfun(@isempty,regexpi(names,str)));
+    if logical(status{index})
+      retval = true;
+    else
+      retval = false;
+    end
   else
-    retval = true;
+    software = ver;
+    software = {software.Name};
+    if isempty(cell2mat(regexpi(software,str)))
+      retval = false;
+    else
+      retval = true;
+    end
   end
 
 end

@@ -103,7 +103,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     for k = 1:K
     w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
     end
-    parfun = @() parboot (x, X1, nboot, n, nvar, bootfun, T0, g, S, opt, w, ck);
+    parfun = @() parboot (x, X1, nboot, n, nvar, bootfun, T0, g, S, opt, w, ck, xbar, xvar);
     bootout = cell(1,B);
     bootout = parcellfun(paropt.nproc, parfun, bootout, 'UniformOutput',false);
     T1 = cell2mat(cellfun(@(S) S.T1, bootout, 'UniformOutput', false));

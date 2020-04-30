@@ -665,8 +665,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     ori_data = data; % Make a copy of the data
     if ~isempty(strata) || ~isempty(clusters)
-      if size(clusters,1) ~= size(data{1},1)
-        error('Dimensions of clusters are inconsistent with the data')
+      if ~isempty(clusters)
+        if size(clusters,1) ~= size(data{1},1)
+          error('Dimensions of clusters are inconsistent with the data')
+        end
       end
       if size(strata,1) ~= size(data{1},1)
         error('Dimensions of strata are inconsistent with the data')
