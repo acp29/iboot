@@ -1,6 +1,6 @@
 function retval = isoctave
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Check we are running within Octave
   software = ver;
