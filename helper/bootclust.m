@@ -1,7 +1,6 @@
 function T = bootclust (bootfun, K, g, runmode, mu, varargin)
 
-  % Private function file required for ibootci
-  % Helper function for cluster bootstrap
+  % Helper function required for cluster bootstrap in ibootci
 
   % Two-stage nonparametric bootstrap sampling with shrinkage
   % correction for clustered data [1-4].
