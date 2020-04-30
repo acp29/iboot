@@ -109,7 +109,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     T1 = cell2mat(cellfun(@(S) S.T1, bootout, 'UniformOutput', false));
     T2 = cell2mat(cellfun(@(S) S.T2.', bootout, 'UniformOutput', false));
     U = cell2mat(cellfun(@(S) S.U, bootout, 'UniformOutput', false));
-  elseif paropt.UseParallel && ~isoctave
+  elseif (paropt.UseParallel || ~isempty(pool)) && ~isoctave
     % Matlab parallel computing
     % Perform ordinary resampling with replacement
     if nargout > 3
