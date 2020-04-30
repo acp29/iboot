@@ -1,6 +1,6 @@
 function x_shrunk = shrunk_smooth (x,bandwidth,xbar,xvar,noise)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Bootstrap smoothing with shrinkage correction to maintain
   % the sample variance
