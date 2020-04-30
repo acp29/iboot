@@ -22,11 +22,16 @@ function [SE, T, U] = jack (x, func, paropt)
   m = size(x{1}, 1);
   T = zeros(m,1);
   i = [1:m].';
+  try
+    pool = gcp('nocreate');
+  catch
+    pool = [];
+  end
   if paropt.UseParallel && isoctave
     % Octave parallel computing
     parfun = @(i) parjack (x, func, nvar, m, i);
     T = pararrayfun(paropt.nproc, parfun, i, 'UniformOutput',true);
-  elseif paropt.UseParallel && ~isoctave
+  elseif (paropt.UseParallel || ~isempty(pool)) && ~isoctave
     % Matlab parallel computing
     parfor i = 1:m
       M = cell(1,nvar);
