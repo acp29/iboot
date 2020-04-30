@@ -1,6 +1,6 @@
 function y = split_blocks (x, l)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Calculate data and block dimensions
   n = size(x{1},1);
