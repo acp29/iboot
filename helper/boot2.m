@@ -1,6 +1,6 @@
 function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Extract required options structure fields
   blocksize = opt.blocksize;
