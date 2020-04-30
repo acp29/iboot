@@ -1,7 +1,6 @@
 function y = cat_blocks (nvar, varargin)
 
-  % Private function file required for ibootci
-  % Helper function for block bootstrap
+  % Helper function required for block bootstrap in ibootci 
 
   % Get data dimensions
   x = (varargin);
