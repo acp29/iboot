@@ -1,6 +1,6 @@
 function  U = interp_boot2 (T2, T0, C)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
     U = sum(T2<=T0);
     if U < 1
