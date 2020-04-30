@@ -1,6 +1,6 @@
 function Y = nanfun (func, X)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Math functions, ignoring NaNs.
   [m,n] = size(X);
