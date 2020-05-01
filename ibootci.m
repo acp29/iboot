@@ -422,7 +422,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     clusters = 1+find(cellfun(@(options) any(strcmpi({'clusters','cluster'},options)),options));
     blocksize = 1+find(cellfun(@(options) any(strcmpi({'block','blocks','blocksize'},options)),options));
     bandwidth = 1+find(cellfun(@(options) any(strcmpi({'smooth','smoothing','bandwidth'},options)),options));
-    paropt = 1+find(strcmpi('Options',options));
+    paropt = 1+find(cellfun(@(options) any(strcmpi({'options','option'},options)),options));
     bootsam = 1+find(strcmpi('bootsam',options));
     deff = 1+find(strcmpi('deff',options));
     if ~isempty(alpha)
