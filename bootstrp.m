@@ -101,7 +101,7 @@ function [bootstat,bootsam] = bootstrp(argin1,argin2,varargin)
     while ischar(argin3{end-1})
       if strcmpi(argin3{end-1},'weights')
         weights = argin3{end};
-      elseif strcmpi(argin3{end-1},'Options')
+      elseif any(strcmpi({'options','option'},argin3{end-1}))
         paropt = argin3{end};
       else
         error('unrecognised input argument to bootstrp')
@@ -134,4 +134,3 @@ function [bootstat,bootsam] = bootstrp(argin1,argin2,varargin)
   bootstat = bootstat.';
 
 end
-
