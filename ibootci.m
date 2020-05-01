@@ -188,6 +188,7 @@
 %    strata: Argument supplied to 'Strata' (empty if none provided)
 %    clusters: Argument supplied to 'Clusters' (empty if none provided)
 %    blocksize: Length of overlapping blocks (empty if none provided)
+%    paropt: Parallel computing options
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
 %  curve for central coverage. The first column is nominal coverage and
