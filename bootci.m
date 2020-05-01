@@ -162,7 +162,7 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
     nbootstd = 1+find(strcmpi('nbootstd',options));
     stderr = 1+find(strcmpi('stderr',options));
     weights = 1+find(strcmpi('weights',options));
-    paropt = 1+find(strcmpi('Options',options));
+    paropt = 1+find(cellfun(@(options) any(strcmpi({'options','option'},options)),options));
     if ~isempty(alpha)
       try
         alpha = options{alpha};
