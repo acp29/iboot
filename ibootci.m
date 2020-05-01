@@ -286,7 +286,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.6.0 (29/04/2020)
+%  ibootci v2.8.6.1 01/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -364,6 +364,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     strata = S.strata;
     clusters = S.clusters;
     blocksize = S.blocksize;
+    paropt = S.paropt
     deff = 'off';
     type = S.type;
     S.coverage = 1-S.alpha;
@@ -1208,6 +1209,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
     S.clusters = clusters;
     S.blocksize = blocksize;
+    S.paropt = paropt;
 
   end
 
