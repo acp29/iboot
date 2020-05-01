@@ -44,8 +44,15 @@ function [SE, T, U] = jack (x, func, paropt)
     end
   else
     % Octave or Matlab serial computing
-    arrfun = @(i) parjack (x, func, nvar, m, i);
-    T = arrayfun(arrfun, i, 'UniformOutput',true);
+    for i = 1:m
+      M = cell(1,nvar);
+      for v = 1:nvar
+        M{v} = x{v};
+        M{v}(i)=[];
+      end
+      T(i,:) = feval(func, M{:});
+      M = [];
+    end
   end
   Tori = mean(T, 1);
   Tori = Tori(ones(m,1), :);
