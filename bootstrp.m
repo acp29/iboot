@@ -1,4 +1,3 @@
-
 %  Function File: bootstrp
 %
 %  Bootstrap sampling
@@ -30,9 +29,9 @@
 %  following recognised fields:
 %
 %   'UseParallel' — If true, compute bootstrap iterations in parallel.
-%                   Default is false for serial computation. In MATLAB, 
-%                   this option default is true if a parallel pool has  
-%                   already been started.
+%                   Default is false for serial computation. In MATLAB,
+%                   the default is true if a parallel pool has already
+%                   been started.
 %   'nproc'       — The number of processors to use by Octave. Default
 %                   is the number of available processors. If you choose
 %                   In Matlab, nproc is ignored and the number of parallel
@@ -99,12 +98,13 @@ function [bootstat,bootsam] = bootstrp(argin1,argin2,varargin)
   argin3 = varargin;
   narg = numel(argin3);
   if narg > 1
-    ischar(argin3{end-1})
     while ischar(argin3{end-1})
       if strcmpi(argin3{end-1},'weights')
         weights = argin3{end};
       elseif strcmpi(argin3{end-1},'Options')
         paropt = argin3{end};
+      else
+        error('unrecognised input argument to bootstrp')
       end
       argin3 = {argin3{1:end-2}};
       narg = numel(argin3);
