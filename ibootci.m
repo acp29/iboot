@@ -285,7 +285,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.7.0 (05/05/2020)
+%  ibootci v2.8.7.1 (05/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -1045,10 +1045,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       S.z0 = 0;
       S.a = 0;
     case 'cper'
-      % Bias-corrected intervals
+      % Bias-corrected
       [m1,m2,S] = BC(B,T1,T0,alpha,S);
     case 'bca'
-      % Bias-corrected and accelerated intervals
+      % Bias-corrected and accelerated
       [m1,m2,S] = BCa(B,S.bootfun,ori_data,T1,T0,alpha,S,paropt,opt);
     case {'stud','student'}
       % Bootstrap-t
