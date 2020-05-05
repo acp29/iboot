@@ -1049,7 +1049,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       [m1,m2,S] = BC(B,T1,T0,alpha,S);
     case 'bca'
       % Bias-corrected and accelerated intervals
-      [m1,m2,S] = BCa(B,S.bootfun,data,T1,T0,alpha,S,paropt,opt);
+      [m1,m2,S] = BCa(B,S.bootfun,ori_data,T1,T0,alpha,S,paropt,opt);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
