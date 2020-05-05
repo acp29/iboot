@@ -1,20 +1,32 @@
-function [m1, m2, SE, T] = BCa (nboot, func, data, bootstat, stat, alpha, S, paropt)
+function [m1, m2, S] = BCa (nboot, func, data, bootstat, stat, alpha, S, paropt, opt)
 
-  % Private function file required for bootci
+  % Private function file required for ibootci
 
-  % Redefine alpha as nominal coverage
-  alpha = 1 - alpha;
+  % Note that alpha input argument is nominal coverage
 
   % Create distribution functions
   stdnormcdf = @(x) 0.5 * (1 + erf (x / sqrt(2)));
   stdnorminv = @(p) sqrt (2) * erfinv (2 * p-1);
 
+  % Get number of primary sampling units
+  n = S.n(end);
+
   % Calculate bias correction z0
   z0 = stdnorminv (sum (bootstat < stat)/ nboot);
 
-  % Use the Jackknife to calculate acceleration
-  [SE, T, U] = jack (data, func, paropt);
-  a = (1 / 6) * (sum(U.^3) / sum(U.^2)^(3/2));
+  % Use the Jackknife to calculate acceleration constant
+  if nargin > 8
+    [SE, T, U] = jack (data, func, paropt, opt);
+    if any(diff(opt.weights)) && isempty(opt.clusters)
+      w = opt.weights/sum(opt.weights);
+    else
+      w = 1/n .* ones(n,1);
+    end
+  else
+    [SE, T, U] = jack (data, func, paropt);
+    w = 1/n .* ones(n,1);
+  end
+  a = ((1 / 6) * ((sum(w .* U.^3)) / (sum(w .* U.^2))^(3/2))) / sqrt(n);
 
   % Calculate BCa percentiles
   z1 = stdnorminv(0.5 * (1 + alpha));

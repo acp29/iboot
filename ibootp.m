@@ -69,16 +69,16 @@ function p = ibootp(m,bootstat,S,calcurve)
       % Find P-value from the cdf of the bootstrap distribution by linear interpolation
       [cdf,t1] = empcdf(T1,0);
       p = 1-interp1(t1,cdf,m,'linear');
-    case {'cper'}
+    case {'cper','bca'}
       % Find P-value from the cdf of the bootstrap distribution by linear interpolation
       [cdf,t1] = empcdf(T1,0);
       p = 1-interp1(t1,cdf,m,'linear');
       % Create distribution functions
       stdnormcdf = @(x) 0.5*(1+erf(x/sqrt(2)));
       stdnorminv = @(p) sqrt(2)*erfinv(2*p-1);
-      % Bias correction to P-value if applicable
+      % Bias correction (and acceleration if applicable) to P-value
       z1 = stdnorminv(p);
-      p = stdnormcdf(2*S.z0+z1);
+      p = stdnormcdf(S.z0+((S.z0+z1)/(1-S.a*(S.z0+z1))));
     case {'stud','student'}
       % Use bootstrap-t method
       p = bootstud(m,bootstat,S);
@@ -88,7 +88,7 @@ function p = ibootp(m,bootstat,S,calcurve)
   p = 2*min(p,1-p);
 
   % Calibration of P-value if applicable
-  if nargin > 3 && any(strcmpi(S.type,{'per','percentile','cper'}))
+  if nargin > 3 && any(strcmpi(S.type,{'per','percentile','cper','bca'}))
     C = S.nboot(2);
     if C > 0
       idx = sum((calcurve(:,1)<1));

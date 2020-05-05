@@ -1,4 +1,4 @@
-function [m1, m2, S] = BC (B, func, x, T1, T0, alpha, S)
+function [m1, m2, S] = BC (B, T1, T0, alpha, S)
 
   % Private function file required for ibootci
 
@@ -17,5 +17,6 @@ function [m1, m2, S] = BC (B, func, x, T1, T0, alpha, S)
   z2 = stdnorminv(0.5*(1-alpha));
   m2 = stdnormcdf(2*z0+z2);
   S.z0 = z0;
+  S.a = 0;
 
 end

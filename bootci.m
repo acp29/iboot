@@ -290,7 +290,7 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
 
     case {'bca'}
       % Bias correction and acceleration (BCa)
-      [m1, m2, S] = BCa (nboot, bootfun, data, bootstat, S.stat, alpha, S, paropt);
+      [m1, m2, S] = BCa (nboot, bootfun, data, bootstat, S.stat, 1-alpha, S, paropt);
 
       % Calculate interval for percentile or BCa method
       [cdf,t1] = empcdf (bootstat,1);

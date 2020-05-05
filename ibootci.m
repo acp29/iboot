@@ -51,13 +51,12 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type) computes the bootstrap
 %  confidence interval of the statistic defined by the function bootfun.
 %  type is the confidence interval type, chosen from among the following:
-%    'per' or 'percentile': Percentile method (Default).
+%    'per' or 'percentile': Percentile method.
+%    'bca': Bias-corrected and accelerated method (Default).
+%    'cper': Bias-corrected percentile method.
 %    'stud' or 'student': Studentized (bootstrap-t) confidence interval.
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
-%    'cper': Bias-corrected percentile method [7].
-%    For the bias-corrected and acceleration (BCa) method, use the bootci
-%    wrapper function.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  computes the Studentized bootstrap confidence interval of the statistic
@@ -79,7 +78,7 @@
 %  observation weights. weights must be a vector of non-negative numbers.
 %  The length of weights must be equal to first dimension of the non-
 %  scalar input argument(s) to bootfun. Balanced resampling is extended
-%  to resampling with weights [8], which are used as bootstrap sampling
+%  to resampling with weights [7], which are used as bootstrap sampling
 %  probabilities. Note that weights are not implemented for Studentized-
 %  type intervals or bootstrap iteration.
 %
@@ -94,7 +93,7 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters) specifies
 %  a vector containing numeric identifiers for clusters. Whereas strata
 %  are fixed, clusters are resampled. This is achieved by two-stage
-%  bootstrap resampling of residuals with shrinkage correction [5,9,10].
+%  bootstrap resampling of residuals with shrinkage correction [5,8,9].
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration.
@@ -104,9 +103,9 @@
 %  data with serial dependence (e.g. stationary time series). The
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
 %  without standardization making them equivariant under monotone
-%  transformations [11]. The double bootstrap resampling and calibration
+%  transformations [10]. The double bootstrap resampling and calibration
 %  procedure makes interval coverage less sensitive to the choice of block
-%  length [12]. If the blocksize is set to 'auto' (recommended), the block
+%  length [11]. If the blocksize is set to 'auto' (recommended), the block
 %  length is calculated automatically. Note that balanced resampling is not
 %  maintained for block bootstrap. Block bootstrap can also be used for
 %  regression of time series data by combining it with pairs bootstrap
@@ -115,11 +114,11 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
 %  additive random Gaussian noise of the specified bandwidth (or
 %  covariance matrix) to the bootstrap sample sets before evaluating
-%  bootfun [13]. If bandwidth is set to 'auto', it will be estimated
+%  bootfun [12]. If bandwidth is set to 'auto', it will be estimated
 %  from the data: to the standard error of the mean for univariate
 %  data, or the covariance matrix divided by the sample size for
-%  multivariate data [14]. Inflation of the variance is prevented by
-%  including a shrinkage correction procedure [15,16].
+%  multivariate data [13]. Inflation of the variance is prevented by
+%  including a shrinkage correction procedure [14,15].
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam) performs
 %  bootstrap computations using the indices from bootsam for the first
@@ -173,7 +172,8 @@
 %    alpha: Desired alpha level
 %    coverage: Central coverage of the confidence interval
 %    cal: Nominal alpha level from calibration
-%    z0: Bias correction (0 if type is not 'cper')
+%    z0: Bias used for correction (0 if type is not 'cper' or 'bca')
+%    a: Acceleration constant (0 if type is not 'bca')
 %    bandwidth: Bandwidth for smooth bootstrap (Gaussian kernel)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
@@ -220,30 +220,28 @@
 %        application. Chapter 3: pg 97-100
 %  [6] Polansky (2000) Stabilizing bootstrap-t confidence intervals
 %        for small samples. Can J Stat. 28(3):501-516
-%  [7] Efron (1982) The jackknife, the bootstrap and other resampling
-%        plans. CBMS 38, SIAM-NSF.
-%  [8] Booth, Hall and Wood (1993) Balanced Importance Resampling
+%  [7] Booth, Hall and Wood (1993) Balanced Importance Resampling
 %        for the Bootstrap. The Annals of Statistics. 21(1):286-298
-%  [9] Gomes et al. (2012) Developing appropriate methods for cost-
+%  [8] Gomes et al. (2012) Developing appropriate methods for cost-
 %        effectiveness analysis of cluster randomized trials.
 %        Medical Decision Making. 32(2): 350-361
-%  [10] Ng, Grieve and Carpenter (2013) Two-stage nonparametric
+%  [9] Ng, Grieve and Carpenter (2013) Two-stage nonparametric
 %        bootstrap sampling with shrinkage correction for clustered
 %        data. The Stata Journal. 13(1): 141-164
-%  [11] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise
+%  [10] Gotze and Kunsch (1996) Second-Order Correctness of the Blockwise
 %        Bootstrap for Stationary Observations. The Annals of Statistics.
 %        24(5):1914-1933
-%  [12] Lee and Lai (2009) Double block bootstrap confidence intervals
+%  [11] Lee and Lai (2009) Double block bootstrap confidence intervals
 %        for dependent data. Biometrika. 96(2):427-443
-%  [13] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap
+%  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap
 %        Confidence Intervals. J R Statist Soc B. 59(4):821-838
-%  [14] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs.
+%  [13] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs.
 %        Smoothing. Proceedings of the Section on Statistics & the
 %        Environment. Alexandria, VA: American Statistical Association.
 %        pp. 2924?2930
-%  [15] Jones (1991) On correcting for variance inflation in kernel
+%  [14] Jones (1991) On correcting for variance inflation in kernel
 %        density estimation. Comput Stat Data An. 11, 3-15
-%  [16] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist.
+%  [15] Wang (1995) Optimizing the smoothed bootstrap. Ann. Inst. Statist.
 %        Math. Vol. 47, No. 1, 65-80
 %
 %  Example 1: Two alternatives for 95% confidence intervals for the mean
@@ -378,7 +376,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.bandwidth = bandwidth;
     opt.paropt = paropt;
     % Perform calibration (if applicable)
-    if C>0 && any(strcmpi(type,{'per','percentile','cper'}))
+    if C>0 && any(strcmpi(type,{'per','percentile','cper','bca'}))
       U = zeros(1,B);
       for h = 1:B
         U(h) = interp_boot2(T2(:,h),T0,C);
@@ -401,7 +399,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     nbootstd = [];
     stderr = [];
     deff = 'off';
-    type = 'per';
+    type = 'bca';
     paropt = struct;
     paropt.UseParallel = false;
     paropt.nproc = nproc;
@@ -439,10 +437,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       try
         type = options{type};
       catch
-        type = 'per';
+        type = 'bca';
       end
     else
-      type = 'per';
+      type = 'bca';
     end
     if any(strcmpi(type,{'stud','student'}))
       if ~isempty(nbootstd)
@@ -612,8 +610,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     if (alpha <= 0) || (alpha >= 1)
       error('The alpha value must be a value between 0 and 1');
     end
-    if ~any(strcmpi(type,{'per','percentile','stud','student','cper'}))
-      error('The type of bootstrap must be either per, cper or stud');
+    if ~any(strcmpi(type,{'per','percentile','stud','student','cper','bca'}))
+      error('The type of bootstrap must be either per, cper, bca or stud');
     end
     if ~isa(bandwidth,'numeric') && ~any(strcmpi(bandwidth,{'auto','on'}))
       error('The smoothing bandwidth(s) must be numeric, or set to ''auto'' or ''on''')
@@ -682,21 +680,24 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         % Picquelle and Mier (2011) Fisheries Research 107(1-3):1-13
         [data,strata] = unitmeans(data,strata,nvar);
       end
-      if ~isempty(clusters)
-        clusters = strata;
-      end
       if numel(unique(strata)) == 1
         strata = []; % Cannot perform stratified resampling
       else
         n = size(strata,1);
       end
-      % Sort strata and data vectors so that strata components are grouped
-      [strata,I] = sort(strata);
-      for v = 1:nvar
-        data{v} = data{v}(I);
+      if ~isempty(strata)
+        % Sort strata and data vectors so that strata components are grouped
+        [strata,I] = sort(strata);
+        for v = 1:nvar
+          data{v} = data{v}(I);
+        end
+        ori_data = data; % recreate copy of the data following sort
+        if ~isempty(clusters)
+          clusters = strata;
+        end
       end
-      ori_data = data; % recreate copy of the data
     end
+
     if isempty(weights)
       weights = ones(n,1);
     else
@@ -869,7 +870,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
     % Prepare for cluster resampling (if applicable)
     if ~isempty(clusters)
-      if ~isempty(blocksize)
+      if ~isempty(blocksize) || any(diff(weights))
         error('Incompatible combination of options.')
       end
       if any(strcmpi(type,{'stud','student'}))
@@ -1017,7 +1018,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   end
 
   % Calibrate central two-sided coverage
-  if C>0 && any(strcmpi(type,{'per','percentile','cper'}))
+  if C>0 && any(strcmpi(type,{'per','percentile','cper','bca'}))
     % Create a calibration curve
     V = abs(2*U-1);
     [calcurve(:,2),calcurve(:,1)] = empcdf(V,0);
@@ -1042,14 +1043,19 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       m1 = 0.5*(1+alpha);
       m2 = 0.5*(1-alpha);
       S.z0 = 0;
+      S.a = 0;
     case 'cper'
-      % Bias corrected intervals
-      [m1,m2,S] = BC(B,bootfun,data,T1,T0,alpha,S);
+      % Bias-corrected intervals
+      [m1,m2,S] = BC(B,T1,T0,alpha,S);
+    case 'bca'
+      % Bias-corrected and accelerated intervals
+      [m1,m2,S] = BCa(B,S.bootfun,data,T1,T0,alpha,S,paropt,opt);
     case {'stud','student'}
       % Bootstrap-t
       m1 = 0.5*(1-alpha);
       m2 = 0.5*(1+alpha);
       S.z0 = 0;
+      S.a = 0;
   end
 
   % Linear interpolation for interval construction
@@ -1170,8 +1176,15 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if ~isempty(strata) || ~isempty(clusters)
         [sorted,J] = sort(I);
         strata = strata(J,:);
+        for v = 1:S.nvar
+          ori_data{v} = ori_data{v}(J,:);
+        end
+        data = ori_data;
         if ~isempty(idx)
           idx = idx(J,:);
+        end
+        if ~isempty(clusters)
+          clusters = strata;
         end
       end
       if ~isempty(blocksize) && ~isempty(idx)
