@@ -50,7 +50,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     % Create strata matrix
     g = zeros(n,K);
     for k = 1:K
-    g(:,k) = (strata == gid(k));
+      g(:,k) = (strata == gid(k));
     end
     % Get strata sample and bootstrap sample set dimensions
     nk = sum(g).';   % strata sample sizes
@@ -69,17 +69,17 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
   % Prepare weights for resampling
   if any(diff(weights))
     if ~isempty(strata)
-    % Calculate within-stratum weights
-    c = zeros(n,1);
-    for k = 1:K
-      c = c + round(Nk(k) * g(:,k).*weights./sum(g(:,k).*weights));
-      c(ik(k):ik(k+1),1) = cumsum(c(ik(k):ik(k+1),1));
-      c(ik(k+1)) = Ck(k);
-    end
+      % Calculate within-stratum weights
+      c = zeros(n,1);
+      for k = 1:K
+        c = c + round(Nk(k) * g(:,k).*weights./sum(g(:,k).*weights));
+        c(ik(k):ik(k+1),1) = cumsum(c(ik(k):ik(k+1),1));
+        c(ik(k+1)) = Ck(k);
+      end
     else
-    % Calculate weights (no groups)
-    c = cumsum(round(N * weights./sum(weights)));
-    c(end) = N;
+      % Calculate weights (no groups)
+      c = cumsum(round(N * weights./sum(weights)));
+      c(end) = N;
     end
     c = [c(1);diff(c)];
   else
@@ -96,12 +96,12 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     % Octave parallel computing
     % Perform ordinary resampling with replacement
     if nargout > 3
-    error('No bootsam when operating ibootci in parallel mode')
+      error('No bootsam when operating ibootci in parallel mode')
     end
     % Prepare resampling weights
     w = zeros(n,K);
     for k = 1:K
-    w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
+      w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
     end
     parfun = @() parboot (x, X1, nboot, n, nvar, bootfun, T0, g, S, opt, w, ck, xbar, xvar);
     bootout = cell(1,B);
@@ -113,40 +113,40 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     % Matlab parallel computing
     % Perform ordinary resampling with replacement
     if nargout > 3
-    error('No bootsam when operating ibootci in parallel mode')
+      error('No bootsam when operating ibootci in parallel mode')
     end
     % Prepare resampling weights
     w = zeros(n,K);
     for k = 1:K
-    w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
+      w(:,k) = cumsum((g(:,k).*weights)./sum(g(:,k).*weights));
     end
     parfor h = 1:B
-    idx = zeros(n,1);
-    X1 = cell(1,nvar);
-    for i = 1:n
-      k = sum(i>ck)+1;
-      j = sum((rand(1) >= w(:,k)))+1;
-      idx(i,1) = j;
-    end
-    for v = 1:nvar
-      X1{v} = x{v}(idx);
-    end
-    % Since second bootstrap is usually much smaller, perform rapid
-    % balanced resampling by a permutation algorithm
-    if C>0
-      [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-    end
-    if ~isempty(stderr)
-      U(h) = stderr(X1{:});
-    end
-    if ~isempty(bandwidth)
-      % Apply smoothing using a Gaussian kernel
-      noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
-      for v = 1:nvar
-      X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
+      idx = zeros(n,1);
+      X1 = cell(1,nvar);
+      for i = 1:n
+        k = sum(i>ck)+1;
+        j = sum((rand(1) >= w(:,k)))+1;
+        idx(i,1) = j;
       end
-    end
-    T1(h) = feval(bootfun,X1{:});
+      for v = 1:nvar
+        X1{v} = x{v}(idx);
+      end
+      % Since second bootstrap is usually much smaller, perform rapid
+      % balanced resampling by a permutation algorithm
+      if C>0
+        [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
+      end
+      if ~isempty(stderr)
+        U(h) = stderr(X1{:});
+      end
+      if ~isempty(bandwidth)
+        % Apply smoothing using a Gaussian kernel
+        noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
+        for v = 1:nvar
+          X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
+        end
+      end
+      T1(h) = feval(bootfun,X1{:});
     end
   else
     % Octave or Matlab serial computing
@@ -154,41 +154,40 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     % efficient balanced resampling algorithm
     % If strata is provided, resampling is stratified
     for h = 1:B
-    for i = 1:n
-      k = sum(i>ck)+1;
-      j = sum((rand(1) >= cumsum((g(:,k).*c)./sum(g(:,k).*c))))+1;
-      if nargout < 4
-      idx(i,1) = j;
-      else
-      idx(i,h) = j;
+      for i = 1:n
+        k = sum(i>ck)+1;
+        j = sum((rand(1) >= cumsum((g(:,k).*c)./sum(g(:,k).*c))))+1;
+        if nargout < 4
+          idx(i,1) = j;
+        else
+          idx(i,h) = j;
+        end
+        c(j) = c(j)-1;
       end
-      c(j) = c(j)-1;
-    end
-    for v = 1:nvar
-      if nargout < 4
-      X1{v} = x{v}(idx);
-      else
-      X1{v} = x{v}(idx(:,h));
-      end
-    end
-    % Since second bootstrap is usually much smaller, perform rapid
-    % balanced resampling by a permutation algorithm
-    if C>0
-      [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
-    end
-    if ~isempty(stderr)
-      U(h) = stderr(X1{:});
-    end
-    if ~isempty(bandwidth)
-      % Apply smoothing using a Gaussian kernel
-      noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
       for v = 1:nvar
-      X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
+        if nargout < 4
+          X1{v} = x{v}(idx);
+        else
+          X1{v} = x{v}(idx(:,h));
+        end
       end
-    end
-    T1(h) = feval(bootfun,X1{:});
+      % Since second bootstrap is usually much smaller, perform rapid
+      % balanced resampling by a permutation algorithm
+      if C>0
+        [U(h), T2(:,h)] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt);
+      end
+      if ~isempty(stderr)
+        U(h) = stderr(X1{:});
+      end
+      if ~isempty(bandwidth)
+        % Apply smoothing using a Gaussian kernel
+        noise = bsxfun(@times,randn(n,nvar)*chol(R),bandwidth);
+        for v = 1:nvar
+          X1{v} = shrunk_smooth (X1{v}, bandwidth(v), xbar(v), xvar(v), noise(:,v));
+        end
+      end
+      T1(h) = feval(bootfun,X1{:});
     end
   end
 
 end
-
