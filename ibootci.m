@@ -285,7 +285,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.7.1 (05/05/2020)
+%  ibootci v2.8.7.2 (09/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -899,7 +899,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if strcmpi(blocksize,'auto')
         blocksize = round(n^(1/3));  % set block length to ~ n^(1/3)
       end
-      data = split_blocks(data,blocksize);
+      data = split_blocks(data,n,blocksize);
       bootfun = @(varargin) auxfun(bootfun,S.nvar,varargin);
       nvar = S.nvar * blocksize;
     end
