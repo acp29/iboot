@@ -897,7 +897,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         error('Incompatible combination of options')
       end
       if strcmpi(blocksize,'auto')
-        blocksize = max(1,round(n^(1/4)));  % set block length to ~ n^(1/4)
+        % Set block length to n^(1/5), which should be optimal for two-sided intervals
+        % Hall et al (1995) On blocking rules for the bootstrap with dependent data.
+        % Biometrika. 82, 3, pp. 561-74
+        blocksize = max(1,round(n^(1/5)));
       end
       data = split_blocks(data,n,blocksize);
       bootfun = @(varargin) auxfun(bootfun,S.nvar,varargin);
