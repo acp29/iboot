@@ -897,7 +897,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         error('Incompatible combination of options')
       end
       if strcmpi(blocksize,'auto')
-        blocksize = min(1,round(n^(1/4)));  % set block length to ~ n^(1/4)
+        blocksize = max(1,round(n^(1/4)));  % set block length to ~ n^(1/4)
       end
       data = split_blocks(data,n,blocksize);
       bootfun = @(varargin) auxfun(bootfun,S.nvar,varargin);
