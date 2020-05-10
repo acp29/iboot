@@ -184,6 +184,8 @@
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval of the test statistic
 %    prct: Percentiles used to generate confidence intervals (proportion)
+%    warnflag: Warning flag (0 = no warning; 1 = warning during operation)
+%    warnmsg: Last warning message
 %    weights: Argument supplied to 'Weights' (empty if none provided)
 %    strata: Argument supplied to 'Strata' (empty if none provided)
 %    clusters: Argument supplied to 'Clusters' (empty if none provided)
@@ -285,7 +287,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.7.2 (09/05/2020)
+%  ibootci v2.8.7.3 (10/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -782,6 +784,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     end
 
     % Set the bootstrap sample sizes
+    warning('') % Clear last warning message
     if iter==0
       B = 5000;
       C = 200;
@@ -808,8 +811,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if (1/min(alpha,1-alpha)) > (0.5*C)
         error('ibootci:extremeAlpha',...
              ['The calibrated alpha is too extreme for calibration so the result will be unreliable. \n',...
-              'Try increasing the number of replicate samples in the second bootstrap.\n',...
-              'If the problem persists, the original sample size may be inadequate.\n']);
+              'Try increasing the number of replicate samples in the second bootstrap.\n']);
       end
       if any(diff(weights))
         error('Weights are not implemented for iterated bootstrap.');
@@ -897,7 +899,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         error('Incompatible combination of options')
       end
       if strcmpi(blocksize,'auto')
-        % Set block length 
+        % Set block length
         blocksize = max(1,round(n^(1/3)));
       end
       data = split_blocks(data,n,blocksize);
@@ -1212,6 +1214,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.SE = SE;           % Bootstrap standard error of the test statistic
     S.ci = ci.';         % Bootstrap confidence intervals of the test statistic
     S.prct = [m2,m1];    % Percentiles used to generate confidence intervals
+    [warnMsg, warnId] = lastwarn;
+    if ~isempty(warnMsg)
+      S.warnflag = 1;
+      S.warnmsg = warnMsg;
+    else
+      S.warnflag = 0;
+      S.warnmsg = '';
+    end
     if any(diff(weights))
       S.weights = weights;
     else
