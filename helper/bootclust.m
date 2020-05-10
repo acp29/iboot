@@ -10,7 +10,7 @@ function T = bootclust (bootfun, K, g, runmode, mu, varargin)
   % to be taken from populations with equal variance. Not compatible
   % with bootstrap-t or bootstrap iteration.
   %
-  % Reference5:
+  % References:
   %  [1] Davison and Hinkley (1997) Bootstrap Methods and their
   %       application. Chapter 3: pg 97-100
   %  [2] Ng, Grieve and Carpenter (2013) The Stata Journal.
