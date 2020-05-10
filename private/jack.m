@@ -6,7 +6,7 @@ function [SE, T, U] = jack (x, func, paropt, opt)
 
   % Get basic info about data
   nvar = size(x,2);
-  m = size(x{1},1);
+  [m, n] = size(x{1});
 
   if nargin < 2
     error('Invalid number of input arguments');
@@ -71,7 +71,7 @@ function [SE, T, U] = jack (x, func, paropt, opt)
 
   % Perform 'leave one out' procedure and calculate the variance(s)
   % of the test statistic.
-  T = zeros(m,1);
+  T = zeros(m,n);
   i = [1:m].';
   try
     pool = gcp('nocreate');
@@ -88,7 +88,7 @@ function [SE, T, U] = jack (x, func, paropt, opt)
       M = cell(1,nvar);
       for v = 1:nvar
         M{v} = x{v};
-        M{v}(i:(i+l-1)) = [];
+        M{v}(i:(i+l-1),:) = [];
         M{v} = cell2mat(M{v});
       end
       T(i,:) = feval(func, M{:});
@@ -100,7 +100,7 @@ function [SE, T, U] = jack (x, func, paropt, opt)
       M = cell(1,nvar);
       for v = 1:nvar
         M{v} = x{v};
-        M{v}(i:(i+l-1)) = [];
+        M{v}(i:(i+l-1),:) = [];
         M{v} = cell2mat(M{v});
       end
       T(i,:) = feval(func, M{:});
