@@ -71,11 +71,11 @@
 %  Toolbox or Octave Forge package is available). This argument is a
 %  structure with the following recognised fields:
 %
-%   'UseParallel' — If true, compute bootstrap iterations in parallel.
+%   'UseParallel' - If true, compute bootstrap iterations in parallel.
 %                   Default is false for serial computation. In MATLAB,
 %                   the default is true if a parallel pool has already
 %                   been started.
-%   'nproc'       — The number of processors to use by Octave. Default
+%   'nproc'       - The number of processors to use by Octave. Default
 %                   is the number of available processors. If you choose
 %                   In Matlab, nproc is ignored and the number of parallel
 %                   workers should be predefined beforehand by starting
