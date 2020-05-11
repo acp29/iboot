@@ -33,7 +33,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.8.3 (26/12/2019)
+%  iboottest2 v1.5.8.4 (11/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -91,8 +91,9 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
     C = nboot(2);
   end
 
-  % Retireve some ibootci options
+  % Retrieve some ibootci options
   options = varargin;
+  type = 1+find(strcmpi('type',options));
   alpha = 1+find(strcmpi('alpha',options));
   weights = 1+find(strcmpi('Weights',options));
   strata = 1+find(sum([strcmpi('Strata',options);strcmpi('Stratum',options);strcmpi('Stratified',options)]));
@@ -100,6 +101,20 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   blocksize = 1+find(sum([strcmpi('Block',options);strcmpi('Blocks',options);strcmpi('Blocksize',options)]));
   bandwidth = 1+find(sum([strcmpi('smooth',options);strcmpi('smoothing',options);strcmpi('bandwidth',options)]));
   cellref = [];
+  if ~isempty(type)
+    try
+      cellref = cat(2,cellref,[type-1,type]);
+      type = options{type};
+    catch
+      type = 'per';
+      cellref(end-1:end)=[];
+    end
+    if strcmpi(type,'bca')
+      error('BCa correction is incompatible with iboottest2')
+    end
+  else
+    type = 'per';
+  end
   if ~isempty(alpha)
     try
       cellref = cat(2,cellref,[alpha-1,alpha]);
@@ -206,21 +221,21 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
     end
   else
     bandwidth = {[],[]};
-  end  
+  end
   options(cellref)=[];   % remove these evaluated options from the options array
 
   % Perform independent resampling from x and y
   state = warning;
   warning off;
-  [ciX,bootstatX,SX] = ibootci(nboot,{bootfun,x},'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},'Smooth',bandwidth{1},options{:});
-  [ciY,bootstatY,SY] = ibootci(nboot,{bootfun,y},'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},'Smooth',bandwidth{2},options{:});
+  [ciX,bootstatX,SX] = ibootci(nboot,{bootfun,x},'type',type,'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Block',blocksize{1},'Smooth',bandwidth{1},options{:});
+  [ciY,bootstatY,SY] = ibootci(nboot,{bootfun,y},'type',type,'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Block',blocksize{2},'Smooth',bandwidth{2},options{:});
 
   if C>0
     if ~isempty(weights{1})
-      [ciX,bootstatX{1}] = ibootci(B,{bootfun,x},'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Smooth',bandwidth{1},options{:});
+      [ciX,bootstatX{1}] = ibootci(B,{bootfun,x},'type',type,'alpha',SX.cal,'Weights',weights{1},'Strata',strata{1},'Cluster',clusters{1},'Smooth',bandwidth{1},options{:});
     end
     if ~isempty(weights{2})
-      [ciY,bootstatY{1}] = ibootci(B,{bootfun,y},'alpha',SY.cal,'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Smooth',bandwidth{2},options{:});
+      [ciY,bootstatY{1}] = ibootci(B,{bootfun,y},'type',type,'alpha',SY.cal,'Weights',weights{2},'Strata',strata{2},'Cluster',clusters{2},'Smooth',bandwidth{2},options{:});
     end
   end
   warning(state);
@@ -249,7 +264,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
 
   % Calculate confidence interval using ibootci
   [ci,bootstat,S,calcurve] = ibootci(bootstatZ, S);
-  
+
   % Update output structure
   S.ICC = [SX.ICC, SY.ICC];
   S.DEFF = [SX.DEFF, SY.DEFF];
