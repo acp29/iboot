@@ -184,13 +184,13 @@
 %    SE: Bootstrap standard error of the test statistic
 %    ci: Bootstrap confidence interval of the test statistic
 %    prct: Percentiles used to generate confidence intervals (proportion)
-%    warnflag: Warning flag (0 = no warning; 1 = warning during operation)
-%    warnmsg: Last warning message
 %    weights: Argument supplied to 'Weights' (empty if none provided)
 %    strata: Argument supplied to 'Strata' (empty if none provided)
 %    clusters: Argument supplied to 'Clusters' (empty if none provided)
 %    blocksize: Length of overlapping blocks (empty if none provided)
 %    paropt: Parallel computing options
+%    warnflag: Warning flag (0 = no warning; 1 = warning during operation)
+%    warnmsg: Last warning message
 %
 %  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
 %  curve for central coverage. The first column is nominal coverage and
