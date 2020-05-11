@@ -1214,14 +1214,6 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.SE = SE;           % Bootstrap standard error of the test statistic
     S.ci = ci.';         % Bootstrap confidence intervals of the test statistic
     S.prct = [m2,m1];    % Percentiles used to generate confidence intervals
-    [warnMsg, warnId] = lastwarn;
-    if ~isempty(warnMsg)
-      S.warnflag = 1;
-      S.warnmsg = warnMsg;
-    else
-      S.warnflag = 0;
-      S.warnmsg = '';
-    end
     if any(diff(weights))
       S.weights = weights;
     else
@@ -1235,6 +1227,14 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     S.clusters = clusters;
     S.blocksize = blocksize;
     S.paropt = paropt;
+    [warnMsg, warnId] = lastwarn;
+    if ~isempty(warnMsg)
+      S.warnflag = 1;
+      S.warnmsg = warnMsg;
+    else
+      S.warnflag = 0;
+      S.warnmsg = '';
+    end
 
   end
 
