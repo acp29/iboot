@@ -96,7 +96,8 @@
 %  bootstrap resampling of residuals with shrinkage correction [5,8,9].
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
-%  and resampled. This option is not compatible with bootstrap iteration.
+%  and resampled. This option is not compatible with bootstrap iteration
+%  of bootstrap-t intervals.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize) specifies
 %  a positive integer defining the block length for block bootstrapping
