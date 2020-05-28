@@ -126,12 +126,15 @@
 %  bootstrap.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the
-%  design effect by resampling. The bootstrap option appropriate for
+%  design effect (DEFF) by resampling. The bootstrap option appropriate 
 %  for the data structure must be set in the call to ibootci for this  
 %  result to be meaningful. For example: 1) block bootstrap should be 
-%  used on time series data (or other data expected to have serial  
+%  used for time series data (or other data expected to have serial  
 %  dependence); 2) cluster bootstrap should be used on heirarchical 
-%  data structures. State can be 'on' or 'off'. Default is 'off'.
+%  data structures. The value of DEFF can be used to calculate the 
+%  effective sample size by dividing the number of observations by
+%  the DEFF value returned in the output structure S (see below). 
+%  State can be 'on' or 'off'. Default is 'off'.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Options',paropt) specifies
 %  options that govern if and how to perform bootstrap iterations using
