@@ -126,8 +126,12 @@
 %  bootstrap.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the
-%  design effect by resampling. State can be 'on' or 'off'. Default is
-%  'off'.
+%  design effect by resampling. The bootstrap option appropriate for
+%  for the data structure must be set in the call to ibootci for this  
+%  result to be meaningful. For example: 1) block bootstrap should be 
+%  used on time series data (or other data expected to have serial  
+%  dependence); 2) cluster bootstrap should be used on heirarchical 
+%  data structures. State can be 'on' or 'off'. Default is 'off'.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'Options',paropt) specifies
 %  options that govern if and how to perform bootstrap iterations using
