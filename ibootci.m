@@ -1,7 +1,7 @@
 %  Function File: ibootci
 %
-%  Two-sided bootstrap confidence intervals for small samples and
-%  samples with complex dependence structures
+%  Two-sided bootstrap confidence intervals and standard errors for 
+%  small samples and samples with complex dependence structures
 %
 %  ci = ibootci(nboot,bootfun,...)
 %  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
