@@ -5,7 +5,8 @@
 %   p = iboottest2(nboot,{bootfun,x,y})
 %   p = iboottest2(nboot,{bootfun,x,y},Name,Value)
 %   [p,ci] = iboottest2(...)
-%   [p,ci,S] = iboottest2(...)
+%   [p,ci,bootstat] = iboottest2(...)
+%   [p,ci,bootstat,S] = iboottest2(...)
 %
 %  Two sample bootstrap test for univariate data. The null hypothesis
 %  is that the difference between the bootfun statistic calculated
@@ -33,7 +34,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.8.4 (11/05/2020)
+%  iboottest2 v1.5.8.5 (04/06/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -52,7 +53,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function [p,ci,S] = iboottest2(argin1,argin2,varargin)
+function [p,ci,bootstat,S] = iboottest2(argin1,argin2,varargin)
 
   % Check and process iboottest2 input arguments
   nboot = argin1;
@@ -243,15 +244,15 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   % Calculate differences between bootfun evaluated for bootstrap
   % sample sets derived from x and y
   if iscell(bootstatX)
-    bootstatZ = cell(2,1);
-    bootstatZ{1} = bootstatX{1} - bootstatY{1};
+    bootstat = cell(2,1);
+    bootstat{1} = bootstatX{1} - bootstatY{1};
     if size(bootstatX{2},1) > 1
-      bootstatZ{2} = bootstatX{2} - bootstatY{2};
+      bootstat{2} = bootstatX{2} - bootstatY{2};
     else
-      bootstatZ{2} = sqrt(bootstatX{2}.^2 + bootstatY{2}.^2);  % propagation of error for stderr
+      bootstat{2} = sqrt(bootstatX{2}.^2 + bootstatY{2}.^2);  % propagation of error for stderr
     end
   else
-    bootstatZ = bootstatX - bootstatY;
+    bootstat = bootstatX - bootstatY;
   end
 
   % Create template settings structure and calculate the sample test statistic
@@ -263,7 +264,7 @@ function [p,ci,S] = iboottest2(argin1,argin2,varargin)
   S.SE = sqrt(SX.SE.^2 + SY.SE.^2);  % propagation of error (required if stderr option used)
 
   % Calculate confidence interval using ibootci
-  [ci,bootstat,S,calcurve] = ibootci(bootstatZ, S);
+  [ci,bootstat,S,calcurve] = ibootci(bootstat, S);
 
   % Update output structure
   S.ICC = [SX.ICC, SY.ICC];
