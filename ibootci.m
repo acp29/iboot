@@ -522,6 +522,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
           bandwidth = [];
         elseif any(strcmpi(bandwidth,{'auto','on'}))
           % do nothing
+        elseif any(strcmpi(bandwidth,{'off'}))
+          bandwidth = [];
         end
       catch
         bandwidth = [];
