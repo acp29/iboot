@@ -279,9 +279,12 @@
 %    >> [ci,bootstat,S] = ibootci([5000,200],{'mean',y},'alpha',0.05);
 %    >> ci = ibootci(5000,{'mean',y},'alpha',S.cal,'Weights',w);
 %
-%  Example 5: 95% confidence interval for the median by smoothed bootstrap
-%  (requires the smoothmedian function available at Matlab Central File
-%  Exchange)
+%  Example 5: Two alternatives for 95% confidence interval for the median 
+%  by smoothed bootstrap.
+%  a) Using gaussian kernel and automatically determined bandwidth
+%    >> y = randn(20,1);
+%    >> ci = ibootci([5000 200],{@median,y},'smooth','auto');
+%  b) Using 'smoothmedian' function in /iboot/param (RECOMMENDED)
 %    >> y = randn(20,1);
 %    >> ci = ibootci([5000 200],@smoothmedian,y);
 %
