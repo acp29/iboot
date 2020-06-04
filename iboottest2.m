@@ -92,6 +92,11 @@ function [p,ci,bootstat,S] = iboottest2(argin1,argin2,varargin)
     C = nboot(2);
   end
 
+  % Check number of output arguments requested
+  if nargout > 4
+    error('Too many output arguments requested')
+  end
+  
   % Retrieve some ibootci options
   options = varargin;
   type = 1+find(strcmpi('type',options));
