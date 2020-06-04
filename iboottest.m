@@ -6,7 +6,8 @@
 %   p = iboottest(m,nboot,{bootfun,x},Name,Value)
 %   p = iboottest(nboot,{bootfun,x,y},...)
 %   [p,ci] = iboottest(...)
-%   [p,ci,S] = iboottest(...)
+%   [p,ci,bootstat] = iboottest(...)
+%   [p,ci,bootstat,S] = iboottest(...)
 %
 %  One-sample or paired-sample bootstrap test for univariate data.
 %  The null hypothesis for the paired-sample test is that the
@@ -22,7 +23,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest v1.1.1.0 (30/07/2019)
+%  iboottest v1.1.2.0 (04/06/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -41,7 +42,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function [p,ci,S] = iboottest(arg1,varargin)
+function [p,ci,bootstat,S] = iboottest(arg1,varargin)
 
   % Check and process iboottest input arguments
   if isa(varargin{1},'cell')
@@ -80,6 +81,11 @@ function [p,ci,S] = iboottest(arg1,varargin)
   nboot = argin{1};
   bootfun = argin{2}{1};
   argin(1:2) = [];
+  
+  % Check number of output arguments requested
+  if nargout > 4
+    error('Too many output arguments requested')
+  end
 
   % Calculate confidence interval using ibootci
   [ci,bootstat,S,calcurve] = ibootci(nboot,{bootfun,data},argin{:});
