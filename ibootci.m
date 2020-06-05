@@ -119,7 +119,9 @@
 %  from the data: to the standard error of the mean for univariate
 %  data, or the covariance matrix divided by the sample size for
 %  multivariate data [13]. Inflation of the variance is prevented by
-%  including a shrinkage correction procedure [14,15].
+%  including a shrinkage correction procedure [14,15]. For the median,
+%  instead of using this option we recommend calculating intervals 
+%  using the smoothmedian function (in /iboot/param/).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam) performs
 %  bootstrap computations using the indices from bootsam for the first
