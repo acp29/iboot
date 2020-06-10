@@ -1,6 +1,6 @@
 %  Function File: bootci
 %
-%  Two-sided bootstrap confidence intervals
+%  Two-sided nonparametric bootstrap confidence intervals
 %
 %  ci = bootci(nboot,bootfun,...)
 %  ci = bootci(nboot,{bootfun,...},...,'alpha',alpha)
