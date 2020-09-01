@@ -336,6 +336,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
   if ~isoctave
     nproc = 1;
   end
+  
+  % Initialize last warning
+  lastwarn('')
 
   % Assign input arguments to function variables
   if isstruct(argin2)
