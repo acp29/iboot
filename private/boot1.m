@@ -105,7 +105,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     end
     parfun = @() parboot (x, X1, nboot, n, nvar, bootfun, T0, g, S, opt, w, ck, xbar, xvar);
     bootout = cell(1,B);
-    errfun = @() error('an error occurred during octave parallel implementation. Try running computations in serial.');
+    errfun = @() error('An error occurred during octave parallel implementation. Try running computations in serial.');
     bootout = parcellfun(paropt.nproc, parfun, bootout, 'UniformOutput',false,'ErrorHandler',errfun);
     T1 = cell2mat(cellfun(@(S) S.T1, bootout, 'UniformOutput', false));
     T2 = cell2mat(cellfun(@(S) S.T2.', bootout, 'UniformOutput', false));
