@@ -7,7 +7,7 @@ Add to the MATLAB or OCTAVE path:
 
 Note: In Octave, for parallel implementation the path of the above folders must be saved to the octaverc file (e.g. with 'savepath'), not just added temporarily to the path using 'addpath'. If not, then the the CPU workers do not have access to the parboot function
 
-Current version: 2.8.7.4
+Current version: 2.8.8.0
 
 Please cite as:
 
