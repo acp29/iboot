@@ -32,7 +32,8 @@ function [U, T2] = boot2 (X1, nboot, n, nvar, bootfun, T0, g, S, opt)
   idx = zeros(n,C);
   for k = 1:K
     tmp = (1:nk(k))'*ones(1,C);
-    tmp = tmp(reshape(randperm(Nk(k)),nk(k),C));  % For compatibility with R2007
+    [~,rperm] = sort(rand(1,Nk(k)));
+    tmp = tmp(reshape(rperm,nk(k),C));
     tmp = tmp + ik(k) - 1;
     idx(ik(k): ik(k+1)-1,:) = tmp;
   end
