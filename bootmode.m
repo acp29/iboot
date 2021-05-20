@@ -1,4 +1,6 @@
-% Function file: [H, P, h] = bootmode (x, m, B, kernel)
+% Function file: bootmode
+% 
+% [H, P, h] = bootmode (x, m, B, kernel)
 %
 % This function tests whether the distribution underlying the univariate
 % data in vector x has m modes. The method employs the smooth bootstrap
