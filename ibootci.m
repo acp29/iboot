@@ -1211,7 +1211,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         temp = cell(n,1);
         for i = 1:n
           temp{i} = bsxfun(@plus,(0:blocksize-1)'.*ones(1,B),...
-                                 ones(blocksize,1).*idx(i,:));
+                           ones(blocksize,1).*idx(i,:));
         end
         idx = cell2mat(temp);
         idx(n+1:end,:) = [];
