@@ -99,7 +99,7 @@
 %  [6] Booth, Hall and Wood (1993) Balanced Importance Resampling
 %        for the Bootstrap. The Annals of Statistics. 21(1):286-298
 %
-%  bootci v2.8.7.0 (05/05/2020)
+%  bootci v2.8.7.1 (28/09/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
