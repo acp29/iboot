@@ -1116,8 +1116,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
 
     % Calculate interval for percentile method
     [cdf,t1] = empcdf(T1,0);
-    UL = interp1(cdf,t1,m1,'linear','extrap');
-    LL = interp1(cdf,t1,m2,'linear','extrap');
+    %UL = interp1(cdf,t1,m1,'linear','extrap');
+    %LL = interp1(cdf,t1,m2,'linear','extrap');
+    UL = interp1(cdf,t1,m1,'linear',max(t1));
+    LL = interp1(cdf,t1,m2,'linear',min(t1));
     ci = [LL;UL];
 
   end
