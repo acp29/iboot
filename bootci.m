@@ -294,8 +294,10 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
 
       % Calculate interval for percentile or BCa method
       [cdf,t1] = empcdf (bootstat,1);
-      UL = interp1(cdf, t1, m1, 'linear', 'extrap');
-      LL = interp1(cdf, t1, m2, 'linear', 'extrap');
+      %UL = interp1(cdf, t1, m1, 'linear', 'extrap');
+      %LL = interp1(cdf, t1, m2, 'linear', 'extrap');
+      UL = interp1(cdf, t1, m1, 'linear', max(t1));
+      LL = interp1(cdf, t1, m2, 'linear', min(t1));
       ci = [LL; UL];
   end
 
