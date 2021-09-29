@@ -13,6 +13,9 @@ function [m1, m2, S] = BCa (nboot, func, data, bootstat, stat, alpha, S, paropt,
 
   % Calculate bias correction z0
   z0 = stdnorminv (sum (bootstat < stat)/ nboot);
+  if isinf(z0) || isnan(z0)
+    error('Unable to calculate bias correction z0, please use percentile intervals instead')
+  end
 
   % Use the Jackknife to calculate acceleration constant
   if nargin > 8
@@ -23,7 +26,7 @@ function [m1, m2, S] = BCa (nboot, func, data, bootstat, stat, alpha, S, paropt,
       w = 1/n .* ones(n,1);
     end
   else
-    [SE, T, U] = jack (data, func, paropt);
+    [SE, T, U] = jack (data, func, paropt, opt);
     w = 1/n .* ones(n,1);
   end
   a = ((1 / 6) * ((sum(w .* U.^3)) / (sum(w .* U.^2))^(3/2))) / sqrt(n);

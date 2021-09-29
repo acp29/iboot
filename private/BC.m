@@ -10,6 +10,9 @@ function [m1, m2, S] = BC (B, T1, T0, alpha, S)
 
   % Calculate bias correction z0
   z0 = stdnorminv(sum(T1<T0)/B);
+  if isinf(z0) || isnan(z0)
+    error('Unable to calculate bias correction z0, please use percentile intervals instead')
+  end
 
   % Calculate Bias-corrected percentiles
   z1 = stdnorminv(0.5*(1+alpha));
