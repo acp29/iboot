@@ -300,7 +300,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  ibootci v2.8.7.4 (28/09/2021)
+%  ibootci v2.8.7.3 (10/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -646,8 +646,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if (nvar == 1)
         nvar = size(data{1},2);
         data = num2cell(data{1},1);
-        matflag = 1;   % Flag for matrix input set to True
+        matflag = 1;   % Flag for matrix input set to 1
         runmode = 'slow';
+        warning('ibootci:slowMode',...
+                'Slow mode. Calculation of bootstrap statistics cannot be vectorized for matrix input.')
       else
         error('Multiple data input arguments must be provided as vectors')
       end
@@ -937,6 +939,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
     opt.stderr = stderr;
     opt.runmode = runmode;
     opt.paropt = paropt;
+    opt.matflag = matflag;
 
     % Perform bootstrap
     % Bootstrap resampling
@@ -1213,7 +1216,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
         temp = cell(n,1);
         for i = 1:n
           temp{i} = bsxfun(@plus,(0:blocksize-1)'.*ones(1,B),...
-                           ones(blocksize,1).*idx(i,:));
+                                 ones(blocksize,1).*idx(i,:));
         end
         idx = cell2mat(temp);
         idx(n+1:end,:) = [];

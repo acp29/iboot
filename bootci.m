@@ -99,7 +99,7 @@
 %  [6] Booth, Hall and Wood (1993) Balanced Importance Resampling
 %        for the Bootstrap. The Annals of Statistics. 21(1):286-298
 %
-%  bootci v2.8.7.1 (28/09/2021)
+%  bootci v2.8.7.0 (05/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -252,7 +252,20 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
       paropt.nproc = nproc;
     end
   end
-
+  % Evaluate data input
+  opt = struct;
+  nvar = size(data,2);
+  if (min(size(data{1}))>1)
+    if (nvar == 1)
+      opt.matflag = 1;   % Flag for matrix input set to 1
+    end
+  else
+    opt.matflag = 0;
+  end
+  opt.blocksize = [];
+  opt.clusters = [];
+  opt.weights = [];
+  
   % Set 'type' input variable for ibootci
   if any(strcmpi(type,{'norm','normal','bca'}))
     % Calculate percentile intervals (we will modify the intervals later)
@@ -290,7 +303,10 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
 
     case {'bca'}
       % Bias correction and acceleration (BCa)
-      [m1, m2, S] = BCa (nboot, bootfun, data, bootstat, S.stat, 1-alpha, S, paropt);
+      if opt.matflag > 0
+        data = num2cell(data{:},1);
+      end
+      [m1, m2, S] = BCa (nboot, bootfun, data, bootstat, S.stat, 1-alpha, S, paropt, opt);
 
       % Calculate interval for percentile or BCa method
       [cdf,t1] = empcdf (bootstat,1);
@@ -299,6 +315,7 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
       UL = interp1(cdf, t1, m1, 'linear', max(t1));
       LL = interp1(cdf, t1, m2, 'linear', min(t1));
       ci = [LL; UL];
+      
   end
 
 end
