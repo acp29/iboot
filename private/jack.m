@@ -91,7 +91,11 @@ function [SE, T, U] = jack (x, func, paropt, opt)
         M{v}(i:(i+l-1),:) = [];
         M{v} = cell2mat(M{v});
       end
-      T(i,:) = feval(func, M{:});
+      if opt.matflag > 0
+        T(i,:) = feval(func, cell2mat(M));
+      else
+        T(i,:) = feval(func, M{:});
+      end
       M = [];
     end
   else
@@ -103,7 +107,11 @@ function [SE, T, U] = jack (x, func, paropt, opt)
         M{v}(i:(i+l-1),:) = [];
         M{v} = cell2mat(M{v});
       end
-      T(i,:) = feval(func, M{:});
+      if opt.matflag > 0
+        T(i,:) = feval(func, cell2mat(M));
+      else
+        T(i,:) = feval(func, M{:});
+      end
       M = [];
     end
   end
