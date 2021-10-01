@@ -4,18 +4,20 @@
 %
 %   p = bootperm2(nboot,bootfun,x,y)
 %
-%  Two sample bootstrap test for unpaired univariate data. The null
-%  hypothesis is that x and y are sampled from the same population.
-%  The test is two-tailed and is essentially a bootstrap version of
-%  a permutation test. This test performs well without bootstrap
-%  iteration and so iteration is not implemented but it can only
-%  compute a P value (not a confidence interval).
+%  Two sample bootstrap test for unpaired data. The null hypothesis
+%  is that x and y are sampled from the same population. The test is
+%  two-tailed and is essentially a bootstrap version of a permutation 
+%  test. This test performs well without bootstrap iteration and so 
+%  iteration is not implemented but it can only compute a P value (not 
+%  a confidence interval).
+%
+%  Note that this function resamples the rows of data x and y.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm2 v1.2.2.0 (29/11/2019)
+%  bootperm2 v1.2.3.0 (01/10/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -42,7 +44,7 @@ function p = bootperm2(nboot,bootfun,x,y)
   end
   
   % Get size of x data
-  n = numel(x);  
+  n = size(x,1);  
   
   % Prepare joint distribution and define function to test the null hypothesis
   z = cat(1,x,y);

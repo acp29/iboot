@@ -11,13 +11,13 @@
 %  value (not a confidence interval).
 %
 %  The test is two-tailed and is related to a one-sample permutation
-%  test.
+%  test. Note that this function resamples the rows of the data x.
 %
 %  The syntax in this function code is known to be compatible with
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  bootperm v1.1.1.0 (29/11/2019)
+%  bootperm v1.1.2.0 (01/10/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -44,7 +44,7 @@ function p = bootperm(nboot,bootfun,x,m)
   end
 
   % Get size of data
-  n = numel(x);
+  n = size(x,1);
 
   % Evaluate optional input arguments for nested data structures
   if nargin > 3

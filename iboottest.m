@@ -16,6 +16,8 @@
 %  test is that the bootfun statistic calculated for x is equal
 %  to zero. All tests are two-tailed.
 %
+%  Note that this function resamples the rows of the data x.
+%
 %  See ibootci documentation for input argument definitions and
 %  for Name-Value pairs
 %
@@ -23,7 +25,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest v1.1.2.0 (04/06/2020)
+%  iboottest v1.1.3.0 (01/10/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -55,9 +57,6 @@ function [p,ci,bootstat,S] = iboottest(arg1,varargin)
     argin = varargin;
   end
   x = argin{2}{2};
-  if all(size(x)>1)
-    error('data must be a vector')
-  end
   switch type
     case 'one-sample'
       if numel(argin{2})>2
@@ -71,10 +70,6 @@ function [p,ci,bootstat,S] = iboottest(arg1,varargin)
       end
       if any(size(x) ~= size(y))
         error('x and y must have the same size and dimensions')
-      end
-      if size(x,2)>1
-        x = x.';
-        y = y.';
       end
       data = x-y;
   end

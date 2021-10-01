@@ -8,10 +8,12 @@
 %   [p,ci,bootstat] = iboottest2(...)
 %   [p,ci,bootstat,S] = iboottest2(...)
 %
-%  Two sample bootstrap test for univariate data. The null hypothesis
+%  Two sample bootstrap test for unpaired data. The null hypothesis
 %  is that the difference between the bootfun statistic calculated
 %  for independent samples x and y is equal to zero. The test is
 %  two-tailed.
+%
+%  Note that this function resamples the rows of data x and y.
 %
 %  See ibootci documentation for input argument definitions and
 %  for Name-Value pairs. The following input arguments differ in
@@ -34,7 +36,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v7.4.0 on Windows XP).
 %
-%  iboottest2 v1.5.8.5 (04/06/2020)
+%  iboottest2 v1.5.9.0 (01/10/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -59,19 +61,7 @@ function [p,ci,bootstat,S] = iboottest2(argin1,argin2,varargin)
   nboot = argin1;
   bootfun = argin2{1};
   x = argin2{2};
-  if all(size(x)>1)
-    error('data must be a vector')
-  end
-  if size(x,2)>1
-    x = x.';
-  end
   y = argin2{3};
-  if all(size(y)>1)
-    error('data must be a vector')
-  end
-  if size(y,2)>1
-    y = y.';
-  end
   if numel(argin2)>3
     error('too many data variables provided')
   end
