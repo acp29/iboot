@@ -97,7 +97,8 @@
 %  If a matrix is provided defining additional levels of subsampling in
 %  a hierarchical data model, then level two cluster means are computed
 %  and resampled. This option is not compatible with bootstrap iteration
-%  or bootstrap-t intervals.
+%  or bootstrap-t intervals. Coverage of intervals was only confirmed for
+%  clustered univariate data.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize) specifies
 %  a positive integer defining the block length for block bootstrapping
