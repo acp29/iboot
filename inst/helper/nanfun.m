@@ -21,7 +21,7 @@ function Y = nanfun (func, X, dim)
       if dim == 1
         Y(1,i) = feval(func, X(~isnan(X(:,i)),i));
       elseif dim == 2
-        Y(i,1) = feval(func, X(~isnan(X(i,:)),i));
+        Y(i,1) = feval(func, X(i,~isnan(X(i,:))));
       end
     end
   else
