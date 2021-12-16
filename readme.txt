@@ -1,6 +1,6 @@
-*** The iboot package for Octave/Matlab *** 
+*** bootstrap package for Octave *** 
 
-This is a set of functions to estimate uncertainty (confidence intervals) and test hypotheses (p-values). Variations of the bootstrap are included that improve the accuracy of bootstrap statistics for small samples and samples with complex dependence structures.
+This package of functions can be used to estimate uncertainty (confidence intervals) and test hypotheses (p-values) using bootstrap. Variations of the bootstrap are included that improve the accuracy of bootstrap statistics for small samples and samples with complex dependence structures.
 
 INSTALLATION
 
