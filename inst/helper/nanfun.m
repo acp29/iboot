@@ -4,7 +4,7 @@ function Y = nanfun (func, X, dim)
 
   % Math functions, ignoring NaNs.
   if nargin < 3
-    dim = 1
+    dim = 1;
   end
   [m,n] = size(X);
   if dim == 1
@@ -16,7 +16,7 @@ function Y = nanfun (func, X, dim)
   else 
     error('dim input argument should be 1 or 2')
   end
-  if m > 1
+  if any(size(Y)<2)
     for i = 1:n
       if dim == 1
         Y(1,i) = feval(func, X(~isnan(X(:,i)),i));
