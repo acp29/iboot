@@ -114,6 +114,8 @@ function p = smoothmedian(x,dim,Tol)
   % Regularization is achieved by adding a constant to the denominator
   if exist('nanmedian')
     centre = nanmedian(x,1);
+  elseif exist('nanfun')
+    centre = nanfun('median',x);
   else
     centre = median(x,1);
   end

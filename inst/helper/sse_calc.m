@@ -1,6 +1,6 @@
 function [SSb, SSw, K, g, MSb, MSw, dk] = sse_calc (x, groups, nvar)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Calculate error components of groups
 

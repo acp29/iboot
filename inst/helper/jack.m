@@ -1,6 +1,6 @@
 function [SE, T, U] = jack (x, func, paropt, opt)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Jackknife
 

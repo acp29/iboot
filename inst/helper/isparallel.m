@@ -1,6 +1,6 @@
 function retval = isparallel
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Check we have parallel computing capabilities
   str = '^parallel';

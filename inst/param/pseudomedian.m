@@ -78,7 +78,13 @@ function [p] = pseudomedian (x, dim)
   W = (xi+xj)./2;
 
   % Calculate ordinary median of Walsh averages
-  p = median(W);
+  if exist('nanmedian')
+    p = nanmedian(W,1);
+  elseif exist('nanfun')
+    p = nanfun('median',W);
+  else
+    p = median(W,1);
+  end
 
   % If applicable, switch dimension
   if dim == 2

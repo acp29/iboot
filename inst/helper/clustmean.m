@@ -1,6 +1,6 @@
 function [mu, Z, K, g] = clustmean (x, clusters, nvar)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Calculates shrunken cluster means and residuals for cluster bootstrap
   % See also bootclust function below
