@@ -4,7 +4,6 @@ dirname = fileparts (canonicalize_file_name (mfilename ('fullpath')));
 if (! exist (fullfile (dirname, 'inst'), 'dir'))
   %% Run this if the package is installed
   for ii=1:length (dirlist)
-     fullfile (dirname, 'inst', dirlist{ii})
      addpath (fullfile (dirname, dirlist{ii}), '-end')
   endfor
 else
