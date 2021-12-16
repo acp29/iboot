@@ -1,0 +1,4 @@
+subdirs={'helper', 'private', 'params',};
+rmpath (fullfile (fileparts (mfilename ('fullpath')), subdirs){:});
+
+
