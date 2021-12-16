@@ -6,3 +6,19 @@ This package of functions can be used to estimate uncertainty (confidence interv
 
 ## Installation
 pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"
+
+## Usage
+pkg load statistics-bootstrap
+
+## Functions
+
+* `bootstrp`
+* `bootci` bootstrap confidence intervals
+* `ibootci`
+* `ibootp`
+* `iboottest`
+* `iboottest2`
+* `bootperm`
+* `bootperm2`
+* `bootmode`
+* `plotboot`
