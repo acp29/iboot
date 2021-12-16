@@ -1,11 +1,8 @@
-name: pkg-example
-version: 1.1.0
-date: 2021-04-06
-author: Kai T. Ohlhus <k.ohlhus@gmail.com>
-maintainer: Kai T. Ohlhus <k.ohlhus@gmail.com>
-title: Minimal example package to demonstrate the Octave package extensions.
-description: Minimal example package to demonstrate the Octave package
- extensions.  It shows how to organize Octave, C/C++, and FORTRAN code within
- a package and to properly compile it.
+name: bootstrap
+version: 1.0.0
+date: 2021-12-16
+author: Andrew Penn <andy.c.penn@gmail.com>
+maintainer: Andrew Penn <andy.c.penn@gmail.com>
+title: This package of functions can be used to estimate uncertainty (confidence intervals) and test hypotheses (p-values) using bootstrap. Variations of the bootstrap are included that improve the accuracy of bootstrap statistics for small samples and samples with complex dependence structures.
 categories: package
-depends: octave (>= 4.0.0)
+depends: octave (>= 3.0.0)
