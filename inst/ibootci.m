@@ -248,7 +248,7 @@
 %        for dependent data. Biometrika. 96(2):427-443
 %  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap
 %        Confidence Intervals. J R Statist Soc B. 59(4):821-838
-%  [13] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs.
+%  [13] Hesterberg (2004) Unbiasing the Bootstrap? Bootknife Sampling vs.
 %        Smoothing. Proceedings of the Section on Statistics & the
 %        Environment. Alexandria, VA: American Statistical Association.
 %        pp. 2924?2930
