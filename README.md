@@ -10,7 +10,7 @@ pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/hea
 ## Usage
 pkg load statistics-bootstrap
 
-## Functions
+### Functions
 
 * `bootstrp` performs bootstrap resampling 
 * `bootci` calculates confidence intervals using bootstrap resampling
