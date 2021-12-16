@@ -4,16 +4,16 @@ dirname = fileparts (canonicalize_file_name (mfilename ('fullpath')));
 if (! exist (fullfile (dirname, 'inst'), 'dir'))
   %% Run this if the package is installed
   for ii=1:length (dirlist)
-     addpath (fullfile (dirname, dirlist{ii}), '-end')
+    rmpath (fullfile (dirname, dirlist{ii}))
   endfor
 else
   %% Run this if we are testing the package without installation
-  for ii=1:length(dirlist)
-    addpath (fullfile (dirname, 'inst', dirlist{ii}))
-    %addpath (fullfile (dirname, 'src'))
+  for ii=1:length (dirlist)
+    rmpath (fullfile (dirname, 'inst', dirlist{ii}))
   endfor
+  rmpath (fullfile (dirname, 'src'))
 endif
 
-warning ('off', 'Octave:fopen-file-in-path');
 clear dirlist dirname
+
 
