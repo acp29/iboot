@@ -5,10 +5,13 @@
 This package of functions can be used to estimate uncertainty (confidence intervals) and test hypotheses (*p*-values) using bootstrap. Variations of the bootstrap are included that improve the accuracy of bootstrap statistics for small samples and samples with complex dependence structures. The package is forked from the GitHub repository [iboot](https://github.com/acp29/iboot).
 
 ## Installation
-pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"
+`pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"`
+ 
+ Find out basic information about th package by typing:
+`pkg describe -verbose statistics-bootstrap`
 
 ## Usage
-pkg load statistics-bootstrap
+`pkg load statistics-bootstrap`
 
 ### Functions
 
@@ -23,4 +26,4 @@ pkg load statistics-bootstrap
 * `bootmode` uses bootstrap to evaluate the likely number of real modes in a distribution
 * `plotboot` plots an overlay of a histogram, kernel density estimate and interval limits from bootstrap statistics
 
-At the Octave command prompt, type `help function-name` for more information about the function and it's usage
+At the Octave command prompt, type `help function-name` for more information about the function and it's usage.
