@@ -1,6 +1,6 @@
 %  Function File: ibootp
 %
-%  Bootstrap P-value: One sample test
+%  Bootstrap p-value: One sample test
 %
 %   p = ibootp(m,bootstat,S,calcurve)
 %
@@ -11,10 +11,10 @@
 %  This functon requires the output bootstrap replicate statistics
 %  (bootstat) and the output structure (S) from ibootci. Provision
 %  of the calibration curve (calcurve) is optional but highly
-%  recommended for accurate P-values if the bootstrap method used
+%  recommended for accurate p-values if the bootstrap method used
 %  was the percentile method.
 %
-%  P-values obtained from ibootp are consistent with the confidence
+%  p-values obtained from ibootp are consistent with the confidence
 %  intervals calculated with ibootci.
 %
 %  When the p-value is too small to calibrate by double bootstrap,
