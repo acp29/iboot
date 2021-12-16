@@ -1,4 +1,4 @@
-subdirs={'helper', 'private', 'param',};
+subdirs={'helper', 'param',};
 addpath (fullfile (fileparts (mfilename ('fullpath')), subdirs){:});
 
 
