@@ -1,6 +1,7 @@
 # statistics-bootstrap
 
-Author and maintainer: Andrew Penn (andy.c.penn@gmail.com)
+## Package author and maintainer
+Andrew Penn (andy.c.penn@gmail.com)
 
 ## A statistics package for Octave/Matlab providing a variety of bootstrap resampling tools
 
