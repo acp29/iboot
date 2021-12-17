@@ -1,13 +1,16 @@
 % Basic uninstall script 
 % 
 
-
-dirlist = fullfile (pwd,'inst',{"", "helper", "param"});
-N = cellfun('numel',dirlist);
-[S, I] = sort (N, 'descend');
-sortedlist = dirlist(I);
-n = numel(dirlist);
+copyfile ('PKG_ADD','PKG_ADD.m');
+copyfile ('PKG_DEL','PKG_DEL.m');
+run (fullfile(pwd,'PKG_ADD.m'));
 if isoctave
+  % Uninstall for Octave
+  dirlist = cell(3,1); % dir list needs to be in decreasing order of length
+  dirlist{1} = regexptranslate ('escape', fullfile (pwd,'inst','helper'));
+  dirlist{2} = regexptranslate ('escape', fullfile (pwd,'inst','param'));
+  dirlist{3} = regexptranslate ('escape', fullfile (pwd,'inst',''));
+  n = numel(dirlist);
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
     S = fileread(octaverc);
@@ -15,15 +18,26 @@ if isoctave
   else
     error('~/.octaverc does not exist');
   end
-  comment = '\n% Load statistics-bootstrap package';
-  S = regexprep(S,comment,'');
+  comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
+  S = regexprep(S,['(\s*)',comment],'');
   for i=1:n
-    S = regexprep(S,sprintf('\n%s',sortedlist{i}),'');
+    S = regexprep(S,['(\s*)',dirlist{i}],'');
+  end
+  fwrite (fid,S,'char');
+  fclose (fid);
+else
+  % Assumming uninstall for Matlab instead
+  run (fullfile(pwd,'PKG_DEL'));
+  if exist('savepath')
+    savepath
+  else
+    % backwards compatibility
+    path2rc;
   end
 end
-fwrite (fid,S,'char');
-fclose (fid);
 
-disp(sprintf('statistics-bootstrap package has been uninstalled from: %s ',dirlist{1}))
+disp('This statistics-bootstrap package has been uninstalled')
 
-run('PKG_DEL');
+clear dirlist S
+delete ('PKG_ADD.m');
+delete ('PKG_DEL.m');
