@@ -8,9 +8,9 @@ if (! exist (fullfile (dirname, 'inst'), 'dir'))
   endfor
 else
   %% Run this if we are testing the package without installation
+  addpath (fullfile (dirname, 'inst'))
   for ii=1:length(dirlist)
     addpath (fullfile (dirname, 'inst', dirlist{ii}))
-    addpath (fullfile (dirname, 'src'))
   endfor
 endif
 

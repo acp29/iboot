@@ -7,7 +7,12 @@ This package of functions can be used to estimate uncertainty (confidence interv
 ## Installation
 `pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"`
  
- Find out basic information about th package by typing: `pkg describe -verbose statistics-bootstrap`
+ Alternatively, to install the statistics-bootstrap package locally: 
+ 
+ * doenload and decompress the package file   
+ * cd to the package directory and type `install` at the octave command ptompt
+ 
+ Find out basic information about the package by typing: `pkg describe -verbose statistics-bootstrap`  
 
 ## Usage
 `pkg load statistics-bootstrap`

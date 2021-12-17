@@ -11,7 +11,7 @@ else
   for ii=1:length (dirlist)
     rmpath (fullfile (dirname, 'inst', dirlist{ii}))
   endfor
-  rmpath (fullfile (dirname, 'src'))
+  rmpath (fullfile (dirname, 'inst'))
 endif
 
 clear dirlist dirname
