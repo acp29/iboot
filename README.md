@@ -9,7 +9,7 @@ This package of functions can be used to estimate uncertainty (confidence interv
  
  Alternatively, to install the statistics-bootstrap package locally: 
  
- * doenload and decompress the package file   
+ * download and decompress the package file   
  * cd to the package directory and type `install` at the octave command ptompt
  
  Find out basic information about the package by typing: `pkg describe -verbose statistics-bootstrap`  
