@@ -2,6 +2,7 @@
 %
 %  Plot bootstrap results
 %
+%   plotboot(bootstat)
 %   plotboot(bootstat,ci)
 %   plotboot(bootstat,ci,S)
 %

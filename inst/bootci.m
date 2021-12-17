@@ -68,8 +68,8 @@
 %  ci = bootci(nboot,{bootfun,...},...,'Options',paropt) specifies
 %  options that govern if and how to perform bootstrap and jacknife
 %  iterations using multiple processors (if the Parallel Computing
-%  Toolbox or Octave Forge package is available). This argument is a
-%  structure with the following recognised fields:
+%  Toolbox or Octave Forge parallel package is available). This 
+%  argument is a structure with the following recognised fields:
 %
 %   'UseParallel' - If true, compute bootstrap iterations in parallel.
 %                   Default is false for serial computation. In MATLAB,

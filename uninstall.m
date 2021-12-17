@@ -21,7 +21,8 @@ if isoctave
   comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
   S = regexprep(S,['(\s*)',comment],'');
   for i=1:n
-    S = regexprep(S,strcat('(\s*)', regexptranslate ('escape', strcat('\naddpath (''',dirlist{i},''', ''-end'''))),'');
+    S = regexprep(S,strcat('(\s*)',... 
+                  regexptranslate ('escape', strcat('addpath (''',dirlist{i},''', ''-end'')'))),'');
   end
   fwrite (fid,S,'char');
   fclose (fid);

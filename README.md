@@ -4,15 +4,26 @@
 
 This package of functions can be used to estimate uncertainty (confidence intervals) and test hypotheses (*p*-values) using bootstrap. Variations of the bootstrap are included that improve the accuracy of bootstrap statistics for small samples and samples with complex dependence structures. The package is forked from the GitHub repository [iboot](https://github.com/acp29/iboot).
 
+## Requirements and dependencies
+
+This package is known to be compatible with versions of Octave v3.2.4+ and Matlab v7.4.0+. It may be compatible with some earlier versions of Octave. Most features of of the package do not depend on other packages. An exception is the parallel computing options, which require either the Parallel Computing MATLAB Toolbox or the OCTAVE forge parallel package.
+
 ## Installation
-`pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"`
  
- Alternatively, to install the statistics-bootstrap package locally: 
+To install (or test) the statistics-bootstrap package at it's existing location in either Octave or Matlab, follow these steps: 
  
- * download and decompress the package file   
- * cd to the package directory and type `install` at the octave command ptompt
+ * Download the package. If it is a compressed file, decompress it
+ * Open Octave or Matlab
+ * `cd` to the package directory. (The directory contains a file called 'install.m')
+ * type `install` at the octave command prompt
  
- Find out basic information about the package by typing: `pkg describe -verbose statistics-bootstrap`  
+ To uninstall, follow the above steps but use the `uninstall` command
+ 
+ Alternatively, users of more recent versions of Octave can install the package automatically with the following command:
+ 
+ `pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"`
+ 
+ In Octave, you can find out basic information about the package by typing: `pkg describe -verbose statistics-bootstrap`  
 
 ## Usage
 `pkg load statistics-bootstrap`

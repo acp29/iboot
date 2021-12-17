@@ -23,7 +23,7 @@ if isoctave
   end
   for i=1:n
     if isempty(strfind(S,dirlist{i}))
-      fprintf (fid, '\naddpath(''%s'',''-end'')', dirlist{i});
+      fprintf (fid, '\naddpath (''%s'', ''-end'')', dirlist{i});
     end
   end
   fclose (fid);
