@@ -1,15 +1,15 @@
 % Basic uninstall script 
 % 
 
-copyfile ('PKG_ADD','PKG_ADD.m');
-copyfile ('PKG_DEL','PKG_DEL.m');
+copyfile ('PKG_ADD','PKG_ADD.m'); % copy as m-file for backwards compatibility
+copyfile ('PKG_DEL','PKG_DEL.m'); % copy as m-file for backwards compatibility
 run (fullfile(pwd,'PKG_ADD.m'));
 if isoctave
   % Uninstall for Octave
   dirlist = cell(3,1); % dir list needs to be in decreasing order of length
-  dirlist{1} = regexptranslate ('escape', fullfile (pwd,'inst','helper'));
-  dirlist{2} = regexptranslate ('escape', fullfile (pwd,'inst','param'));
-  dirlist{3} = regexptranslate ('escape', fullfile (pwd,'inst',''));
+  dirlist{1} = fullfile (pwd,'inst','helper');
+  dirlist{2} = fullfile (pwd,'inst','param');
+  dirlist{3} = fullfile (pwd,'inst','');
   n = numel(dirlist);
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
@@ -21,7 +21,7 @@ if isoctave
   comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
   S = regexprep(S,['(\s*)',comment],'');
   for i=1:n
-    S = regexprep(S,['(\s*)',dirlist{i}],'');
+    S = regexprep(S,strcat('(\s*)', regexptranslate ('escape', strcat('\naddpath (''',dirlist{i},''', ''-end'''))),'');
   end
   fwrite (fid,S,'char');
   fclose (fid);
@@ -36,8 +36,10 @@ else
   end
 end
 
-disp('This statistics-bootstrap package has been uninstalled')
+% Notify user that uninstall is complete
+disp('This statistics-bootstrap package has been uninstalled from this location')
 
-clear dirlist S
+% Clean up
+clear dirlist S comment i ii octaverc fid n msg
 delete ('PKG_ADD.m');
 delete ('PKG_DEL.m');

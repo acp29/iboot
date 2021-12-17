@@ -23,7 +23,7 @@ if isoctave
   end
   for i=1:n
     if isempty(strfind(S,dirlist{i}))
-      fprintf (fid, '\n%s', dirlist{i});
+      fprintf (fid, '\naddpath(''%s'',''-end'')', dirlist{i});
     end
   end
   fclose (fid);
@@ -41,5 +41,5 @@ end
 disp ('The statistics-bootstrap package has been installed at the current location ')
 
 % Clean up
-clear dirlist
+clear dirlist S comment i ii octaverc fid n msg
 delete ('PKG_ADD.m');
