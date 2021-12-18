@@ -297,10 +297,6 @@
 %    >> func = @(x) trimmean(x,50)
 %    >> ci = ibootci([5000 200],func,y);
 %
-%  The syntax in this function code is known to be compatible with
-%  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
-%  Matlab (v7.4.0 on Windows XP).
-%
 %  ibootci v2.8.7.3 (10/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
@@ -333,8 +329,8 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
    error('Too many output arguments');
   end
 
-  % Initialize nproc (Matlab only)
-  if ~isoctave
+  % Initialise nproc if it doesn't exist
+  if ~exist('nproc','builtin')
     nproc = 1;
   end
   

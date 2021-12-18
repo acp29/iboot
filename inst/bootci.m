@@ -131,8 +131,8 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
    error('Too many output arguments');
   end
 
-  % Initialice nproc if Matlab
-  if ~isoctave
+  % Initialise nproc if it doesn't exist
+  if ~exist('nproc','builtin')
     nproc = 1;
   end
 
