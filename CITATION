@@ -11,5 +11,5 @@ A BibTeX entry for LaTeX users is:
   or samples with complex dependence structures},
     author    = {Andrew C. Penn},
     year      = {2020},
-    doi       = {https://doi.org/10.5281/zenodo.3992392},
+    URL       = {https://doi.org/10.5281/zenodo.3992392},
   }
