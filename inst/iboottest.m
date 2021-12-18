@@ -21,10 +21,6 @@
 %  See ibootci documentation for input argument definitions and
 %  for Name-Value pairs
 %
-%  The syntax in this function code is known to be compatible with
-%  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
-%  Matlab (v7.4.0 on Windows XP).
-%
 %  iboottest v1.1.3.0 (01/10/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
