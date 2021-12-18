@@ -142,8 +142,8 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'Options',paropt) specifies
 %  options that govern if and how to perform bootstrap iterations using
 %  multiple processors (if the Parallel Computing Toolbox or Octave
-%  Forge package is available). This argument is a structure with the
-%  following recognised fields:
+%  Forge parallel package is available). This argument is a structure 
+%  with the following recognised fields:
 %
 %   'UseParallel' - If true, compute bootstrap iterations in parallel.
 %                   Default is false for serial computation. In MATLAB,
@@ -212,10 +212,10 @@
 %  corresponds to one bootstrap sample and contains the row indices of
 %  the values drawn from the nonscalar data to create that sample.
 %
-%  If the Parallel Computing MATLAB Toolbox or OCTAVE forge package
-%  is installed, bootstrap resampling can be accelerated by parallel
-%  processing. This is particularly useful for the calculation of
-%  p-values using the ibootci wrapper functions. Note that bootstrap
+%  If the Parallel Computing MATLAB Toolbox or OCTAVE forge parallel
+%  package is installed, bootstrap resampling can be accelerated by 
+%  parallel processing. This is particularly useful for the calculation 
+%  of p-values using the ibootci wrapper functions. Note that bootstrap
 %  resampling is not balanced in the first bootstrap when operating
 %  ibootci in parallel.
 %
@@ -248,7 +248,7 @@
 %        for dependent data. Biometrika. 96(2):427-443
 %  [12] Polansky and Schucany (1997) Kernel Smoothing to Improve Bootstrap
 %        Confidence Intervals. J R Statist Soc B. 59(4):821-838
-%  [13] Hesterberg (2004) Unbiasing the Bootstrap?Bootknife Sampling vs.
+%  [13] Hesterberg (2004) Unbiasing the Bootstrap? Bootknife Sampling vs.
 %        Smoothing. Proceedings of the Section on Statistics & the
 %        Environment. Alexandria, VA: American Statistical Association.
 %        pp. 2924?2930

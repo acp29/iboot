@@ -1,6 +1,6 @@
 function [F, x] = empcdf (y, c)
 
-  % Private function file reuired for iboocti
+  % Helper function file reuired for iboocti
 
   % Calculate empirical cumulative distribution function of y
   %

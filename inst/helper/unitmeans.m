@@ -1,6 +1,6 @@
 function [y, g] = unitmeans (x, clusters, nvar)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Calculate unit (cluster) means
 

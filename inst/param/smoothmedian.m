@@ -28,16 +28,13 @@
 %  median have good coverage for the ordinary median of the
 %  population distribution and can be used to obtain second order
 %  accurate intervals with Studentized bootstrap and calibrated
-%  percentile bootstrap methods [1]. These bootstrap methods are
-%  available in bootci (from the Statistics and Machine Learning
-%  Toolbox) and ibootci (from Matlab Central File Exchange)
-%  respectively. When the population distribution is thought to be
-%  strongly skewed, coverage errors can be reduced by improving
-%  symmetry through appropriate data transformation. Unlike kernel-
-%  based smoothing approaches, bootstrapping smoothmedian does not
-%  require explicit choice of a smoothing parameter or a probability
-%  density function. The algorithm used is suitable for small-to-
-%  medium sample sizes.
+%  percentile bootstrap methods [1]. When the population distribution 
+%  is thought to be strongly skewed, coverage errors can be reduced 
+%  by improving symmetry through appropriate data transformation. 
+%  Unlike kernel-based smoothing approaches, bootstrapping smoothmedian 
+%  does not require explicit choice of a smoothing parameter or a 
+%  probability density function. The algorithm used is suitable for 
+%  small-to-medium sample sizes.
 %
 %  Bibliography:
 %  [1] Brown, Hall and Young (2001) The smoothed median and the
@@ -47,7 +44,7 @@
 %  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
 %  Matlab (v6.5.0 and v7.4.0 on Windows XP).
 %
-%  smoothmedian v1.4.5 (29/11/2019)
+%  smoothmedian v1.5.0 (16/12/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -115,7 +112,13 @@ function p = smoothmedian(x,dim,Tol)
   % Variable transformation to normalize stopping criteria
   % Centre the data on the median and divide by the midrange
   % Regularization is achieved by adding a constant to the denominator
-  centre = nanmedian(x,1);
+  if exist('nanmedian')
+    centre = nanmedian(x,1);
+  elseif exist('nanfun')
+    centre = nanfun('median',x);
+  else
+    centre = median(x,1);
+  end
   midrange = (max(x,[],1)-min(x,[],1))/2;
   x = (x-centre(ones(1,m),:))./(1+midrange(ones(1,m),:));
 

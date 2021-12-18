@@ -155,7 +155,7 @@ function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
     % efficient balanced resampling algorithm
     % If strata is provided, resampling is stratified
     % In serial mode, a random seed is specified making the monte carlo simulation deterministic and reproducible between Matlab and Octave
-    rand('twister',seed2state(0));
+    rand('twister',rng_state);
     for h = 1:B
       for i = 1:n
         k = sum(i>ck)+1;

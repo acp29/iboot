@@ -1,6 +1,6 @@
 function  p = bootstud(m,bootstat,S)
 
-  % Private function file required for ibootp
+  % Helper function file required for ibootp
 
   % Use bootstrap-t method with variance stabilization for small samples
   % Polansky (2000) Can J Stat. 28(3):501-516

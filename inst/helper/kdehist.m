@@ -15,6 +15,8 @@
 
 function [h0, h1] = kdehist(x, kernel, h0, h1)
 
+  % Helper function file for plotboot
+
   if nargin < 2
     kernel = 'epanechnikov';
   end
