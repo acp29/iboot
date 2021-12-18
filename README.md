@@ -1,7 +1,10 @@
 # statistics-bootstrap
 
-## Package author and maintainer
+## Package maintainer
 Andrew Penn (andy.c.penn@gmail.com)
+
+## Package contributors
+Andrew Penn
 
 ## A statistics package for Octave/Matlab providing a variety of bootstrap resampling tools
 
@@ -45,3 +48,5 @@ To install (or test) the statistics-bootstrap package at it's existing location 
 * `plotboot` plots an overlay of a histogram, kernel density estimate and interval limits from bootstrap statistics
 
 At the Octave command prompt, type `help function-name` for more information about the function and it's usage.
+
+
