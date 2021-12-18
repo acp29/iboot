@@ -22,10 +22,6 @@
 %  using the Studentized bootstrap (bootstrap-t) with an additive
 %  correction factor to stabilize the variance.
 %
-%  The syntax in this function code is known to be compatible with
-%  recent versions of Octave (v3.2.4 on Debian 6 Linux 2.6.32) and
-%  Matlab (v7.4.0 on Windows XP).
-%
 %  ibootp v1.5.8.0 (05/05/2020)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/

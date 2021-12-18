@@ -81,8 +81,8 @@ function [bootstat,bootsam] = bootstrp(argin1,argin2,varargin)
     error('Too few input arguments');
   end
 
-  % Initialize nproc (Matlab only)
-  if ~isoctave
+  % Initialise nproc if it doesn't exist
+  if ~exist('nproc','builtin')
     nproc = 1;
   end
 
