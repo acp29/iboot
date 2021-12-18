@@ -17,7 +17,9 @@ This package of functions can be used to estimate uncertainty (confidence interv
 
 ## Requirements and dependencies
 
-This package is known to be compatible with versions of Octave v3.2.4+ and Matlab v7.4.0+. It may be compatible with some earlier versions of Octave. Most features of of the package do not depend on other packages. An exception is the parallel computing options, which require either the Parallel Computing MATLAB Toolbox or the OCTAVE forge parallel package.
+This package is known to be compatible with versions of Octave v3.2.4+ and Matlab v7.4.0+. It may also be compatible with some earlier versions of Octave but earlier versions have not been tested. 
+
+Most features of of the package do not depend on other packages. An exception is the parallel computing options, which require either the OCTAVE forge parallel package or the Parallel Computing MATLAB Toolbox.
 
 ## Installation
  
