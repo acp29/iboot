@@ -11,7 +11,11 @@ n = numel (dirlist);
 if isoctave
   % Install for Octave
   octaverc = '~/.octaverc';
-  [fid, msg] = fopen (octaverc, 'r+t', 'ieee-le');
+  if exist(octaverc,'file')
+    [fid, msg] = fopen (octaverc, 'r+t', 'ieee-le');
+  else
+    [fid, msg] = fopen (octaverc, 'w+t', 'ieee-le');
+  end 
   S = (fread (fid, "*char")).';
   comment = sprintf ('\n\n%s', '% Load statistics-bootstrap package');
   if isempty(strfind(S,comment))
