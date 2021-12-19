@@ -1,8 +1,8 @@
 % Basic uninstall script 
 % 
 
-copyfile ('PKG_ADD','PKG_ADD.m'); % copy as m-file for backwards compatibility
-copyfile ('PKG_DEL','PKG_DEL.m'); % copy as m-file for backwards compatibility
+copyfile ('PKG_ADD','PKG_ADD.m'); % copy to m-file for backwards compatibility
+copyfile ('PKG_DEL','PKG_DEL.m'); % copy to m-file for backwards compatibility
 run (fullfile(pwd,'PKG_ADD.m'));
 if isoctave
   % Uninstall for Octave
@@ -14,16 +14,16 @@ if isoctave
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
     [fid, msg] = fopen (octaverc, 'r+t', 'ieee-le');
-    S = (fread (fid, "*char")).';
+    S = (fread (fid, '*char')).';
     fclose(fid);
     [fid, msg] = fopen (octaverc, 'wt', 'ieee-le');
   else
     error('~/.octaverc does not exist');
   end
   comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
-  S = regexprep(S,['\s\s',comment],'');
+  S = regexprep(S,['\r\n\r\n',comment],'');
   for i=1:n
-    S = regexprep(S,strcat('\s',... 
+    S = regexprep(S,strcat('\r\n',... 
                   regexptranslate ('escape', strcat('addpath (''',dirlist{i},''', ''-end'')'))),'');
   end
   fseek (fid, 0);

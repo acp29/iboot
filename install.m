@@ -16,14 +16,14 @@ if isoctave
   else
     [fid, msg] = fopen (octaverc, 'w+t', 'ieee-le');
   end 
-  S = (fread (fid, "*char")).';
-  comment = sprintf ('\n\n%s', '% Load statistics-bootstrap package');
+  S = (fread (fid, '*char')).';
+  comment = sprintf ('\r\n\r\n%s', '% Load statistics-bootstrap package');
   if isempty(strfind(S,comment))
     S = strcat (S, comment);
   end
   for i=1:n
     if isempty(strfind(S,dirlist{i}))
-      S = strcat (S, sprintf ('\naddpath (''%s'', ''-end'')', dirlist{i}));
+      S = strcat (S, sprintf ('\r\naddpath (''%s'', ''-end'')', dirlist{i}));
     end
   end
   fseek (fid, 0);
