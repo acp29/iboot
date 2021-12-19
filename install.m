@@ -12,9 +12,9 @@ if isoctave
   % Install for Octave
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
-    [fid, msg] = fopen (octaverc, 'r+t', 'ieee-le');
+    [fid, msg] = fopen (octaverc, 'r+t');
   else
-    [fid, msg] = fopen (octaverc, 'w+t', 'ieee-le');
+    [fid, msg] = fopen (octaverc, 'w+t');
   end 
   S = (fread (fid, '*char')).';
   comment = sprintf ('\r\n\r\n%s', '% Load statistics-bootstrap package');
