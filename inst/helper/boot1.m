@@ -1,6 +1,6 @@
 function [T1, T2, U, idx] = boot1 (x, nboot, n, nvar, bootfun, T0, S, opt)
 
-  % Private function file required for ibootci
+  % Helper function file required for ibootci
 
   % Extract required options structure fields
   weights = opt.weights;
