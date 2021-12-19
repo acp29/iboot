@@ -13,10 +13,10 @@ if isoctave
   n = numel(dirlist);
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
-    [fid, msg] = fopen (octaverc, 'r+t', 'ieee-le');
+    [fid, msg] = fopen (octaverc, 'r+t');
     S = (fread (fid, '*char')).';
     fclose(fid);
-    [fid, msg] = fopen (octaverc, 'wt', 'ieee-le');
+    [fid, msg] = fopen (octaverc, 'wt');
   else
     error('~/.octaverc does not exist');
   end
