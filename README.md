@@ -1,4 +1,4 @@
-# iboot package
+# statistics-bootstrap package
 
 ## Package maintainer
 Andrew Penn (andy.c.penn@gmail.com)
