@@ -13,18 +13,21 @@ if isoctave
   n = numel(dirlist);
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
-    S = fileread(octaverc);
-    [fid, msg] = fopen (octaverc, 'w');
+    [fid, msg] = fopen (octaverc, 'r+t', 'ieee-le');
+    S = (fread (fid, "*char")).';
+    fclose(fid);
+    [fid, msg] = fopen (octaverc, 'wt', 'ieee-le');
   else
     error('~/.octaverc does not exist');
   end
   comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
-  S = regexprep(S,['(\s*)',comment],'');
+  S = regexprep(S,['\s\s',comment],'');
   for i=1:n
-    S = regexprep(S,strcat('(\s*)',... 
+    S = regexprep(S,strcat('\s',... 
                   regexptranslate ('escape', strcat('addpath (''',dirlist{i},''', ''-end'')'))),'');
   end
-  fwrite (fid,S,'char');
+  fseek (fid, 0);
+  fputs (fid, S);
   fclose (fid);
 else
   % Assumming uninstall for Matlab instead
