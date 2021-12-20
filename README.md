@@ -1,4 +1,5 @@
-# statistics-bootstrap package
+# iboot package
+(see also the Octave statistics-bootstrap package)
 
 ## Package maintainer
 Andrew Penn (andy.c.penn@gmail.com)
@@ -23,24 +24,14 @@ Most features of of the package do not depend on other packages. An exception is
 
 ## Installation
  
-To install (or test) the statistics-bootstrap package at it's existing location in either Octave or Matlab, follow these steps: 
+To install (or test) the iboot package at it's existing location in either Octave or Matlab, follow these steps: 
  
  * Download the package. If it is a compressed file, decompress it.
  * Open Octave or Matlab command prompt.
  * `cd` to the package directory. (The directory contains a file called 'install.m')
- * Type `install` . The package will load now and automatically when you start Octave/Matlab
+ * Type `install`. The package will load now and automatically when you start Octave/Matlab
  
  To uninstall, follow the above steps but use the `uninstall` command
- 
- Alternatively, users of more recent versions of Octave can install the package automatically with the following command:
- 
- `pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"`
- 
- The package can be loaded on demand in Octave with the following commmand:
- 
- `pkg load statistics-bootstrap`
- 
- In Octave, you can find out basic information about the package by typing: `pkg describe -verbose statistics-bootstrap`  
 
 ## Usage
 
