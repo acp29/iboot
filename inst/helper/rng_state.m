@@ -1,7 +1,7 @@
 function state = rng_state()
 
-  % Helper function file required to enable Octave and Matlab to give consistent results
-
+  % Helper function file required for Octave and Matlab to give consistent results
+  
   state = uint32([5489; 1301868182; 2938499221; 2950281878; 1875628136; 751856242; ...
                   944701696; 2243192071; 694061057; 219885934; 2066767472; ...
                   3182869408; 485472502; 2336857883; 1071588843; 3418470598; ...
