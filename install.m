@@ -3,29 +3,31 @@
 
 copyfile ('PKG_ADD','PKG_ADD.m');
 run (fullfile(pwd,'PKG_ADD.m'));
-dirlist = cell(3,1);
-dirlist{1} = fullfile (pwd,'inst','helper');
+dirlist = cell(3,1); % dir list needs to be in increasing order of length
+dirlist{1} = fullfile (pwd,'inst','');
 dirlist{2} = fullfile (pwd,'inst','param');
-dirlist{3} = fullfile (pwd,'inst','');
+dirlist{3} = fullfile (pwd,'inst','helper');
 n = numel (dirlist);
 if isoctave
   % Install for Octave
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
-    [fid, msg] = fopen (octaverc, 'at');
+    [fid, msg] = fopen (octaverc, 'r+t');
   else
-    [fid, msg] = fopen (octaverc, 'wt');
-  end
-  S = fileread (octaverc);
-  comment = '% Load statistics-bootstrap package';
+    [fid, msg] = fopen (octaverc, 'w+t');
+  end 
+  S = (fread (fid, '*char')).';
+  comment = sprintf ('\r\n\r\n%s', '% Load statistics-bootstrap package');
   if isempty(strfind(S,comment))
-    fprintf (fid, '\n%s', comment);
+    S = strcat (S, comment);
   end
   for i=1:n
     if isempty(strfind(S,dirlist{i}))
-      fprintf (fid, '\naddpath (''%s'', ''-end'')', dirlist{i});
+      S = strcat (S, sprintf ('\r\naddpath (''%s'', ''-end'')', dirlist{i}));
     end
   end
+  fseek (fid, 0);
+  fputs (fid, S);
   fclose (fid);
 else
   % Assumming install for Matlab instead

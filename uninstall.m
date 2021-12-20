@@ -1,8 +1,8 @@
 % Basic uninstall script 
 % 
 
-copyfile ('PKG_ADD','PKG_ADD.m'); % copy as m-file for backwards compatibility
-copyfile ('PKG_DEL','PKG_DEL.m'); % copy as m-file for backwards compatibility
+copyfile ('PKG_ADD','PKG_ADD.m'); % copy to m-file for backwards compatibility
+copyfile ('PKG_DEL','PKG_DEL.m'); % copy to m-file for backwards compatibility
 run (fullfile(pwd,'PKG_ADD.m'));
 if isoctave
   % Uninstall for Octave
@@ -13,18 +13,21 @@ if isoctave
   n = numel(dirlist);
   octaverc = '~/.octaverc';
   if exist(octaverc,'file')
-    S = fileread(octaverc);
-    [fid, msg] = fopen (octaverc, 'w');
+    [fid, msg] = fopen (octaverc, 'r+t');
+    S = (fread (fid, '*char')).';
+    fclose(fid);
+    [fid, msg] = fopen (octaverc, 'wt');
   else
     error('~/.octaverc does not exist');
   end
   comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
-  S = regexprep(S,['(\s*)',comment],'');
+  S = regexprep(S,['\r\n\r\n',comment],'');
   for i=1:n
-    S = regexprep(S,strcat('(\s*)',... 
+    S = regexprep(S,strcat('\r\n',...
                   regexptranslate ('escape', strcat('addpath (''',dirlist{i},''', ''-end'')'))),'');
   end
-  fwrite (fid,S,'char');
+  fseek (fid, 0);
+  fputs (fid, S);
   fclose (fid);
 else
   % Assumming uninstall for Matlab instead
