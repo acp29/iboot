@@ -23,7 +23,7 @@ if isoctave
   comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
   S = regexprep(S,['\r\n\r\n',comment],'');
   for i=1:n
-    S = regexprep(S,strcat('\r\n',... 
+    S = regexprep(S,strcat('\r\n',...
                   regexptranslate ('escape', strcat('addpath (''',dirlist{i},''', ''-end'')'))),'');
   end
   fseek (fid, 0);
