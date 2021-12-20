@@ -40,6 +40,9 @@ else
   end
 end
 
+% Unload package from current session
+run (fullfile(pwd,'PKG_DEL.m'));
+
 % Notify user that uninstall is complete
 disp('This iboot package has been uninstalled from this location')
 
