@@ -1,5 +1,5 @@
 # iboot package
-(see also the Octave statistics-bootstrap package)
+(see also the Octave [statistics-bootstrap package](https://github.com/gnu-octave/statistics-bootstrap))
 
 ## Package maintainer
 Andrew Penn (andy.c.penn@gmail.com)
