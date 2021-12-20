@@ -30,7 +30,7 @@ if isoctave
   fputs (fid, S);
   fclose (fid);
 else
-  % Assumming install for Matlab instead
+  % Assuming install for Matlab instead
   if exist('savepath')
     savepath;
   else
