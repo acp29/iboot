@@ -19,7 +19,7 @@ This package of functions can be used to estimate uncertainty (confidence interv
 
 This package is known to be compatible with versions of Octave v3.6.0+ and Matlab v7.4.0+. 
 
-Most features of of the package do not depend on other packages. An exception is the parallel computing options, which require either the OCTAVE forge parallel package or the Parallel Computing MATLAB Toolbox.
+Most features of of the package do not depend on other packages. An exception is the parallel computing options, which require either the Octave forge parallel package or the Parallel Computing Matlab Toolbox.
 
 ## Installation
  
@@ -28,7 +28,7 @@ To install (or test) the statistics-bootstrap package at it's existing location 
  * Download the package. If it is a compressed file, decompress it.
  * Open Octave or Matlab command prompt.
  * `cd` to the package directory. (The directory contains a file called 'install.m')
- * Type `install` . The package will load now and automatically when you start Octave/Matlab
+ * Type `install`. The package will load now and automatically when you start Octave/Matlab
  
  To uninstall, follow the above steps but use the `uninstall` command
  
@@ -61,5 +61,5 @@ At the Octave command prompt, type `help function-name` for more information abo
 
 ### Notes 
 
-The Matlab Statistics and Machine Learning toolbox has functions also called `bootstrp` and `bootci`. The usage of the same-named functions in the statistics-bootstrap package have almost identical usage to the Matlab functions from the Statistics and Machine Learning toolbox. Be aware though that the `bootci` Matlab function has a couple of errors, namely in the calculation of the bias for `cper` and `bca` intervals, and in the calculation of `stud` intervals. We recommend using the statistics-bootstrap package function `bootci`, or better it's function with `ibootci` for the calculation of calibrated bootstrap confidence intervals . The 'i' prefix to the bootstrap function name indicates that the functions have capabilities to calculate calibrated bootstrap statistics or confidence intervals by iterated (a.k.a. double) bootstrap.
+The Matlab Statistics and Machine Learning toolbox has functions also called `bootstrp` and `bootci`. The usage of the same-named functions in the statistics-bootstrap package have almost identical usage to the Matlab functions from the Statistics and Machine Learning toolbox. Be aware though that the `bootci` Matlab function has a couple of errors, namely in the calculation of the bias for `cper` and `bca` intervals, and in the calculation of `stud` intervals. We recommend using the statistics-bootstrap package function `bootci`, or better it's function with `ibootci` for the calculation of calibrated bootstrap confidence intervals . The 'i' prefix to the bootstrap function name indicates that the functions have capabilities to calculate calibrated bootstrap statistics confidence intervals or *p*-values by iterated (a.k.a. double) bootstrap.
 
