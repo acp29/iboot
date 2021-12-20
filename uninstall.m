@@ -40,8 +40,11 @@ else
   end
 end
 
+% Unload package from current session
+run (fullfile(pwd,'PKG_DEL.m'));
+
 % Notify user that uninstall is complete
-disp('This statistics-bootstrap package has been uninstalled from this location')
+disp ('This statistics-bootstrap package has been uninstalled from this location')
 
 % Clean up
 clear dirlist S comment i ii octaverc fid n msg
