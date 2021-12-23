@@ -105,13 +105,16 @@
 %  data with serial dependence (e.g. stationary time series). The
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
 %  without standardization making them equivariant under monotone
-%  transformations [10]. The double bootstrap resampling and calibration
-%  procedure makes interval coverage less sensitive to the choice of block
-%  length [11]. If the blocksize is set to 'auto' (recommended), the block
-%  length is calculated automatically. Note that balanced resampling is not
-%  maintained for block bootstrap. Block bootstrap can also be used for
-%  regression of time series data by combining it with pairs bootstrap
-%  (i.e. by providing x and y vectors as data variables).
+%  transformations and there accuracy can be improved by bias correction 
+%  and acceleration [10], with the acceleration constant estimated by 
+%  block-jacknife resampling. The double bootstrap resampling and 
+%  calibration procedure makes interval coverage less sensitive to the 
+%  choice of block length [11]. If the blocksize is set to 'auto' 
+%  (recommended), the block length is calculated automatically. Note that 
+%  balanced resampling is not maintained for block bootstrap. Block 
+%  bootstrap can also be used for regression of time series data by 
+%  combining it with pairs bootstrap (i.e. by providing x and y vectors  
+%  as data variables).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
 %  additive random Gaussian noise of the specified bandwidth (or

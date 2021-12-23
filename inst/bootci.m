@@ -99,7 +99,7 @@
 %  [6] Booth, Hall and Wood (1993) Balanced Importance Resampling
 %        for the Bootstrap. The Annals of Statistics. 21(1):286-298
 %
-%  bootci v2.8.7.0 (05/05/2020)
+%  bootci v2.8.7.1 (23/12/2021)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -267,7 +267,7 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
   opt.weights = [];
   
   % Set 'type' input variable for ibootci
-  if any(strcmpi(type,{'norm','normal','bca'}))
+  if any(strcmpi(type,{'norm','normal'}))
     % Calculate percentile intervals (we will modify the intervals later)
     inptype = 'per';
   else
@@ -290,7 +290,7 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
   % Parse input arguments to the function ibootci
   [ci, bootstat, S] = ibootci (nboot, {bootfun, data{:}}, options{:});
 
-  % Apply normal approximation or bias correction and acceleration
+  % Apply normal approximation
   switch lower(type)
     case {'norm','normal'}
       % Normal approximation intervals
@@ -299,23 +299,7 @@ function [ci,bootstat] = bootci(argin1,argin2,varargin)
       za = stdnorminv(alpha/2);   % normal confidence point
       LL = S.bc_stat + S.SE * za;
       UL = S.bc_stat - S.SE * za;
-      ci = [LL; UL];
-
-    case {'bca'}
-      % Bias correction and acceleration (BCa)
-      if opt.matflag > 0
-        data = num2cell(data{:},1);
-      end
-      [m1, m2, S] = BCa (nboot, bootfun, data, bootstat, S.stat, 1-alpha, S, paropt, opt);
-
-      % Calculate interval for percentile or BCa method
-      [cdf,t1] = empcdf (bootstat,1);
-      %UL = interp1(cdf, t1, m1, 'linear', 'extrap');
-      %LL = interp1(cdf, t1, m2, 'linear', 'extrap');
-      UL = interp1(cdf, t1, m1, 'linear', max(t1));
-      LL = interp1(cdf, t1, m2, 'linear', min(t1));
-      ci = [LL; UL];
-      
+      ci = [LL; UL];     
   end
 
 end
