@@ -3,8 +3,8 @@
 %  Two-sided nonparametric bootstrap confidence intervals and standard 
 %  errors for small samples and samples with complex dependence structures
 %
-%  ci = ibootci(nboot,bootfun,...)
-%  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
+%  ci = ibootci(nboot,bootfun,d)
+%  ci = ibootci(nboot,{bootfun,d1,...,dN},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr)

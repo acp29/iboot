@@ -7,7 +7,7 @@
 %  One sample bootstrap test for univariate data. The null hypothesis
 %  is that x is sampled from a population with location m calculated
 %  by bootfun. This test performs well without bootstrap iteration
-%  and so iteration is not implemented but it can only compute a P
+%  and so iteration is not implemented but it can only compute a p-
 %  value (not a confidence interval).
 %
 %  The test is two-tailed and is related to a one-sample permutation

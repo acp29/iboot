@@ -8,7 +8,7 @@
 %  is that x and y are sampled from the same population. The test is
 %  two-tailed and is essentially a bootstrap version of a permutation 
 %  test. This test performs well without bootstrap iteration and so 
-%  iteration is not implemented but it can only compute a P value (not 
+%  iteration is not implemented but it can only compute a p-value (not 
 %  a confidence interval).
 %
 %  Note that this function resamples the rows of data x and y.

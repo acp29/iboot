@@ -2,8 +2,8 @@
 %
 %  Two-sided nonparametric bootstrap confidence intervals
 %
-%  ci = bootci(nboot,bootfun,...)
-%  ci = bootci(nboot,{bootfun,...},...,'alpha',alpha)
+%  ci = bootci(nboot,bootfun,d)
+%  ci = bootci(nboot,{bootfun,d1,...,dN},...,'alpha',alpha)
 %  ci = bootci(nboot,{bootfun,...},...,'type',type)
 %  ci = bootci(nboot,{bootfun,...},...,'type','student','nbootstd',nbootstd)
 %  ci = bootci(nboot,{bootfun,...},...,'type','student','stderr',stderr)
