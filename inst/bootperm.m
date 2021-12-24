@@ -71,7 +71,7 @@ end
 function t = null(bootfun,z,n)
 
   % Calculate statistic for the null hypothesis
-  x = z(1:n);
+  x = z(1:n,:);
   t = feval(bootfun,x);
 
 end
