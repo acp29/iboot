@@ -115,7 +115,6 @@ function p = bootperm(y,vararg,nboot,bootfun,paropt)
     func = @(y) gfunc(y,g,bootfun);
   else
     % One-sample test 
-    % Resampling from data with both signs
     % Data is exchangeable with symmetry above and below m
     m = vararg;
     y = cat(1,y-m,m-y);
