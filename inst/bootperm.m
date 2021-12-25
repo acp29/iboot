@@ -58,6 +58,9 @@ function p = bootperm(y,vararg,nboot,bootfun)
   if size(y,2)>1
     y = y.'; 
   end
+  if (nargin < 2)
+    vararg = 0;
+  end
   if all(size(vararg)>1)
     error('the second input argument must be a scalar value (m) or vector (g)')
   end
@@ -73,7 +76,7 @@ function p = bootperm(y,vararg,nboot,bootfun)
 
   % Define function to calculate maximum difference among groups
   if (numel(vararg) > 1)
-    % Test for two or more groups 
+    % Test for two or more groups
     g = vararg;
     if size(g,2)>1
       g = g.'; 
@@ -83,9 +86,9 @@ function p = bootperm(y,vararg,nboot,bootfun)
     end
     func = @(y) gfunc(y,g,bootfun);
   else
-    % One-sample test
+    % One-sample test (sign flipping)
     m = vararg;
-    y = cat(1,y,-1*y);
+    y = cat(1,y-m,m-y);
     func = @(y) mfunc(y,bootfun);
   end
 
@@ -94,8 +97,10 @@ function p = bootperm(y,vararg,nboot,bootfun)
 
   % Calculate p-value
   stat = func(y);
-  [cdf,bootstat] = empcdf(bootstat,0);
-  p = 1-interp1(bootstat,cdf,stat,'linear');
+  p = sum(bootstat>stat)/nboot;
+  if (p == 0)
+    warning('p-value too small to calculate. Try increasing nboot.')
+  end
 
 end
 
@@ -113,12 +118,13 @@ function t = gfunc(Y,g,bootfun)
   k = numel(gk);
 
   % Calculate maximum difference statistic (t) among the groups
+  % (which is simpler and more intuitive than calculating F or MSE)
   Z = zeros(k,n);
   for i = 1:k
     Z(i,:) = feval(bootfun,Y(g==gk(i),:));
   end
   Z = sort(Z,1);
-  t = Z(k,:)-Z(1,:);
+  t = Z(k,:)-Z(1,:); % sign always positive
 
 end
 
@@ -130,6 +136,6 @@ function t = mfunc(Y,bootfun)
 
   n = size(Y,1)/2;
   Y(n+1:end,:) = [];
-  t = abs(feval(bootfun,Y));
+  t = abs(feval(bootfun,Y)); % sign always positive
 
 end
