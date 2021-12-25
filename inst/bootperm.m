@@ -7,7 +7,8 @@
 %   p = bootperm(y,...,nboot)
 %   p = bootperm(y,...,nboot,bootfun)
 %
-%   This function provides a bootstrap version of permutation tests [1].
+%   This function provides a bootstrap version of permutation tests for
+%   univariate data [1].
 %
 %   p = bootperm(y,m) is a 1-sample bootstrap permutation test IF m is
 %   a scalar value. m corresponds to the null hypothesis. The default
@@ -82,7 +83,7 @@ function p = bootperm(y,vararg,nboot,bootfun)
       g = g.'; 
     end
     if (numel(g)>1) && (numel(y) ~= numel(g))
-      error('y and g vectors must be the same size')
+      error('y and g must be vectors the same size')
     end
     func = @(y) gfunc(y,g,bootfun);
   else
