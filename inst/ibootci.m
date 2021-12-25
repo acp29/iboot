@@ -51,8 +51,8 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type) computes the bootstrap
 %  confidence interval of the statistic defined by the function bootfun.
 %  type is the confidence interval type, chosen from among the following:
-%    'per' or 'percentile': Percentile method.
-%    'bca': Bias-corrected and accelerated method (Default).
+%    'per' or 'percentile': Percentile method. (Default)
+%    'bca': Bias-corrected and accelerated method.
 %    'cper': Bias-corrected percentile method.
 %    'stud' or 'student': Studentized (bootstrap-t) confidence interval.
 %    The bootstrap-t method includes an additive correction to stabilize
@@ -455,10 +455,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       try
         type = options{type};
       catch
-        type = 'bca';
+        type = 'per';
       end
     else
-      type = 'bca';
+      type = 'per';
     end
     if any(strcmpi(type,{'stud','student'}))
       if ~isempty(nbootstd)
