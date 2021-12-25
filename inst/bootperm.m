@@ -2,30 +2,47 @@
 %
 %  Bootstrap permutation tests
 %
-%   p = bootperm(y,m)
-%   p = bootperm(y,g)
-%   p = bootperm(y,...,nboot)
-%   p = bootperm(y,...,nboot,bootfun)
+%  p = bootperm(y,m)
+%  p = bootperm(y,g)
+%  p = bootperm(y,...,nboot)
+%  p = bootperm(y,...,nboot,bootfun)
+%  p = bootperm(y,...,nboot,bootfun,paropt)
 %
-%   This function provides a bootstrap version of permutation tests for
-%   univariate data [1].
+%  This function provides a bootstrap version of permutation tests for
+%  univariate data [1].
 %
-%   p = bootperm(y,m) is a 1-sample bootstrap permutation test IF m is
-%   a scalar value. m corresponds to the null hypothesis. The default
-%   is 0. 
+%  p = bootperm(y,m) is a 1-sample bootstrap permutation test IF m is
+%  a scalar value. m corresponds to the null hypothesis. The default
+%  is 0. 
 %
-%   p = bootperm(y,g) is a k-sample bootstrap permutation test if g is
-%   a vector the same size as y with unique numbers used as group labels.
-%   If the number of groups (k) is 2, this is a 2-sample bootstrap
-%   permutation test. If k > 2, this is a bootstrap permutation test for
-%   k groups.
+%  p = bootperm(y,g) is a k-sample bootstrap permutation test if g is
+%  a vector the same size as y with unique numbers used as group labels.
+%  If the number of groups (k) is 2, this is a 2-sample bootstrap
+%  permutation test. If k > 2, this is a bootstrap permutation test for
+%  k groups.
 %   
-%   p = bootperm(y,...,nboot) sets the number of bootstrap resamples. 
-%   The default is 5000.
+%  p = bootperm(y,...,nboot) sets the number of bootstrap resamples. 
+%  The default is 5000.
 %
-%   p = bootperm(y,...,nboot,bootfun) also sets the statistic calculated
-%   from the bootstrap samples. This can be a function handle or string
-%   corresponding to the function name. The default is @mean or 'mean'.
+%  p = bootperm(y,...,nboot,bootfun) also sets the statistic calculated
+%  from the bootstrap samples. This can be a function handle or string
+%  corresponding to the function name. The default is @mean or 'mean'.
+%
+%  p = bootperm(y,...,nboot,bootfun,paropt) specifies options that govern 
+%  if and how to perform bootstrap iterations using multiple processors 
+%  (if the Parallel Computing Toolbox or Octave Forge package is available).
+%  This argument is a structure with the following recognised fields:
+%
+%   'UseParallel' - If true, compute bootstrap iterations in parallel.
+%                   Default is false for serial computation. In MATLAB,
+%                   the default is true if a parallel pool has already
+%                   been started.
+%   'nproc'       - The number of processors to use by Octave. Default
+%                   is the number of available processors. If you choose
+%                   In Matlab, nproc is ignored and the number of parallel
+%                   workers should be predefined beforehand by starting
+%                   a parallel pool, else it will use the preferred number
+%                   of workers.
 %
 %   Bibliography:
 %   [1] Efron and Tibshirani. Chapter 16 Hypothesis testing with the
@@ -50,7 +67,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm(y,vararg,nboot,bootfun)
+function p = bootperm(y,vararg,nboot,bootfun,paropt)
 
   % Check and process bootperm input arguments
   if all(size(y)>1) || ~numel(y)>1
@@ -74,10 +91,20 @@ function p = bootperm(y,vararg,nboot,bootfun)
   if (nargin < 4)
     bootfun = 'mean';
   end
+  if (nargin < 5)
+    paropt = struct;
+    paropt.UseParallel = false;
+    % Initialise nproc if it doesn't exist
+    if ~exist('nproc','builtin')
+      nproc = 1;
+    end
+    paropt.nproc = nproc;
+  end
 
   % Define function to calculate maximum difference among groups
   if (numel(vararg) > 1)
     % Test for two or more groups
+    % Data is exchangeable across all the groups labelled in g
     g = vararg;
     if size(g,2)>1
       g = g.'; 
@@ -87,14 +114,16 @@ function p = bootperm(y,vararg,nboot,bootfun)
     end
     func = @(y) gfunc(y,g,bootfun);
   else
-    % One-sample test (sign flipping)
+    % One-sample test 
+    % Resampling from data with both signs
+    % Data is exchangeable with symmetry above and below m
     m = vararg;
     y = cat(1,y-m,m-y);
     func = @(y) mfunc(y,bootfun);
   end
 
   % Perform resampling and calculate bootstrap statistics
-  bootstat = bootstrp(nboot,func,y);
+  bootstat = bootstrp(nboot,func,y,'Options',paropt);
 
   % Calculate p-value
   stat = func(y);
@@ -135,7 +164,7 @@ end
 
 function t = mfunc(Y,bootfun)
 
-  % Permutation test statistic for the 1 sample 
+  % Permutation test statistic for the 1 sample case
   
   % Make sample the same size as the original data 
   n = size(Y,1)/2;
