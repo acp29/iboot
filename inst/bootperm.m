@@ -117,12 +117,14 @@ function t = gfunc(Y,g,bootfun)
   gk = unique(g);
   k = numel(gk);
 
-  % Calculate maximum difference statistic (t) among the groups
+  % Calculate bootfun on the data from each group
   % (which is simpler and more intuitive than calculating F or MSE)
   Z = zeros(k,n);
   for i = 1:k
     Z(i,:) = feval(bootfun,Y(g==gk(i),:));
   end
+
+  % Calculate maximum difference statistic (t) among the groups
   Z = sort(Z,1);
   t = Z(k,:)-Z(1,:); % sign always positive
 
@@ -133,9 +135,12 @@ end
 function t = mfunc(Y,bootfun)
 
   % Permutation test statistic for the 1 sample 
-
+  
+  % Make sample the same size as the original data 
   n = size(Y,1)/2;
   Y(n+1:end,:) = [];
+
+  % Calculate absolute value of result of bootfun on the resample(s)
   t = abs(feval(bootfun,Y)); % sign always positive
 
 end
