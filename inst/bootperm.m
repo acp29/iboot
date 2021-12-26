@@ -1,34 +1,29 @@
 %  Function File: bootperm
 %
-%  Bootstrap permutation tests
+%  Bootstrap permutation test
 %
-%  p = bootperm(y,m)
-%  p = bootperm(y,g)
-%  p = bootperm(y,...,nboot)
-%  p = bootperm(y,...,nboot,bootfun)
-%  p = bootperm(y,...,nboot,bootfun,paropt)
+%  p = bootperm(data,group)
+%  p = bootperm(data,group,nboot)
+%  p = bootperm(data,group,nboot,bootfun)
+%  p = bootperm(data,group,nboot,bootfun,paropt)
 %
 %  This function provides a bootstrap version of permutation tests for
 %  univariate (vector) or multivatiate (matrix) data [1]. 
 %
-%  (Note that matrix input for y will mean that calculation of bootfun 
+%  (Note that matrix input for data will mean that calculation of bootfun 
 %  will not be vectorized. When this is the case, the function will 
-%  return a harmless warning saying so)
+%  return a harmless warning saying so.)
 %
-%  p = bootperm(y,m) is a 1-sample bootstrap permutation test IF m is
-%  a scalar value. m corresponds to the null hypothesis. The default
-%  is 0. 
-%
-%  p = bootperm(y,g) is a k-sample bootstrap permutation test if g is
-%  a vector the same size as y with unique numbers used as group labels.
-%  If the number of groups (k) is 2, this is a 2-sample bootstrap
+%  p = bootperm(data,group) is a k-sample bootstrap permutation test where 
+%  group is a vector the same size as y with unique numbers used as group 
+%  labels. If the number of groups (k) is 2, this is a 2-sample bootstrap
 %  permutation test. If k > 2, this is a bootstrap permutation test for
 %  k groups.
 %   
-%  p = bootperm(y,...,nboot) sets the number of bootstrap resamples. 
+%  p = bootperm(data,group,nboot) sets the number of bootstrap resamples. 
 %  The default is 5000.
 %
-%  p = bootperm(y,...,nboot,bootfun) also sets the statistic calculated
+%  p = bootperm(data,group,nboot,bootfun) also sets the statistic calculated
 %  from the bootstrap samples. This can be a function handle or string
 %  corresponding to the function name. The default is @mean or 'mean'.
 %
@@ -71,15 +66,18 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function p = bootperm(y,vararg,nboot,bootfun,paropt)
+function p = bootperm(data,group,nboot,bootfun,paropt)
 
   % Check and process bootperm input arguments
-  nvar = size(y,2);
+  nvar = size(data,2);
   if (nargin < 2)
-    vararg = 0;
+    error('bootperm requires atleast two input arguments');
   end
-  if all(size(vararg)>1)
-    error('the second input argument must be a scalar value (m) or vector (g)')
+  if size(group,2)>1
+    group = group.'; 
+  end
+  if (numel(group)>1) && (size(data,1) ~= numel(group))
+    error('data and group must be vectors the same size')
   end
   if (nargin < 3)
     nboot = 5000;
@@ -101,30 +99,14 @@ function p = bootperm(y,vararg,nboot,bootfun,paropt)
   end
 
   % Define function to calculate maximum difference among groups
-  if (numel(vararg) > 1)
-    % Test for two or more groups
-    % H0: Data is exchangeable across all the groups labelled in g
-    g = vararg;
-    if size(g,2)>1
-      g = g.'; 
-    end
-    if (numel(g)>1) && (size(y,1) ~= numel(g))
-      error('y and g must be vectors the same size')
-    end
-    func = @(y) gfunc(y,g,bootfun,nvar);
-  else
-    % One-sample test 
-    % H0: Data is exchangeable with symmetry above and below m
-    m = vararg;
-    y = cat(1,y-m,m-y);
-    func = @(y) mfunc(y,bootfun);
-  end
+  % H0: Data is exchangeable across all the groups labelled in g
+  func = @(data) maxdiff(data,group,bootfun,nvar);
+  stat = func(data);
 
   % Perform resampling and calculate bootstrap statistics
-  [~,bootstat] = ibootci(nboot,{func,y},'Options',paropt);
+  [~,bootstat] = ibootci(nboot,{func,data},'Options',paropt);
 
   % Calculate p-value
-  stat = func(y);
   p = sum(bootstat>stat)/nboot;
   if (p == 0)
     warning('p-value too small to calculate. Try increasing nboot.')
@@ -134,9 +116,9 @@ end
 
 %--------------------------------------------------------------------------
 
-function t = gfunc(Y,g,bootfun,nvar)
+function t = maxdiff(Y,g,bootfun,nvar)
 
-  % Permutation test statistic for 2 or more groups
+  % Calculate maximum difference between bootfun output of all the groups
 
   % Get size and of the data vector or matrix
   [m,n] = size(Y);
@@ -158,20 +140,5 @@ function t = gfunc(Y,g,bootfun,nvar)
   % Calculate maximum difference statistic (t) among the groups
   Z = sort(Z,1);
   t = Z(k,:)-Z(1,:); % sign always positive
-
-end
-
-%--------------------------------------------------------------------------
-
-function t = mfunc(Y,bootfun)
-
-  % Permutation test statistic for the 1 sample case
-  
-  % Make sample the same size as the original data 
-  n = size(Y,1)/2;
-  Y(n+1:end,:) = [];
-
-  % Calculate absolute value of result of bootfun on the resample(s)
-  t = abs(feval(bootfun,Y)); % sign always positive
 
 end
