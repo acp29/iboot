@@ -8,7 +8,9 @@
 %  p = bootperm(data,group,nboot,bootfun,paropt)
 %
 %  This function provides a bootstrap version of permutation tests for
-%  univariate (vector) or multivatiate (matrix) data [1]. 
+%  univariate (vector) or multivatiate (matrix) data [1]. The null 
+%  hypothesis (H0) is that for a given statistic defined by bootfun, 
+%  the data samples from different groups come from the same population. 
 %
 %  (Note that matrix input for data will mean that calculation of bootfun 
 %  will not be vectorized. When this is the case, the function will 
@@ -79,13 +81,13 @@ function p = bootperm(data,group,nboot,bootfun,paropt)
   if (numel(group)>1) && (size(data,1) ~= numel(group))
     error('data and group must be vectors the same size')
   end
-  if (nargin < 3)
+  if (nargin < 3) || isempty(nboot)
     nboot = 5000;
   end
   if any(size(nboot)>1)
     error('nboot must be scalar. bootperm is not compatible with bootstrap iteration')
   end
-  if (nargin < 4)
+  if (nargin < 4) || isempty(bootfun)
     bootfun = 'mean';
   end
   if (nargin < 5)
