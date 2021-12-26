@@ -22,10 +22,10 @@
 %  bootstrap sampling probabilities. Balanced resampling is extended
 %  to resampling with weights [3].
 %
-%  bootstat = bootstrp(...,'Options',paropt) specifies
-%  options that govern if and how to perform bootstrap iterations using
-%  multiple processors (if the Parallel Computing Toolbox or Octave
-%  Forge package is available). This argument is a structure with the
+%  bootstat = bootstrp(...,'Options',paropt) specifies options that 
+%  govern if and how to perform bootstrap iterations using multiple 
+%  processors (if the Parallel Computing Toolbox or Octave Forge 
+%  package is available). This argument is a structure with the 
 %  following recognised fields:
 %
 %   'UseParallel' - If true, compute bootstrap iterations in parallel.
