@@ -1,4 +1,5 @@
-# statistics-bootstrap package
+# iboot package
+(see also the Octave [statistics-bootstrap package](https://github.com/gnu-octave/statistics-bootstrap))
 
 ## Package maintainer
 Andrew Penn (andy.c.penn@gmail.com)
@@ -23,7 +24,7 @@ Most features of of the package do not depend on other packages. An exception is
 
 ## Installation
  
-To install (or test) the statistics-bootstrap package at it's existing location in either Octave or Matlab, follow these steps: 
+To install (or test) the iboot package at it's existing location in either Octave or Matlab, follow these steps: 
  
  * Download the package. If it is a compressed file, decompress it.
  * Open Octave or Matlab command prompt.
@@ -31,16 +32,6 @@ To install (or test) the statistics-bootstrap package at it's existing location 
  * Type `install`. The package will load now and automatically when you start Octave/Matlab
  
  To uninstall, follow the above steps but use the `uninstall` command
- 
- Alternatively, users of more recent versions of Octave can install the package automatically with the following command:
- 
- `pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"`
- 
- The package can be loaded on demand in Octave with the following commmand:
- 
- `pkg load statistics-bootstrap`
- 
- In Octave, you can find out basic information about the package by typing: `pkg describe -verbose statistics-bootstrap`  
 
 ## Usage
 
@@ -61,5 +52,5 @@ At the Octave command prompt, type `help function-name` for more information abo
 
 ### Notes 
 
-The Matlab Statistics and Machine Learning toolbox has functions also called `bootstrp` and `bootci`. The same-named functions in the statistics-bootstrap package have almost identical usage to the Matlab functions from the Statistics and Machine Learning toolbox. Be aware though that the `bootci` Matlab function has a couple of errors, namely in the calculation of the bias for `cper` and `bca` intervals, and in the calculation of `stud` intervals. We recommend using the statistics-bootstrap package function `bootci`, or better it's function `ibootci` for the calculation of calibrated bootstrap confidence intervals . The 'i' prefix to the bootstrap function name indicates that the functions have capabilities to calculate calibrated bootstrap statistics confidence intervals or *p*-values by iterated (a.k.a. double) bootstrap.
+The Matlab Statistics and Machine Learning toolbox has functions also called `bootstrp` and `bootci`. The same-named functions in the iboot package have almost identical usage to the Matlab functions from the Statistics and Machine Learning toolbox. Be aware though that the `bootci` Matlab function has a couple of errors, namely in the calculation of the bias for `cper` and `bca` intervals, and in the calculation of `stud` intervals. We recommend using the iboot package function `bootci`, or better it's function `ibootci` for the calculation of calibrated bootstrap confidence intervals . The 'i' prefix to the bootstrap function name indicates that the functions have capabilities to calculate calibrated bootstrap confidence intervals or *p*-values by iterated (a.k.a. double) bootstrap.
 
