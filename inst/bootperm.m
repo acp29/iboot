@@ -104,7 +104,7 @@ function p = bootperm(data,group,nboot,bootfun,paropt)
   stat = func(data);
 
   % Perform resampling and calculate bootstrap statistics
-  [~,bootstat] = ibootci(nboot,{func,data},'Options',paropt);
+  bootstat = bootstrp(nboot,func,data,'Options',paropt);
 
   % Calculate p-value
   p = sum(bootstat>stat)/nboot;
