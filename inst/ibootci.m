@@ -3,8 +3,8 @@
 %  Two-sided nonparametric bootstrap confidence intervals and standard 
 %  errors for small samples and samples with complex dependence structures
 %
-%  ci = ibootci(nboot,bootfun,...)
-%  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha)
+%  ci = ibootci(nboot,bootfun,d)
+%  ci = ibootci(nboot,{bootfun,d1,...,dN},...,'alpha',alpha)
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type)
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
 %  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr)
@@ -51,8 +51,8 @@
 %  ci = ibootci(nboot,{bootfun,...},...,'type',type) computes the bootstrap
 %  confidence interval of the statistic defined by the function bootfun.
 %  type is the confidence interval type, chosen from among the following:
-%    'per' or 'percentile': Percentile method.
-%    'bca': Bias-corrected and accelerated method (Default).
+%    'per' or 'percentile': Percentile method. (Default)
+%    'bca': Bias-corrected and accelerated method.
 %    'cper': Bias-corrected percentile method.
 %    'stud' or 'student': Studentized (bootstrap-t) confidence interval.
 %    The bootstrap-t method includes an additive correction to stabilize
@@ -105,13 +105,16 @@
 %  data with serial dependence (e.g. stationary time series). The
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
 %  without standardization making them equivariant under monotone
-%  transformations [10]. The double bootstrap resampling and calibration
-%  procedure makes interval coverage less sensitive to the choice of block
-%  length [11]. If the blocksize is set to 'auto' (recommended), the block
-%  length is calculated automatically. Note that balanced resampling is not
-%  maintained for block bootstrap. Block bootstrap can also be used for
-%  regression of time series data by combining it with pairs bootstrap
-%  (i.e. by providing x and y vectors as data variables).
+%  transformations and there accuracy can be improved by bias correction 
+%  and acceleration [10], with the acceleration constant estimated by 
+%  block-jacknife resampling. The double bootstrap resampling and 
+%  calibration procedure makes interval coverage less sensitive to the 
+%  choice of block length [11]. If the blocksize is set to 'auto' 
+%  (recommended), the block length is calculated automatically. Note that 
+%  balanced resampling is not maintained for block bootstrap. Block 
+%  bootstrap can also be used for regression of time series data by 
+%  combining it with pairs bootstrap (i.e. by providing x and y vectors  
+%  as data variables).
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
 %  additive random Gaussian noise of the specified bandwidth (or
@@ -452,10 +455,10 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       try
         type = options{type};
       catch
-        type = 'bca';
+        type = 'per';
       end
     else
-      type = 'bca';
+      type = 'per';
     end
     if any(strcmpi(type,{'stud','student'}))
       if ~isempty(nbootstd)
