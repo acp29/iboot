@@ -9,7 +9,7 @@
 %  p = bootperm(y,...,nboot,bootfun,paropt)
 %
 %  This function provides a bootstrap version of permutation tests for
-%  univariate data [1].
+%  univariate (vector) or multivatiate (matrix) dsta [1].
 %
 %  p = bootperm(y,m) is a 1-sample bootstrap permutation test IF m is
 %  a scalar value. m corresponds to the null hypothesis. The default
@@ -70,12 +70,7 @@
 function p = bootperm(y,vararg,nboot,bootfun,paropt)
 
   % Check and process bootperm input arguments
-  if all(size(y)>1) || ~numel(y)>1
-    error('y must be a vector')
-  end
-  if size(y,2)>1
-    y = y.'; 
-  end
+  nvar = size(y,2);
   if (nargin < 2)
     vararg = 0;
   end
@@ -104,18 +99,18 @@ function p = bootperm(y,vararg,nboot,bootfun,paropt)
   % Define function to calculate maximum difference among groups
   if (numel(vararg) > 1)
     % Test for two or more groups
-    % Data is exchangeable across all the groups labelled in g
+    % H0: Data is exchangeable across all the groups labelled in g
     g = vararg;
     if size(g,2)>1
       g = g.'; 
     end
-    if (numel(g)>1) && (numel(y) ~= numel(g))
+    if (numel(g)>1) && (size(y,1) ~= numel(g))
       error('y and g must be vectors the same size')
     end
-    func = @(y) gfunc(y,g,bootfun);
+    func = @(y) gfunc(y,g,bootfun,nvar);
   else
     % One-sample test 
-    % Data is exchangeable with symmetry above and below m
+    % H0: Data is exchangeable with symmetry above and below m
     m = vararg;
     y = cat(1,y-m,m-y);
     func = @(y) mfunc(y,bootfun);
@@ -135,12 +130,15 @@ end
 
 %--------------------------------------------------------------------------
 
-function t = gfunc(Y,g,bootfun)
+function t = gfunc(Y,g,bootfun,nvar)
 
   % Permutation test statistic for 2 or more groups
 
   % Get size and of the data vector or matrix
   [m,n] = size(Y);
+  if (nvar > 1)
+    n = 1;
+  end
 
   % Calculate the number (k) of unique groups
   gk = unique(g);
