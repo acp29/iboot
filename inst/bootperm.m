@@ -9,7 +9,11 @@
 %  p = bootperm(y,...,nboot,bootfun,paropt)
 %
 %  This function provides a bootstrap version of permutation tests for
-%  univariate (vector) or multivatiate (matrix) dsta [1].
+%  univariate (vector) or multivatiate (matrix) data [1]. 
+%
+%  (Note that matrix input for y will mean that calculation of bootfun 
+%  will not be vectorized. When this is the case, the function will 
+%  return a harmless warning saying so)
 %
 %  p = bootperm(y,m) is a 1-sample bootstrap permutation test IF m is
 %  a scalar value. m corresponds to the null hypothesis. The default
