@@ -51,12 +51,14 @@ At the Octave command prompt, type `help function-name` for more information abo
 
 ### Notes 
 
-The Matlab Statistics and Machine Learning toolbox has functions also called `bootstrp` and `bootci`. The same-named functions in the iboot package have almost identical usage to the Matlab functions from the Statistics and Machine Learning toolbox. Be aware though that the `bootci` Matlab function has a couple of errors, namely in the calculation of the bias for `cper` and `bca` intervals, and in the calculation of `stud` intervals. We recommend using the iboot package function `bootci`, or better it's function `ibootci` for the calculation of calibrated bootstrap confidence intervals . The 'i' prefix to the bootstrap function name indicates that the functions have capabilities to calculate calibrated bootstrap confidence intervals or *p*-values by iterated (a.k.a. double) bootstrap.
+The Matlab Statistics and Machine Learning toolbox has functions also called `bootstrp` and `bootci`. The same-named functions in the iboot package have almost identical usage to the Matlab functions from the Statistics and Machine Learning toolbox. Be aware though that Matlab's own `bootci` function has a couple of errors, namely in the calculation of the bias for `cper` and `bca` intervals, and in the calculation of `stud` intervals.  We recommend using the iboot package function `bootci`, or better it's function `ibootci` for the calculation of calibrated bootstrap confidence intervals . The 'i' prefix to the bootstrap function name indicates that the functions have capabilities to calculate calibrated bootstrap confidence intervals or *p*-values by iterated (a.k.a. double) bootstrap.
 
 ## Development roadmap
 
 * Add function to param folder to calculate D statistic from KS-test (with input format suitable for bootnhst, iboottest and (i)bootci) 
 * Add capability to specify nesting in bootnhst, which will use stratified bootstrap resampling 
+* Add the optionality to have stepwise control of FWER in bootnhst posthoc tests  
 * Allow bootstrap to accept empty argument for bootfun (to enhance compatible behaviours with corresponding matlab function 
 * Create usage guide with examples of how to apply the package functions to different problems and scenarious 
 * Create some compiled mex and oct files on various platforms (mac, pc and linux) to speed up computations. 
+
