@@ -183,13 +183,8 @@ function [p, c, gnames] = bootnhst (data, group, ref, nboot, bootfun, paropt)
   end
   
   % Define function to calculate maximum difference among groups
-<<<<<<< Updated upstream
-  func = @(data) maxdiff(data,g,ref,bootfun,nvar);
-  t = func(data);
-=======
   func = @(data) maxq(data,g,ref,bootfun,nvar);
   q = func(data);
->>>>>>> Stashed changes
 
   % Perform resampling and calculate bootstrap statistics
   state = warning;
