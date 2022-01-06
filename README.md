@@ -61,3 +61,4 @@ The Matlab Statistics and Machine Learning toolbox has functions also called `bo
 * Create usage guide with examples of how to apply the package functions to different problems and scenarios  
 * Create some compiled mex and oct files on various platforms (mac, pc and linux) to speed up computations. 
 
+
