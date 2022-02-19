@@ -1,6 +1,6 @@
 name: iboot
 version: 3.5.1
-date: 2022-02-07
+date: 2022-02-11
 author: Andrew Penn <andy.c.penn@gmail.com>
 maintainer: Andrew Penn <andy.c.penn@gmail.com>
 title: A statistics package with a variety of bootstrap resampling tools
