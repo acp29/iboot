@@ -777,8 +777,8 @@ function [p, c, stats] = ibootnhst (data, group, varargin)
   if numel(nboot) > 2
     error('the vector nboot cannot have length > 2')
   elseif numel(nboot) < 2
-    % set default number of second bootstrap samples;
-    nboot = cat(2,nboot,1000);
+    % set nboot(2) to 0 if the argument provided to nboot is scalar
+    nboot = cat(2,nboot,0);
   end
   if nboot(1) < 1000
     error('the minimum allowable value of nboot(1) is 1000')
