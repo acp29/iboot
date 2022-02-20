@@ -45,18 +45,18 @@ function maxT = maxstat (Y, g, nboot, bootfun, ref, clusters, strata)
       % Bootstrap resampling can involve less computation than Jackknife when sample sizes get larger
       nk(j) = sum(g==gk(j));
       if nvar > 1
-        t = zeros(nboot(2),1);
-        nB = nk(j) * nboot(2);
-        idx = reshape(randperm(nB, nB), nk(j), nboot(2));
-        for b = 1:nboot(2)
+        t = zeros(nboot,1);
+        nB = nk(j) * nboot;
+        idx = reshape(randperm(nB, nB), nk(j), nboot);
+        for b = 1:nboot
           tmp = Y(g==gk(j),:);
           t(b) = feval(bootfun,tmp(idx(:,b),:));
         end
       else
         % Vectorized if data is univariate
-        nB = nk(j) * nboot(2);
-        idx = reshape(randperm(nB, nB), nk(j), nboot(2));
-        tmp = Y(g==gk(j),:) * ones(1,nboot(2));
+        nB = nk(j) * nboot;
+        idx = reshape(randperm(nB, nB), nk(j), nboot);
+        tmp = Y(g==gk(j),:) * ones(1, nboot);
         t = feval(bootfun,tmp(idx));
       end
       SE(j) = std(t);
