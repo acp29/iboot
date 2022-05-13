@@ -2,14 +2,15 @@
 %
 %  Bootknife sampling  
 %
-%  bootstat = bootknife(nboot,bootfun,d)
-%  bootstat = bootknife(nboot,bootfun,d1,...,dN)
-%  bootstat = bootknife(...,'Weights',weights)
-%  bootstat = bootknife(...,'Smooth',boolean)
-%  [bootstat,bootsam] = bootknife(...)
+%  stats = bootknife(nboot,bootfun,d1,...,dN)
+%  ... = bootknife(...,'alpha',alpha)
+%  ... = bootknife(...,'Strata',strata)
+%  [stats,bootstat] = bootknife(...)
+%  [stats,bootstat] = bootknife(...)
+%  [stats,bootstat,bootsam] = bootknife(...)
 %
-%  bootstat = bootknife(nboot,bootfun,d,...) draws nboot bootknife data
-%  resamples and returns the statistic computed by bootfun in bootstat.
+%  stats = bootknife(nboot,bootfun,d,...) draws nboot bootknife data
+%  resamples and returns statistics from the bootstrap distribution.
 %  Bootknife sampling involves creating leave-one-out jackknife samples
 %  of size n - 1 and then drawing bootstrap samples of size n with
 %  replacement from the jackknife samples [1]. Unlike for the bootstrap, 
@@ -21,28 +22,36 @@
 %  method used is balanced resampling [2]. This function is particularly
 %  useful if the intention is to use bootstat to calculate a standard  
 %  error for bootfun on the data, when the size of the dataset is small.
+%  The first output argument returns a row vector with the following
+%  elements:
+%    1) The statistic calculated by bootfun on the original sample
+%    2) The bias of the statistic estimated from the bootstrap
+%    3) The bias corrected statistic
+%    4) The bootstrap standard error
+%    5) Lower limit of the 95% bootstrap confidence interval
+%    6) Upper limit of the 95% bootstrap confidence interval
 %
-%  bootstat = bootknife(nboot,bootfun,d1,...,dN) is as above except that 
+%  stats = bootknife(nboot,bootfun,d1,...,dN) is as above except that 
 %  the third and subsequent numeric input arguments are data vectors 
 %  that are used to create inputs for bootfun. 
 %
-%  bootstat = bootknife(...,'Weights',weights) specifies observation
-%  weights. weights must be a vector of non-negative numbers. The
-%  length of weights must be equal to first dimension of the
-%  non-scalar input argument(s) to bootfun. The weights are used as
-%  bootstrap sampling probabilities. Balanced resampling is extended
-%  to resampling with weights.
+%  ... = bootknife(nboot,{bootfun,...},...,'strata',strata) specifies a
+%  vector containing numeric identifiers of strata. The dimensions of
+%  strata must be equal to that of the non-scalar input arguments to
+%  bootfun. Bootstrap resampling is stratified so that every stratum is
+%  represented in each bootstrap test statistic.
 %
-%  bootstat = bootknife(...,'Smooth',boolean) specifies whether to 
-%  smooth the bootknife distribution by adding additive random Gaussian  
-%  noise. Since smoothing is applied directly to the bootknife statistics, 
-%  this smoothing algorithm is appropriate for any function of the data. 
-%  The amount of smoothing is inversely related to the sample size and  
-%  may affect interval length, but less so coverage, in the tails of the 
-%  bootknife distribution. Inflation of the sampling variance is 
-%  prevented by including a shrinkage correction procedure. 
+%  ... = bootknife(nboot,bootfun,...,'alpha',alpha) computes the
+%  iterated bootstrap confidence interval of the statistic defined by the
+%  function bootfun with lower and uppper interval ends calibrated to 
+%  100 * alpha/2 and 100 * (1-alpha)/2 %, where alpha is a scalar
+%  value between 0 and 1. The default value of alpha is 0.05 corresponding 
+%  to intervals with a coverage of 95% confidence.
 %
-%  [bootstat,bootsam] = bootknife(...) also returns bootsam, a  
+%  [stats,bootstat] = bootknife(...) also returns bootstat, a vector 
+%  bootstrap statistics for the (first level of) bootknife sampling. 
+%
+%  [stats,bootstat,bootsam] = bootknife(...) also returns bootsam, a  
 %  matrix of indices for bootknife sampling. Each column in bootsam
 %  corresponds to one bootknife sample and contains the row 
 %  indices of the values drawn from the nonscalar data argument 
@@ -55,7 +64,7 @@
 %  [2] Davison et al. (1986) Efficient Bootstrap Simulation.
 %        Biometrika, 73: 555-66
 %
-%  bootknife v1.1.0.0 (02/03/2022)
+%  bootknife v1.2.0.0 (15/04/2022)
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 %
@@ -74,7 +83,7 @@
 %  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function [bootstat,idx] = bootknife (nboot, bootfun, varargin)
+function [stats, T1, idx] = bootknife (nboot, bootfun, varargin)
   
   % Error checking
   if nargin < 3
@@ -82,18 +91,18 @@ function [bootstat,idx] = bootknife (nboot, bootfun, varargin)
   end
 
   % Set defaults
-  weights = [];
-  smooth = false;
-
+  alpha = 0.05;
+  strata = [];
+  
   % Assign input arguments to function variables
   argin3 = varargin;
   narg = numel(argin3);
   if narg > 1
     while ischar(argin3{end-1})
-      if strcmpi(argin3{end-1},'Weights')
-        weights = argin3{end};
-      elseif strcmpi(argin3{end-1},'Smooth')
-        smooth = argin3{end};
+      if strcmpi(argin3{end-1},'alpha')
+        alpha = argin3{end};   
+      elseif strcmpi(argin3{end-1},'strata')
+        strata = argin3{end};   
       else
         error('unrecognised input argument to bootstrp')
       end
@@ -106,100 +115,109 @@ function [bootstat,idx] = bootknife (nboot, bootfun, varargin)
   end
   x = argin3;
 
-
   % Determine properies of data
   nvar = numel(x);
   sz = size(x{1});
   n = sz(1);
-  if sz(2) > 1
-    matflag = 1;
-  else
-    matflag = 0;
-  end 
-
-  % Check name-value pairs for errors
-  if isempty(weights)
-    w = ones(n,1);
-  else
-    if size(weights,2)>1
-      % Transpose row vector weights
-      weights = weights.';
-    end
-    if ~all(size(weights) == [n,1])
-      error('The weights vector is not the same dimensions as the data');
-    end
-    if any(weights<0)
-      error('Weights must be a vector of non-negative numbers')
-    end
-    weights = weights / sum(weights);
-    w = weights * n;
-  end
 
   % Initialize
   B = nboot(1);
-  N = n * B;
-  bootstat = zeros(1, B);
-  X = cell(1, nvar);
-  if nargout > 1
-    idx = zeros(n,B);
+  if (numel(nboot) > 1)
+    C =  nboot(2);
   else
-    idx = zeros(n,1);
+    C = 200;
   end
-  c = w * B;
+  T1 = zeros(1, B);
+  U = zeros(1, B);
+  M = zeros(1, B);
+  V = zeros(1, B);
+  X = cell(1, nvar);
+  idx = zeros(n,B);
+  c = ones(n,1) * B;
 
   % Perform balanced bootknife resampling
   % Octave or Matlab serial/vectorized computing
   %    Gleason, J.R. (1988) Algorithms for Balanced Bootstrap Simulations. 
   %    The American Statistician. Vol. 42, No. 4 pp. 263-266
-  for h = 1:B
-    % Choose which rows of the data to sample
-    r = h - fix((h-1)/n) * n;
-    for i = 1:n
-      d = c;   
-      d(r) = 0;
-      if ~sum(d)
-        d = c;
-      end
-      j = sum((rand(1) >= cumsum(d./sum(d)))) + 1;
-      if nargout > 1
-        idx(i,h) = j;
-      else
-        idx(i,1) = j;
-      end
-      c(j) = c(j) - 1;
+  if ~isempty(strata)
+    % Get strata IDs
+    gid = unique(strata);  % strata ID
+    K = numel(gid);        % number of strata
+    % Create strata matrix
+    g = zeros(n,K);
+    for k = 1:K
+      g(:,k) = (strata == gid(k));
+      [~, ~, idx(g(:,k),:)] = bootknife (B, bootfun, x{:}(g(:,k),:));
     end
     % Perform data sampling
-    if matflag || (nvar > 1)
-      for v = 1:nvar
-        if nargout > 1
-          X{v} = x{v}(idx(:,h));
-        else
-          X{v} = x{v}(idx);
+    for v = 1:nvar
+      X{v} = x{v}(idx);
+    end
+    for b = 1:B
+      T1(b) = feval(bootfun,X{:}(:,b));
+    end
+  else
+    for b = 1:B
+      % Choose which rows of the data to sample
+      r = b - fix((b-1)/n) * n;
+      for i = 1:n
+        d = c;   
+        d(r) = 0;
+        if ~sum(d)
+          d = c;
         end
-      end
-      % Function evaluations performed in a Matlab loop
-      bootstat(h) = feval(bootfun,X{:});
-    else
+        j = sum((rand(1) >= cumsum(d./sum(d)))) + 1;
+        idx(i,b) = j;
+        c(j) = c(j) - 1;
+      end 
+      % Perform data sampling
       for v = 1:nvar
-        if nargout > 1
-          X{v}(:,h) = x{v}(idx(:,h));
-        else
-          X{v}(:,h) = x{v}(idx);
-        end
+        X{v} = x{v}(idx(:,b));
       end
+      % Function evaluation on bootknife sample
+      T1(b) = feval(bootfun,X{:}); 
     end
   end
-  % Vectorized function evaluations on bootknife data samples
-  if ~matflag && (nvar == 1)
-    bootstat = feval(bootfun,X{:});
+  
+  % Calculate the bootstrap standard error, bias and confidence intervals 
+  % Bootstrap standard error estimation
+  T0 = bootfun(x{:});
+  if C > 0
+    % Iterated bootstrap resampling for greater accuracy
+    for b = 1:B
+      [~,T2] = bootknife ([C,0], bootfun, x{:}(idx(:,b)));
+      % Use quick interpolation to find the probability that T2 <= T0
+      I = (T2<=T0);
+      u = sum(I);
+      U(b) =  interp1q([max([min(T2), max(T2(I))]);...
+                        min([max(T2), min(T2(~I))])],...
+                       [u; min(u+1,C)] / C,...
+                       T0);
+      if isnan(U(i))
+        U(b) = u / C;
+      end
+      M(b) = mean(T2);
+      V(b) = var(T2,1);
+    end
+    % Double bootstrap bias estimation
+    % See Ouysee (2011) Economics Bulletin
+    bias = mean(T1) - T0 - mean(M - T1);
+    % Double bootstrap standard error
+    se = sqrt(var(T1,1)^2 / mean(V));
+    % Calibrate tail probabilities to half of alpha
+    l = quantile (U, [alpha/2, 1-alpha/2]);
+    % Calibrated percentile bootstrap confidence intervals
+    ci = quantile (T1, l);
+  else
+    % Bootstrap bias estimation
+    bias = mean(T1) - T0;
+    % Bootstrap standard error
+    se = std(T1,1);
+    % Percentile bootstrap confidence intervals
+    ci = quantile (T1, [alpha/2, 1-alpha/2]);
   end
   
-  % Smooth the bootknife distribution
-  if smooth
-    mu = mean(bootstat);
-    SE = std(bootstat);
-    noise = randn(1,nboot) * SE;
-    bootstat = ((bootstat - mu) * sqrt(1 - 1/n) + noise * sqrt(1/n)) + mu;
-  end
-
+  % Prepare output
+  stats = [T0; bias; T0-bias; se; ci.'];
+  
 end
