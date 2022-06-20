@@ -29,6 +29,9 @@ if isoctave
   fseek (fid, 0);
   fputs (fid, S);
   fclose (fid);
+  if exist ('./inst/boot.oct')
+    delete ('./inst/boot.oct');
+  end
 else
   % Assumming uninstall for Matlab instead
   run (fullfile(pwd,'PKG_DEL'));
@@ -44,7 +47,7 @@ end
 run (fullfile(pwd,'PKG_DEL.m'));
 
 % Notify user that uninstall is complete
-disp ('The iboot package has been uninstalled from this location')
+disp ('This statistics-bootstrap package has been uninstalled from this location')
 
 % Clean up
 clear dirlist S comment i ii octaverc fid n msg

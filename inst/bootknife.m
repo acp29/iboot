@@ -261,48 +261,16 @@ function [stats, T1, idx] = bootknife (x, nboot, bootfun, alpha, strata, idx)
 
   % Perform balanced bootknife resampling
   if nargin < 6
-    % Initialize
-    T1 = zeros (1, B);
-    idx = zeros (n, B);
-    c = ones (n, 1) * B;
-    % Calculate row indices for resampling
-    if ~isempty (strata)
-      for k = 1:K
-        [~, ~, idx(g(:, k), :)] = bootknife (x(g(:, k), :), [B, 0], bootfun, []);
-        rows = find (g(:, k));
-        idx(g(:, k), :) = rows(idx(g(:, k), :));
-      end
-      if vectorized
-        % Perform data sampling
-        X = x(idx);
-        % Function evaluation on bootknife sample
-        T1 = feval (bootfun, X);
-      end
-    else
-      for b = 1:B
-        % Choose which rows of the data to sample
-        r = b - fix ((b - 1) / n) * n;
-        for i = 1:n
-          d = c;   
-          d(r) = 0;
-          if ~sum (d)
-            d = c;
-          end
-          j = sum ((rand (1) >= cumsum (d ./sum (d)))) + 1;
-          idx(i, b) = j;
-          c(j) = c(j) - 1;
-        end 
-      end
-      if vectorized
-        % Perform data sampling
-        X = x(idx);
-        % Function evaluation on bootknife sample
-        T1 = feval (bootfun, X);
-      end
-    end
+    idx = boot (n, B, true);
   end
-  if ~vectorized
-    % Serial evaluation of bootfun on the data
+  if vectorized
+    % Vectorized implementation of data sampling and evaluation of bootfun on the data
+    % Perform data sampling
+    X = x(idx);
+    % Function evaluation on bootknife sample
+    T1 = feval (bootfun, X);
+  else 
+    % Serial implementation of data sampling and evaluation of bootfun on the data
     for b = 1:B
       % Perform data sampling
       X = x(idx(:, b), :);

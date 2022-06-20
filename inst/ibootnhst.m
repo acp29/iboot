@@ -69,9 +69,9 @@
 %    Standard errors are estimated by bootknife resampling by default [2], 
 %  where nboot(2) corresponds to the number of bootknife resamples. If 
 %  nboot(2) is 0 and standard errors are calculated without resampling 
-%  (if bootfun is 'mean' or 'robust'), or using leave-one-out jackknife 
-%  (or cluster-jackknife (if using a 'nested' design). Note that if bootfun 
-%  is not the mean, the t-statistics returned by this function will not be 
+%  (if bootfun is 'mean'), or using leave-one-out jackknife (or cluster-
+%  jackknife (if using a 'nested' design). Note that if bootfun is not 
+%  the mean, the t-statistics returned by this function will not be 
 %  comparable with tabulated values.  
 %
 %  ibootnhst(...,'nboot',nboot) is a vector of upto two positive integers
@@ -166,8 +166,7 @@
 %                   of workers.
 % 
 %  ibootnhst(...,'alpha',alpha) specifies the two-tailed significance level
-%  for confidence interval coverage of 0 (in c) or interval overlap (in 
-%  stats.groups).
+%  for confidence interval coverage of 0 (in c).
 %
 %  ibootnhst(...,'dim',dim) specifies which dimension to average over the
 %  DATA first when DATA is a matrix. dim can take values of 1 or 2. Note
@@ -211,18 +210,14 @@
 %              gnames corresponds to the numbers used to identify GROUPs
 %              in columns 1 and 2 of the output argument c
 %   ref      - reference group
-%   groups   - group number and bootfun for each group with sample size, 
-%              standard error, and lower and upper bootstrap-t confidence 
-%              intervals, which have coverage such that they overlap with 
-%              eachother if the ref input argument is 'pairwise', or with 
-%              the reference group, at a FWER-controlled p-value of greater 
-%              than alpha.
+%   groups   - group number and bootfun for each group with sample size 
+%              and standard error.
 %   Var      - weighted mean (pooled) sampling variance
 %   maxT     - omnibus test statistic (maxT) 
 %   df       - degrees of freedom
 %   nboot    - number of bootstrap resamples
 %   alpha    - two-tailed significance level for the confidence interval 
-%              coverage of 0 (in c) or interval overlap (in stats.groups)
+%              coverage of 0 (in c).
 %   blocks   - vector of numeric identifiers indicating block membership.
 %   clusters - vector of numeric identifiers indicating cluster membership
 %   bootstat - test statistic computed for each bootstrap resample 
@@ -970,9 +965,6 @@ function [p, c, stats] = ibootnhst (data, group, varargin)
         theta(j) = mean(data(g==gk(j),:));
         % Quick calculation for the standard error of the mean
         SE(j) = std(data(g==gk(j),:),0) / sqrt(nk(j));
-      elseif strcmp (bootfun, 'smoothmedian')
-        % Quick calculation of the smoothed median and it's standard error
-        [theta(j), SE(j)] = feval(bootfun, data(g==gk(j),:));
       else
         theta(j) = feval(bootfun,data(g==gk(j),:));
         % If requested, compute unbiased estimates of the standard error using jackknife resampling
@@ -1057,8 +1049,6 @@ function [p, c, stats] = ibootnhst (data, group, varargin)
   p = min(c(:,7));
 
   % Prepare stats output structure
-  % Include bootstrap-t confidence intervals for bootfun evaluated for each group
-  % Within a small margin of error, these confidence intervals overlap at a FWER controlled p-value > 0.05
   stats = struct;
   stats.gnames = gnames;
   stats.ref = ref;
@@ -1068,8 +1058,8 @@ function [p, c, stats] = ibootnhst (data, group, varargin)
   stats.groups(:,2) = theta;
   stats.groups(:,3) = nk;
   stats.groups(:,4) = SE;
-  stats.groups(:,5) = theta - sqrt((0.5*(w+1)).*Var/2) * interp1(cdf,QS,1-alpha,'linear');
-  stats.groups(:,6) = theta + sqrt((0.5*(w+1)).*Var/2) * interp1(cdf,QS,1-alpha,'linear');
+  %stats.groups(:,5) = theta - sqrt((0.5*(w+1)).*Var/2) * interp1(cdf,QS,1-alpha,'linear');
+  %stats.groups(:,6) = theta + sqrt((0.5*(w+1)).*Var/2) * interp1(cdf,QS,1-alpha,'linear');
   stats.Var = Var;
   stats.maxT = maxT;
   stats.df = df;
