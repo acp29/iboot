@@ -17,7 +17,7 @@ if isoctave
     [fid, msg] = fopen (octaverc, 'w+t');
   end 
   S = (fread (fid, '*char')).';
-  comment = sprintf ('\r\n\r\n%s', '% Load statistics-bootstrap package');
+  comment = sprintf ('\r\n\r\n%s', '% Load iboot package');
   if isempty(strfind(S,comment))
     S = strcat (S, comment);
   end
@@ -35,7 +35,7 @@ if isoctave
     warning ('Could not compile boot.oct. Falling back to the (slower) boot.m file.')
   end
   try
-    mkoctfile --output ./inst/smoothmedian.oct ./src/smoothmedian.cc
+    mkoctfile --output ./inst/param/smoothmedian.oct ./src/smoothmedian.cc
   catch
     warning ('Could not compile smoothmedian.oct. Falling back to the (slower) smoothmedian.m file.')
   end
@@ -50,7 +50,7 @@ else
 end
 
 % Notify user that installation is complete
-disp ('The statistics-bootstrap package has been installed at the current location ')
+disp ('The iboot package has been installed at the current location ')
 
 % Clean up
 clear dirlist S comment i ii octaverc fid n msg

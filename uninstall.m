@@ -20,7 +20,7 @@ if isoctave
   else
     error('~/.octaverc does not exist');
   end
-  comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
+  comment = regexptranslate ('escape', '% Load iboot package');
   S = regexprep(S,['\r\n\r\n',comment],'');
   for i=1:n
     S = regexprep(S,strcat('\r\n',...
@@ -32,6 +32,11 @@ if isoctave
   if exist ('./inst/boot.oct')
     delete ('./inst/boot.oct');
   end
+  if exist ('./inst//param/smoothmedian.oct')
+    delete ('./inst//param/smoothmedian.oct');
+  end
+  % Unload package from current session
+  run (fullfile(pwd,'PKG_DEL.m'));
 else
   % Assumming uninstall for Matlab instead
   run (fullfile(pwd,'PKG_DEL'));
@@ -43,11 +48,9 @@ else
   end
 end
 
-% Unload package from current session
-run (fullfile(pwd,'PKG_DEL.m'));
 
 % Notify user that uninstall is complete
-disp ('This statistics-bootstrap package has been uninstalled from this location')
+disp ('This iboot package has been uninstalled from this location')
 
 % Clean up
 clear dirlist S comment i ii octaverc fid n msg
