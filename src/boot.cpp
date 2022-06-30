@@ -37,7 +37,6 @@
 
 
 #include "mex.h"
-#include <iostream>
 #include <random>
 using namespace std;
 
@@ -47,14 +46,38 @@ void mexFunction (int nlhs, mxArray* plhs[],
 {
   
     // Input variables
+    if (nrhs < 2) {
+        mexErrMsgTxt("function requires at least 2 scalar input arguments");
+    }
+    // First input argument
     const short int n = *(mxGetPr(prhs[0]));
+    if (mxGetNumberOfElements (prhs[0]) > 1) {
+        mexErrMsgTxt("the first input argument must be scalar");
+    }
+    if (n <= 0) {
+        mexErrMsgTxt("the first input argument must be a positive integer");
+    }
+    // Second input argument
     const int nboot = *(mxGetPr(prhs[1]));
+    if (mxGetNumberOfElements (prhs[1]) > 1) {
+        mexErrMsgTxt("the second input argument must be scalar");
+    }
+    if (nboot <= 0) {
+        mexErrMsgTxt("the second input argument must be a positive integer");
+    }
+    // Third input argument
     bool u;
     if (nrhs < 3) {
         u = false;
     } else {
         u = *(mxGetPr(prhs[2]));
     }    
+    
+    // Output variables
+    if (nlhs > 1) {
+        mexErrMsgTxt("function can only return a single output arguments");
+    }
+    
     // Declare variables
     mwSize dims[2] = {n,nboot};
     plhs[0] = mxCreateNumericArray(2, dims, 
@@ -69,7 +92,7 @@ void mexFunction (int nlhs, mxArray* plhs[],
         double *w; 
         w = mxGetPr(prhs[3]);
         if (mxGetNumberOfElements (prhs[3]) != n) {
-            mexErrMsgIdAndTxt("boot:WeightVector","weights must be a vector of length n");
+            mexErrMsgTxt("weights must be a vector of length n");
         }
         long int s = 0; 
         for (int i = 0; i < n ; i++)  {
@@ -77,7 +100,7 @@ void mexFunction (int nlhs, mxArray* plhs[],
             s += c[i];
         }
         if (s != N) {
-            mexErrMsgIdAndTxt("boot:WeightSum","weights must add up to n * nboot");
+            mexErrMsgTxt("weights must add up to n * nboot");
         }
     } else {
         // Assign weights (counts) for uniform sampling
