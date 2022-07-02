@@ -1,3 +1,3 @@
 make:
-	mkoctfile --output ../inst/boot.oct boot.cc
-	mkoctfile --output ../inst/param/smoothmedian.oct smoothmedian.cc
+	mkoctfile --mex --output ../inst/boot ./boot.cpp
+	mkoctfile --mex --output ../inst/param/smoothmedian ./smoothmedian.cpp

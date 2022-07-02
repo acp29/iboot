@@ -20,7 +20,7 @@ if isoctave
   else
     error('~/.octaverc does not exist');
   end
-  comment = regexptranslate ('escape', '% Load iboot package');
+  comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
   S = regexprep(S,['\r\n\r\n',comment],'');
   for i=1:n
     S = regexprep(S,strcat('\r\n',...
@@ -29,12 +29,6 @@ if isoctave
   fseek (fid, 0);
   fputs (fid, S);
   fclose (fid);
-  if exist ('./inst/boot.oct')
-    delete ('./inst/boot.oct');
-  end
-  if exist ('./inst/param/smoothmedian.oct')
-    delete ('./inst/param/smoothmedian.oct');
-  end
   % Unload package from current session
   run (fullfile(pwd,'PKG_DEL.m'));
 else
@@ -46,14 +40,16 @@ else
     % backwards compatibility
     path2rc;
   end
-  path_to_boot = sprintf ('./inst/boot.%s',mexext);
-  if exist (path_to_boot)
-    delete (path_to_boot);
-  end
-  path_to_smoothmedian = sprintf ('./inst/param/smoothmedian.%s',mexext);
-  if exist (path_to_smoothmedian)
-    delete (path_to_smoothmedian);
-  end
+end
+
+% Delete MEX files
+path_to_boot = sprintf ('./inst/boot.%s',mexext);
+if exist (path_to_boot)
+  delete (path_to_boot);
+end
+path_to_smoothmedian = sprintf ('./inst/param/smoothmedian.%s',mexext);
+if exist (path_to_smoothmedian)
+  delete (path_to_smoothmedian);
 end
 
 

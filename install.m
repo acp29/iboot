@@ -8,6 +8,11 @@ dirlist{1} = fullfile (pwd,'inst','');
 dirlist{2} = fullfile (pwd,'inst','param');
 dirlist{3} = fullfile (pwd,'inst','helper');
 n = numel (dirlist);
+
+% Check if running in Octave (else assume Matlab)
+info = ver; 
+isoctave = any (ismember ({info.Name}, "Octave"));
+
 if isoctave
   % Install for Octave
   octaverc = '~/.octaverc';
@@ -17,7 +22,7 @@ if isoctave
     [fid, msg] = fopen (octaverc, 'w+t');
   end 
   S = (fread (fid, '*char')).';
-  comment = sprintf ('\r\n\r\n%s', '% Load iboot package');
+  comment = sprintf ('\r\n\r\n%s', '% Load statistics-bootstrap package');
   if isempty(strfind(S,comment))
     S = strcat (S, comment);
   end
@@ -30,14 +35,15 @@ if isoctave
   fputs (fid, S);
   fclose (fid);
   try
-    mkoctfile --output ./inst/boot.oct ./src/boot.cc
+    mkoctfile --mex --output ./inst/boot ./src/boot.cpp
   catch
-    warning ('Could not compile boot.oct. Falling back to the (slower) boot.m file.')
+    warning ('Could not compile boot.%s. Falling back to the (slower) boot.m file.',mexext)
   end
+  path_to_smoothmedian = sprintf ('./inst/param/smoothmedian.%s',mexext);
   try
-    mkoctfile --output ./inst/param/smoothmedian.oct ./src/smoothmedian.cc
+    mkoctfile --mex --output ./inst/param/smoothmedian ./src/smoothmedian.cpp
   catch
-    warning ('Could not compile smoothmedian.oct. Falling back to the (slower) smoothmedian.m file.')
+    warning ('Could not compile smoothmedian.%s. Falling back to the (slower) smoothmedian.m file.',mexext)
   end
 else
   % Assumming install for Matlab instead
@@ -54,14 +60,14 @@ else
     disp(err.message);
   end
   try
-    mex -compatibleArrayDims -outdir ./inst ./src/boot.cpp
+    mex -compatibleArrayDims -output ./inst/boot ./src/boot.cpp
   catch
-    warning ('Could not compile boot.mex. Falling back to the (slower) boot.m file.')
+    warning ('Could not compile boot.%s. Falling back to the (slower) boot.m file.',mexext)
   end
   try
-    mex -compatibleArrayDims -outdir ./inst/param ./src/smoothmedian.cpp
+    mex -compatibleArrayDims -output ./inst/param/smoothmedian ./src/smoothmedian.cpp
   catch
-    warning ('Could not compile smoothmedian.mex. Falling back to the (slower) smoothmedian.m file.')
+    warning ('Could not compile smoothmedian.%s. Falling back to the (slower) smoothmedian.m file.',mexext)
   end
 end
 
