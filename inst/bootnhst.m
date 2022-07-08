@@ -711,7 +711,7 @@ function [p, c, stats] = bootnhst (data, group, varargin)
 
   % Check if running in Octave (else assume Matlab)
   info = ver; 
-  isoctave = any (ismember ({info.Name}, "Octave"));
+  isoctave = any (ismember ({info.Name}, 'Octave'));
   
   % Apply defaults
   bootfun = 'mean';
@@ -872,7 +872,7 @@ function [p, c, stats] = bootnhst (data, group, varargin)
     end
   end
   if ~isempty(strata) && ~isempty(clusters)
-    error('strata and cluster options cannot be used together')
+    error('block and nested options cannot be used together')
   end
   if nargout > 3
     error('bootnhst only supports up to 3 output arguments')
@@ -903,7 +903,7 @@ function [p, c, stats] = bootnhst (data, group, varargin)
   end
 
   % Assign non-zero numbers to group labels
-  [gnames,~,g] = unique(group);
+  [gnames,junk,g] = unique(group);
   gk = unique(g);
   k = numel(gk);
   if ~isempty(ref)
@@ -1044,8 +1044,8 @@ function [p, c, stats] = bootnhst (data, group, varargin)
   for j = 1:k
     if ~isempty(clusters)
       theta(j) = feval(bootfun,data(g==gk(j),:));
-      % Compute unbiased estimate of the standard error by cluster-jackknife resampling
-      opt = struct;
+      % Compute unbiased estimate of the standard error by
+      % cluster-jackknife resampling
       opt.clusters = clusters(g==gk(j));
       nk(j) = numel(unique(opt.clusters));
       SE(j) = jack(data(g==gk(j),:), bootfun, [], opt);

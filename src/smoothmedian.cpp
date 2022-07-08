@@ -49,6 +49,18 @@
 // Newton-Bisection hybrid algorithm. The tolerance (Tol) is the 
 // maximum step size that is acceptable to break from optimization.
 //
+// The smoothing works by slightly reducing the breakdown point
+// of the median. Bootstrap confidence intervals using the smoothed
+// median have good coverage for the ordinary median of the
+// population distribution and can be used to obtain second order
+// accurate intervals with Studentized bootstrap and calibrated
+// percentile bootstrap methods [1]. When the population distribution 
+// is thought to be strongly skewed, coverage errors can be reduced 
+// by improving symmetry through appropriate data transformation. 
+// Unlike kernel-based smoothing approaches, bootstrapping smoothmedian 
+// does not require explicit choice of a smoothing parameter or a 
+// probability density function. 
+//
 // Bibliography:
 // [1] Brown, Hall and Young (2001) The smoothed median and the
 //      bootstrap. Biometrika 88(2):519-534
@@ -56,10 +68,10 @@
 // Author: Andrew Charles Penn (2022)
 
 
-
 #include "mex.h"
-#include <stdlib.h>
 #include <vector>
+#include <cmath>         // for pow function
+#include <algorithm>     // for sort function (using IntroSort algorithm)
 using namespace std;
 
 void mexFunction (int nlhs, mxArray* plhs[],
@@ -67,35 +79,69 @@ void mexFunction (int nlhs, mxArray* plhs[],
 {
     
     // Input variables
-    if (nrhs < 1) {
-        mexErrMsgTxt("function requires at least 1 input argument");
+    if ( nrhs < 1 ) {
+        mexErrMsgTxt ("function requires at least 1 input argument");
     }
-    
-    // Input variable declaration
+    // First input argument (x)
+    if ( !mxIsClass (prhs[0], "double") ) {
+        mexErrMsgTxt ("the first input argument (x) must be of type double");
+    }
+    if ( mxIsComplex (prhs[0]) ) {
+        mexErrMsgTxt ("the first input argument (x) cannot contain an imaginary part");
+    }
     double *x = (double *) mxGetData (prhs[0]);
+    // Second input argument (dim)
     short int dim;
-    if (nrhs < 2) {
+    if ( nrhs < 2 ) {
         dim = 1;
     } else {
+        if ( mxGetNumberOfElements (prhs[1]) > 1 ) {
+            mexErrMsgTxt ("the second input argument (dim) must be scalar");
+        }
+        if ( !mxIsClass (prhs[1], "double") ) {
+            mexErrMsgTxt ("the second input argument (dim) must be of type double");
+        }
+        if ( mxIsComplex (prhs[1]) ) {
+            mexErrMsgTxt ("the second input argument (dim) cannot contain an imaginary part");
+        }
         dim = *(mxGetPr (prhs[1]));
     }
+    if ( dim != 1 && dim != 2) {
+        mexErrMsgTxt ("the second input argument (dim) must be 1 (column-wise) or 2 (row-wise)");
+    }
+    // Third input argument (Tol)
     double Tol;
-    if (nrhs > 2) {
+    if ( nrhs > 2 ) {
+        if ( mxGetNumberOfElements (prhs[2]) > 1 ) {
+            mexErrMsgTxt ("the third input argument (Tol) must be scalar");
+        }
+        if ( !mxIsClass (prhs[2], "double") ) {
+            mexErrMsgTxt ("the third input argument (Tol) must be of type double");
+        }
+        if ( mxIsComplex (prhs[2]) ) {
+            mexErrMsgTxt ("the third input argument (Tol) cannot contain an imaginary part");
+        }
         Tol = *(mxGetPr (prhs[2]));
+    }
+    if ( !mxIsFinite (Tol) ) {
+        mexErrMsgTxt ("the third input argument (Tol) cannot be NaN or Inf");    
+    }
+    if ( Tol < 0 ) {
+        mexErrMsgTxt ("the third input argument (Tol) must be a positive value");
     }
 
     // Get data dimensions and prepare output vector
     int ndims = (int) mxGetNumberOfDimensions (prhs[0]);
     const mwSize *sz = mxGetDimensions (prhs[0]);
-    if (sz[0] == 1) {
+    if ( sz[0] == 1 ) {
         dim = 2;
     }
     int m, n;
-    if (dim == 1) {
+    if ( dim == 1 ) {
         m = sz[0];
         n = sz[1];
         plhs[0] = mxCreateDoubleMatrix (1, n, mxREAL);
-    } else if (dim == 2) {
+    } else if ( dim == 2 ) {
         n = sz[0];
         m = sz[1]; 
         plhs[0] = mxCreateDoubleMatrix (n, 1, mxREAL);
@@ -107,17 +153,17 @@ void mexFunction (int nlhs, mxArray* plhs[],
     // Declare temporary variables needed for the optimization step
     vector<double> xvec;
     xvec.reserve (m);
-    double a, b, range, T, v, U, D, R, step, nwt, p;
+    double a, b, range, S, T, U, D, R, step, nwt;
     
-    // Loop through the data and apply smoothing to the median
-    int MaxIter = 500;
-    for (int k = 0; k < n ; k++) {
+    // Loop through the data and apply smoothing to the median (maximum 20 iterations)
+    int MaxIter = 19;
+    for ( int k = 0; k < n ; k++ ) {
 
         // Copy the next row/column of the data to temporary vector and sort it
-        if (dim == 1) {
+        if ( dim == 1 ) {
             for (int j = 0; j < m ; j++) xvec.push_back ( x[k * m + j] );
-        } else if (dim == 2) { 
-            for (int j = 0; j < m ; j++) {int i = j * n; xvec.push_back ( x[i + k] );};
+        } else if ( dim == 2 ) { 
+            for ( int j = 0; j < m ; j++ ) {int i = j * n; xvec.push_back ( x[i + k] );};
         }
         sort(xvec.begin(), xvec.end());
         
@@ -136,78 +182,71 @@ void mexFunction (int nlhs, mxArray* plhs[],
         range = b - a;                   // Range
         if (nrhs < 3) {
             Tol = range * 1e-4; 
-        }
-        
-        // Set initial value of free parameter to the midrange
-        p = M[k];   
+        }  
         
         // Start iterations
-        for (int Iter = 0; Iter < MaxIter ; Iter++) {
+        for ( int Iter = 0; Iter <= MaxIter ; Iter++ ) {
             
-            // Break from iterations if the range of the x values is zero
-            if (range == 0) {
+            // Break from iterations if the distance between the bracket bounds < Tol since
+            // the smoothed median will be equal to the median 
+            if (range <= Tol) {
                 break;
             }   
             
-            // Perform computations for the current data vector
+            // Calculate derivatives of the objective function for Newton-Raphson method
+            //S = 0;
             T = 0;
-            v = 0;
             U = 0;
-            for (int j = 0; j < m ; j++) {
-                                
+            for ( int j = 0; j < m ; j++ ) {        
                 if ( !mxIsFinite(xvec[j]) ) {
-                    mexErrMsgTxt ("x cannot contain NaN or Inf");
+                    mexErrMsgTxt ("the first input argument (x) cannot contain NaN or Inf");
                 }
-                
-                for (int i = 0; i < j ; i++) {
-                    
-                    // Calculate first derivative (T)
-                    D = pow (xvec[i] - p, 2) + pow (xvec [j] - p, 2);
+                for ( int i = 0; i < j ; i++ ) {
+                    D = pow (xvec[i] - M[k], 2) + pow (xvec [j] - M[k], 2);
                     R = sqrt(D);
-                    T += (2 * p - xvec[i] - xvec [j]) / R;
-                    
-                    // Calculate second derivative (U)
-                    U += pow (xvec[i] - xvec [j], 2) * R / pow (D, 2);
-                    
+                    // Objective function (S)
+                    //S += R;
+                    if ( D != 0 ) {
+                        // First derivative (T)
+                        T += (2 * M[k] - xvec[i] - xvec [j]) / R;
+                        // Second derivative (U)
+                        U += pow (xvec[i] - xvec [j], 2) * R / pow (D, 2);
+                    }
                 }
-            }
-            
+            }          
+
             // Compute Newton step (fast quadratic convergence but unreliable)
             step = T / U;
-            
+                        
             // Evaluate convergence
-            if (abs (step) < Tol) {
+            if ( abs (step) <= Tol ) { 
                 break; // Break from optimization when converged to tolerance 
             } else {
-                
-                // Update bracket bounds for Bisection
-                if (T < -Tol) {
-                    a = p;
-                } else if (T > +Tol) {
-                    b = p;
+                // Update bracket bounds for Bisection method
+                if ( step < 0 ) {
+                    a = M[k] + Tol;
+                } else if ( step > 0 ) {
+                    b = M[k] - Tol;
                 }
-                
+                // Update the range with the distance between the bracket bounds
+                range = b - a;
                 // Preview new value of the smoothed median
-                nwt = p - step;
-                
+                nwt = M[k] - step;
                 // Choose which method to use to update the smoothed median
-                if (nwt > a && nwt < b) {
+                if ( nwt > a && nwt < b ) {
                     // Use Newton step if it is within bracket bounds
-                    p = nwt;
+                    M[k] = nwt;
                 } else {
                     // Compute Bisection step (slow linear convergence but very safe)
-                    p = 0.5 * (a + b);
+                    M[k] = 0.5 * (a + b);
                 }
             }
-            
-            if (Iter == MaxIter) {
-                mexWarnMsgTxt ("Warning: Root finding failed to reach the specified tolerance");
+
+            if ( Iter == MaxIter ) {
+                mexPrintf ("warning: Root finding failed to reach tolerance for vector %d \n", k+1);
             }
             
         }
-        
-        // Assign parameter value that optimizes the objective function for the smoothed median
-        M[k] = p;
         
         // Clear the temporary vector for the next cycle of the loop
         xvec.clear(); 

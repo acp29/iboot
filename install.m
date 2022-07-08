@@ -1,18 +1,25 @@
 % Basic script for local installation
 % 
 
+% Run pre-installation function to copy over the appropriate binaries to the inst directory, or compile the binaries from source
+pre_install;
+
+% Add directories to path
 copyfile ('PKG_ADD','PKG_ADD.m');
 run (fullfile(pwd,'PKG_ADD.m'));
 dirlist = cell(3,1); % dir list needs to be in increasing order of length
 dirlist{1} = fullfile (pwd,'inst','');
 dirlist{2} = fullfile (pwd,'inst','param');
 dirlist{3} = fullfile (pwd,'inst','helper');
+dirlist{4} = fullfile (pwd,'inst','legacy');
+dirlist{5} = fullfile (pwd,'inst','legacy','helper');
 n = numel (dirlist);
 
 % Check if running in Octave (else assume Matlab)
 info = ver; 
-isoctave = any (ismember ({info.Name}, "Octave"));
+isoctave = any (ismember ({info.Name}, 'Octave'));
 
+% Save the newly added paths so that they will be loaded each time we start Octave or Matlab
 if isoctave
   % Install for Octave
   octaverc = '~/.octaverc';
@@ -22,7 +29,7 @@ if isoctave
     [fid, msg] = fopen (octaverc, 'w+t');
   end 
   S = (fread (fid, '*char')).';
-  comment = sprintf ('\r\n\r\n%s', '% Load statistics-bootstrap package');
+  comment = sprintf ('\r\n\r\n%s', '% Load iboot package');
   if isempty(strfind(S,comment))
     S = strcat (S, comment);
   end
@@ -34,17 +41,6 @@ if isoctave
   fseek (fid, 0);
   fputs (fid, S);
   fclose (fid);
-  try
-    mkoctfile --mex --output ./inst/boot ./src/boot.cpp
-  catch
-    warning ('Could not compile boot.%s. Falling back to the (slower) boot.m file.',mexext)
-  end
-  path_to_smoothmedian = sprintf ('./inst/param/smoothmedian.%s',mexext);
-  try
-    mkoctfile --mex --output ./inst/param/smoothmedian ./src/smoothmedian.cpp
-  catch
-    warning ('Could not compile smoothmedian.%s. Falling back to the (slower) smoothmedian.m file.',mexext)
-  end
 else
   % Assumming install for Matlab instead
   if exist('savepath')
@@ -52,22 +48,6 @@ else
   else
     % backwards compatibility
     path2rc;
-  end
-  try  
-    mex -setup c++
-  catch
-    err = lasterror();
-    disp(err.message);
-  end
-  try
-    mex -compatibleArrayDims -output ./inst/boot ./src/boot.cpp
-  catch
-    warning ('Could not compile boot.%s. Falling back to the (slower) boot.m file.',mexext)
-  end
-  try
-    mex -compatibleArrayDims -output ./inst/param/smoothmedian ./src/smoothmedian.cpp
-  catch
-    warning ('Could not compile smoothmedian.%s. Falling back to the (slower) smoothmedian.m file.',mexext)
   end
 end
 

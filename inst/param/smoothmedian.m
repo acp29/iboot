@@ -123,22 +123,23 @@ function M = smoothmedian(x,dim,Tol)
 
   % Find column indices where smoothing is not possible
   if any(isnan(x)) | any(isinf(x))
-     error("x cannot contain Inf or NaN values")
+     error('x cannot contain Inf or NaN values')
   end
   
-  % Calculate basic statistics for each column of the data
-  xsort = sort(x, 1);
+  % Sort the data and calculate the median for each column of the data
+  x = sort(x, 1);
   mid = 0.5 * m;
-  M = xsort(fix (mid + 1), 1 : n); % Median when m is odd
+  M = x(fix (mid + 1), 1 : n); % Median when m is odd
   if ( mid == fix (mid) ) 
       % Median when m is even
-      M = M + xsort(fix (mid), 1 : n);
+      M = M + x(fix (mid), 1 : n);
       M = M * 0.5;
   end
-  xmin = xsort(1,:);   % Minimum
-  xmax = xsort(end,:);   % Maximum
-  range = (xmax - xmin) / 2;  % Range
-  xsort = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
+
+  % Set initial bracket bounds and calculate range along each column
+  a = x(1,:);   % Minimum
+  b = x(end,:);   % Maximum
+  range = (b - a) / 2;  % Range
   
   % Check/set tolerance
   if (nargin < 3) || isempty(Tol)
@@ -160,47 +161,41 @@ function M = smoothmedian(x,dim,Tol)
   % Set starting value as the median
   p = M;
   
-  % Set initial bracket bounds
-  a = xmin; 
-  b = xmax;
-  xmin = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
-  xmax = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
-
   % Calculate commonly used operations and assign them to new variables
   z = (xi-xj).^2;
   y = xi+xj;
   
   % Minimize objective function (vectorized)
-  MaxIter = 500;
+  MaxIter = 20;
   for Iter = 1:MaxIter
   
-    % Compute first derivative
+    % Compute derivatives
     temp = ones(l,1)*p;
     D = (xi-temp).^2+(xj-temp).^2;
-    R = sqrt(D);
-    T = sum((2*temp-y)./R,1);
-    temp = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
-    
-    % The following calculation of the second derivative(s) is 
-    % equivalent to (but much faster to compute than):
-    % U = sum ( (xi-xj).^2 .* ((xi-temp).^2 + (xj-temp).^2).^(-3/2) ) 
+    D (D==0) = 1; % Ensures that no NaN values occur when the objective function is not differentiable
+    R = sqrt(D); 
+    % Objective function (S)
+    %S = sum(R);
+    % First derivative (T)
+    T = sum((2*temp-y)./R,1); 
+    % Second derivative (U)
+    % Equivalent to (but much faster to compute than):
+    % U = sum ( (xi-xj).^2 .* ((xi-temp).^2 + (xj-temp).^2).^(-3/2) )   
     U = sum(z.*R./D.^2,1);
-    D = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
-    R = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
+    
+    % Reduce memory usage
+    temp = []; %#ok<NASGU> Faster than using clear.
+    D = [];    %#ok<NASGU> Faster than using clear.
+    R = [];    %#ok<NASGU> Faster than using clear.
     
     % Compute Newton step (fast quadratic convergence but unreliable)
-    step = T./U;
-    if (Iter==1)
-      step(a==b) = 0;
-    end
+    step = T./U; 
     
     % Evaluate convergence
-    cvg = abs(step)<=Tol;
+    cvg = ( (abs(step) <= Tol) | (range <= Tol) );
     if any(cvg)
-    
       % Export converged parameters
       M(idx(cvg)) = p(cvg);
-      
       % Avoid excess computations in following iterations
       idx(cvg) = [];
       xi(:,cvg) = [];
@@ -212,8 +207,7 @@ function M = smoothmedian(x,dim,Tol)
       p(cvg) = [];
       step(cvg) = [];
       T(cvg) = [];
-      Tol(cvg) = [];
-      
+      Tol(cvg) = [];  
     end
     
     % Break from loop when all optimizations have converged
@@ -222,8 +216,11 @@ function M = smoothmedian(x,dim,Tol)
     end
     
     % Update bracket bounds
-    a(T<-Tol) = p(T<-Tol);
-    b(T>+Tol) = p(T>+Tol);
+    a(step < 0) = p(step < 0) + Tol(step < 0);
+    b(step > 0) = p(step > 0) - Tol(step > 0);
+                
+    % Update the range with the distance between bracket bounds
+    range = b - a;
     
     % Preview new value of the smoothed median
     nwt = p-step;
@@ -234,20 +231,17 @@ function M = smoothmedian(x,dim,Tol)
     
     % Otherwise, compute Bisection step (slow linear convergence but very safe)
     p(~I) = 0.5 * (a(~I) + b(~I));
-    
+
     % Tidy up
-    nwt = [];  %#ok<NASGU> Reduce memory usage. Faster than using clear.
-    I = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
-    T = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
-    U = []; %#ok<NASGU> Reduce memory usage. Faster than using clear.
+    nwt = [];  %#ok<NASGU> Faster than using clear.
+    I = [];    %#ok<NASGU> Faster than using clear.
+    T = [];    %#ok<NASGU> Faster than using clear.
+    U = [];    %#ok<NASGU> Faster than using clear.
     
   end
-  
+
   if Iter==MaxIter
     fprintf('Warning: Root finding failed to reach the specified tolerance.\n');
-    if (nargout > 1)
-      fprintf('Warning: Estimates of the standard errors will be more unstable.\n');
-    end
   end
 
   % If applicable, switch dimension
