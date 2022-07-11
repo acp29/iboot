@@ -27,7 +27,7 @@ if isoctave
   else
     error('~/.octaverc does not exist');
   end
-  comment = regexptranslate ('escape', '% Load iboot package');
+  comment = regexptranslate ('escape', '% Load statistics-bootstrap package');
   S = regexprep(S,['\r\n\r\n',comment],'');
   for i=1:n
     S = regexprep(S,strcat('\r\n',...
@@ -49,23 +49,11 @@ else
   end
 end
 
-% Delete MEX files
-path_to_boot = sprintf ('./inst/boot.%s',mexext);
-if exist (path_to_boot)
-  delete (path_to_boot);
-  clear boot
-end
-path_to_smoothmedian = sprintf ('./inst/param/smoothmedian.%s',mexext);
-if exist (path_to_smoothmedian)
-  delete (path_to_smoothmedian);
-  clear smoothmedian
-end
-
 
 % Notify user that uninstall is complete
-disp ('This iboot package has been uninstalled from this location')
+disp ('This statistics-bootstrap package has been uninstalled from this location')
 
 % Clean up
-clear dirlist S comment i ii octaverc fid n msg
+clear info isoctave dirlist S comment i ii octaverc fid n msg
 delete ('PKG_ADD.m');
 delete ('PKG_DEL.m');

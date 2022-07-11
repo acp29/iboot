@@ -1,5 +1,4 @@
-# iboot package
-(see also the Octave [statistics-bootstrap package](https://github.com/gnu-octave/statistics-bootstrap))
+# statistics-bootstrap package
 
 ## Package maintainer
 Andrew Penn (andy.c.penn@gmail.com)
@@ -24,14 +23,25 @@ Most features of of the package do not depend on other packages. An exception is
 
 ## Installation
  
-To install (or test) the iboot package at it's existing location in either Octave or Matlab, follow these steps: 
+To install (or test) the statistics-bootstrap package at it's existing location in either Octave or Matlab, follow these steps: 
  
  * Download the package. If it is a compressed file, decompress it.
  * Open Octave or Matlab command prompt.
  * `cd` to the package directory. (The directory contains a file called 'install.m')
+ * Type `make` to make the mex files (or use precompiled binaries if available).  
  * Type `install`. The package will load now (and automatically in the future) when you start Octave/Matlab
  
- To uninstall, follow the above steps but use the `uninstall` command
+ To uninstall, `cd` to the package directory and type  `uninstall`.
+ 
+ Alternatively, users of more recent versions of Octave can install the package automatically with the following command:
+ 
+ `pkg install "https://github.com/gnu-octave/statistics-bootstrap/archive/refs/heads/master.zip"`
+ 
+ The package can be loaded on demand in Octave with the following commmand:
+ 
+ `pkg load statistics-bootstrap`
+ 
+ In Octave, you can find out basic information about the package by typing: `pkg describe -verbose statistics-bootstrap`  
 
 ## Usage
 
@@ -55,11 +65,9 @@ At the Octave command prompt, type `help function-name` for more information abo
 
 The Matlab Statistics and Machine Learning toolbox has functions also called `bootstrp` and `bootci`. The same-named functions in the iboot package have almost identical usage to the Matlab functions from the Statistics and Machine Learning toolbox. Be aware though that Matlab's own `bootci` function has a couple of errors, namely in the calculation of the bias for `cper` and `bca` intervals, and in the calculation of `stud` intervals.  We recommend using the iboot package function `bootci`, or better it's functions `bootknife` or `ibootci` for the calculation of calibrated bootstrap confidence intervals. 
 
-Be aware that that many of the bootstrap functions in this package are deterministic through the setting of a random seed on each function call. This will be a problem if testing the bootstrap functions in simulations that depend on generating samples using Matlab's or Octave's random number generator. The solution is to set `UseParallel` in the `paropt` structure input argument to `True`, which disables the resetting of the random number generator.
+Be aware that that some of the bootstrap functions in this package are deterministic through the setting of a random seed on each function call. This will be a problem if testing the bootstrap functions in simulations that depend on generating samples using Matlab's or Octave's random number generator. The solution is to set `UseParallel` in the `paropt` structure input argument to `True`, which disables the resetting of the random number generator.
 
 ## Development roadmap
-
-* Create more documentation and guidance for using the functions in this package  
-
  
-
+* Create more documentation and guidance for using the functions in this package  
+ 

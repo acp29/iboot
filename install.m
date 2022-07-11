@@ -1,8 +1,8 @@
 % Basic script for local installation
 % 
 
-% Run pre-installation function to copy over the appropriate binaries to the inst directory, or compile the binaries from source
-pre_install;
+% Run make function to copy over the appropriate binaries to the inst directory, or compile the binaries from the source code
+make;
 
 % Add directories to path
 copyfile ('PKG_ADD','PKG_ADD.m');
@@ -29,7 +29,7 @@ if isoctave
     [fid, msg] = fopen (octaverc, 'w+t');
   end 
   S = (fread (fid, '*char')).';
-  comment = sprintf ('\r\n\r\n%s', '% Load iboot package');
+  comment = sprintf ('\r\n\r\n%s', '% Load statistics-bootstrap package');
   if isempty(strfind(S,comment))
     S = strcat (S, comment);
   end
@@ -52,8 +52,8 @@ else
 end
 
 % Notify user that installation is complete
-disp ('The iboot package has been installed at the current location ')
+disp ('The statistics-bootstrap package has been installed at the current location ')
 
 % Clean up
-clear dirlist S comment i ii octaverc fid n msg
+clear info isoctave dirlist S comment i ii octaverc fid n msg
 delete ('PKG_ADD.m');
