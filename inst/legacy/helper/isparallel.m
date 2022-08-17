@@ -3,12 +3,12 @@ function retval = isparallel
   % Helper function file required for ibootci
 
   % Check we have parallel computing capabilities
-  str = '^parallel';
   if isoctave
+    pat = '^parallel';
     software = pkg('list');
     names = cellfun(@(S) S.name, software, 'UniformOutput', false);
     status = cellfun(@(S) S.loaded, software, 'UniformOutput', false);
-    index = find(~cellfun(@isempty,regexpi(names,str)));
+    index = find(~cellfun(@isempty,regexpi(names,pat)));
     if ~isempty(index)
       if logical(status{index})
         retval = true;
@@ -19,11 +19,12 @@ function retval = isparallel
       retval = false;
     end
   else
-    software = ver;
-    software = {software.Name};
-    if isempty(cell2mat(regexpi(software,str)))
+    try
+      retval = ~isempty(getCurrentTask()) && (matlabpool('size') > 0);
+    catch err
+      if ~strcmp(err.identifier, 'MATLAB:UndefinedFunction')
+        rethrow(err);
+      end
       retval = false;
-    else
-      retval = true;
     end
   end

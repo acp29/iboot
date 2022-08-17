@@ -10,38 +10,42 @@ errflag = false;
 % Create cell array of paths to add
 arch = computer('arch');
 [comp, maxsize, endian] = computer ();
-binary = true;
-switch endian
-  case 'L' 
-    if isoctave
-      arch_idx = regexpi (arch, {'mingw32-i686',...
-                                 'mingw32-x86_64',... 
-                                 '^darwin.*x86_64$',... 
-                                 'gnu-linux-x86_64'});
-      binary_paths = {'precompiled_binaries\octave\win\win32\',...
-                      'precompiled_binaries\octave\win\win64\',...
-                      'precompiled_binaries/octave/mac/maci64/',... 
-                      'precompiled_binaries/octave/linux/glnxa64/'};
-    else
-      arch_idx = regexpi (arch, {'win32',... 
-                                 'win64',... 
-                                 'maci64',... 
-                                 'glnxa64'});
-      binary_paths = {'precompiled_binaries\matlab\win\win32\',...
-                      'precompiled_binaries\matlab\win\win64\',...
-                      'precompiled_binaries/matlab/mac/maci64/',... 
-                      'precompiled_binaries/matlab/linux/glnxa64/'};
-    end
-    if ~all(cellfun(@isempty,arch_idx))
-      copyfile (sprintf(repmat('%s',1,3), binary_paths{~cellfun(@isempty,arch_idx)}, 'boot.', mexext),...
-                sprintf(repmat('%s',1,6), '.', filesep, 'inst', filesep, 'boot.', mexext), 'f');
-      copyfile (sprintf(repmat('%s',1,3), binary_paths{~cellfun(@isempty,arch_idx)}, 'smoothmedian.', mexext),... 
-                sprintf(repmat('%s',1,8), '.', filesep, 'inst', filesep, 'param', filesep, 'smoothmedian.', mexext), 'f');
-    else
-      binary = false;
-    end
+try
+  switch endian
+    case 'L' 
+      if isoctave
+        arch_idx = regexpi (arch, {'mingw32-i686',...
+                                   'mingw32-x86_64',... 
+                                   '^darwin.*x86_64$',... 
+                                   'gnu-linux-x86_64'});
+        binary_paths = {'precompiled_binaries\octave\win\win32\',...
+                        'precompiled_binaries\octave\win\win64\',...
+                        'precompiled_binaries/octave/mac/maci64/',... 
+                        'precompiled_binaries/octave/linux/glnxa64/'};
+      else
+        arch_idx = regexpi (arch, {'win32',... 
+                                   'win64',... 
+                                   'maci64',... 
+                                   'glnxa64'});
+        binary_paths = {'precompiled_binaries\matlab\win\win32\',...
+                        'precompiled_binaries\matlab\win\win64\',...
+                        'precompiled_binaries/matlab/mac/maci64/',... 
+                        'precompiled_binaries/matlab/linux/glnxa64/'};
+      end
+      if ~all(cellfun(@isempty,arch_idx))
+        copyfile (sprintf(repmat('%s',1,3), binary_paths{~cellfun(@isempty,arch_idx)}, 'boot.', mexext),...
+                  sprintf(repmat('%s',1,6), '.', filesep, 'inst', filesep, 'boot.', mexext), 'f');
+        copyfile (sprintf(repmat('%s',1,3), binary_paths{~cellfun(@isempty,arch_idx)}, 'smoothmedian.', mexext),... 
+                  sprintf(repmat('%s',1,8), '.', filesep, 'inst', filesep, 'param', filesep, 'smoothmedian.', mexext), 'f');
+      else
+        binary = false;
+      end
+      binary = true;
   case 'B'
       binary = false;
+  end
+catch
+  binary = false;
 end
 dirlist = {'helper', 'param', 'legacy', sprintf('legacy%shelper', filesep)};
 dirname = fileparts (mfilename ('fullpath'));
@@ -49,8 +53,8 @@ dirname = fileparts (mfilename ('fullpath'));
 % Attemt to compile binaries from source code automatically if no suitable binaries can be found
 if binary
   fprintf('The following suitable binaries were detected and copied over to the inst directory: \n');
-  fprintf([repmat('%s',1,5),'\n'], '.', filesep, binary_paths{~cellfun(@isempty,arch_idx)}, 'boot.', mexext);
-  fprintf([repmat('%s',1,5),'\n'], '.', filesep, binary_paths{~cellfun(@isempty,arch_idx)}, 'smoothmedian.', mexext);
+  fprintf('%s%s%s%s%s\n', '.', filesep, binary_paths{~cellfun(@isempty,arch_idx)}, 'boot.', mexext);
+  fprintf('%s%s%s%s%s\n', '.', filesep, binary_paths{~cellfun(@isempty,arch_idx)}, 'smoothmedian.', mexext);
 else
   disp('No precompiled binaries are available for this architecture. Attempting to compile the source code...');
   if isoctave
@@ -70,6 +74,14 @@ else
       err = lasterror();
       disp(err.message);
       warning ('Could not compile smoothmedian.%s. Falling back to the (slower) smoothmedian.m file.',mexext)
+    end
+    try
+      mkoctfile --output ./inst/helper/iboot ./src/iboot.cpp
+    catch
+      errflag = true;
+      err = lasterror();
+      disp(err.message);
+      warning ('Could not compile iboot.oct. Falling back to the (slower) iboot.m file.')
     end
   else
     try  

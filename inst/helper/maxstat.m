@@ -1,21 +1,13 @@
-function maxT = maxstat (Y, g, nboot, bootfun, ref, clusters, strata, isoctave)
+function maxT = maxstat (Y, g, nboot, bootfun, ref, ISOCTAVE)
 
-  % Helper function file required for ibootnhst
+  % Helper function file required for bootnhst
   % Calculate maximum test statistic
+  
+  % maxstat cannot be a subfunction or nested function since 
+  % Octave parallel threads won't be able to find it
 
-  % Get data structure information
-  if isempty(clusters)
-    N = size(g,1);
-  else
-    N = numel(unique(clusters));
-  end
-  if isempty(strata)
-    l = 1;
-  else
-    l = numel(unique(strata)); % number of strata
-  end
-
-  % Calculate the number (k) of unique groups
+  % Calculate the size of the data (N) and the number (k) of unique groups
+  N = size(g,1);
   gk = unique(g);
   k = numel(gk);
 
@@ -25,36 +17,29 @@ function maxT = maxstat (Y, g, nboot, bootfun, ref, clusters, strata, isoctave)
   Var = zeros(k,1);
   nk = zeros(size(gk));
   for j = 1:k
-    if ~isempty(clusters)
-      theta(j) = feval(bootfun,Y(g==gk(j),:));
-      % Compute unbiased estimate of the standard error by cluster-jackknife resampling
-      opt = struct;
-      opt.clusters = clusters(g==gk(j));
-      nk(j) = numel(unique(opt.clusters));
-      SE(j) = jack(Y(g==gk(j),:), bootfun, [], opt);
-    elseif (nboot == 0)
+    if (nboot == 0)
       nk(j) = sum(g==gk(j));
-      if strcmp (bootfun, 'mean')
+      if strcmp (func2str(bootfun), 'mean')
         theta(j) = mean(Y(g==gk(j),:));
         % Quick calculation for the standard error of the mean
         SE(j) = std(Y(g==gk(j),:),0) / sqrt(nk(j));
       else
-        theta(j) = feval(bootfun,Y(g==gk(j),:));
+        theta(j) = bootfun(Y(g==gk(j),:));
         % If requested, compute unbiased estimates of the standard error using jackknife resampling
         SE(j) = jack(Y(g==gk(j),:), bootfun);
       end
     else
       % Compute unbiased estimate of the standard error by balanced bootknife resampling
       % Bootknife resampling involves less computation than Jackknife when sample sizes get larger
-      theta(j) = feval(bootfun,Y(g==gk(j),:));
+      theta(j) = bootfun(Y(g==gk(j),:));
       nk(j) = sum(g==gk(j));
-      stats = bootknife(Y(g==gk(j),:),[nboot,0],bootfun,[],[],0,isoctave);
-      SE(j) = stats(3);
+      stats = bootknife(Y(g==gk(j),:),[nboot,0],bootfun,[],[],0,[],ISOCTAVE);
+      if isnan(stats.std_error)
+        error('evaluating bootfun on the bootknife resamples created NaN values for the standard error')
+      end
+      SE(j) = stats.std_error;
     end
-    Var(j) = ((nk(j)-1)/(N-k-(l-1))) * SE(j)^2;
-  end
-  if any(nk <= 1)
-    error('the number of observations or clusters per group must be greater than 1')
+    Var(j) = ((nk(j)-1)/(N-k)) * SE(j)^2;
   end
   nk_bar = sum(nk.^2)./sum(nk);  % weighted mean sample size
   Var = sum(Var.*nk/nk_bar);     % pooled sampling variance weighted by sample size
