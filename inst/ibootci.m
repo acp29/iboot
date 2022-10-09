@@ -102,7 +102,9 @@
 %  model, then level two cluster means are computed and resampled. This 
 %  option is not compatible with bootstrap iteration or bootstrap-t 
 %  intervals. Coverage was only confirmed for intervals of the mean of 
-%  clustered univariate data.
+%  clustered univariate data. Note that bootfun must not rely on clusters
+%  in it's calculations since the rows of clusters and the data are sorted
+%  before bootstrap.
 %
 %  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize) specifies
 %  a positive integer defining the block length for block bootstrapping
