@@ -1,14 +1,14 @@
-dirlist = {'helper', 'param', 'octave', 'legacy', sprintf('legacy%shelper', filesep)};
+dirlist = {'helper'};
 dirname = fileparts (mfilename ('fullpath'));
 
 if ~exist (fullfile (dirname, 'inst'), 'dir')
   %% Run this if the package is installed
-  for ii=1:length (dirlist)
+  for ii=1:numel(dirlist)
     rmpath (fullfile (dirname, dirlist{ii}))
   end
 else
   %% Run this if we are testing the package without installation
-  for ii=1:length (dirlist)
+  for ii=1:numel(dirlist)
     rmpath (fullfile (dirname, 'inst', dirlist{ii}))
   end
   rmpath (fullfile (dirname, 'inst'))
