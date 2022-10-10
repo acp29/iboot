@@ -99,7 +99,7 @@
 %  membership of the data rows. Whereas STRATA are fixed, CLUSTERS are 
 %  resampled. This is achieved by two-stage bootstrap resampling of 
 %  residuals with shrinkage correction [5,8,9]. If a matrix is provided 
-%  defining additional levels of subsampling in a hierarchical data  
+%  defining additional levels of subsampling in a hierarchical data 
 %  model, then level two cluster means are computed and resampled. This 
 %  option is not compatible with bootstrap iteration or bootstrap-t 
 %  intervals. Coverage was only confirmed for intervals of the mean of 
@@ -126,9 +126,7 @@
 %  from the data: to the standard error of the mean for univariate
 %  data, or the covariance matrix divided by the sample size for
 %  multivariate data [13]. Inflation of the variance is prevented by
-%  including a shrinkage correction procedure [14,15]. For the median,
-%  instead of using this option we recommend calculating intervals 
-%  using the smoothmedian function (in /iboot/param/).
+%  including a shrinkage correction procedure [14,15].
 %
 %  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'bootsam', BOOTSAM) performs
 %  bootstrap computations using the indices from BOOTSAM for the first
@@ -136,20 +134,20 @@
 %
 %  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'DEFF', STATE) estimates the
 %  design effect (DEFF) by resampling. The bootstrap option appropriate 
-%  for the data structure must be set in the call to ibootci for this  
-%  result to be meaningful. For example: 1) block bootstrap should be 
-%  used for time series data (or other data expected to have serial  
-%  dependence); 2) cluster bootstrap should be used on heirarchical 
-%  data structures. The value of DEFF can be used to calculate the 
+%  for the data structure must be set in the call to ibootci for this
+%  result to be meaningful. For example: 1) block bootstrap should be
+%  used for time series data (or other data expected to have serial
+%  dependence); 2) cluster bootstrap should be used on heirarchical
+%  data structures. The value of DEFF can be used to calculate the
 %  effective sample size by dividing the number of observations by
-%  the DEFF value returned in the output structure S (see below). 
+%  the DEFF value returned in the output structure S (see below).
 %  State can be 'on' or 'off'. Default is 'off'.
 %
 %  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'Options', PAROPT) specifies
 %  options that govern if and how to perform bootstrap iterations using
-%  multiple processors (if the Parallel Computing Toolbox or Octave
-%  Forge parallel package is available). This argument is a structure 
-%  with the following recognised fields:
+%  multiple processors (if the Parallel Computing Toolbox or Octave Parallel
+%  package is available). This argument is a structure with the following 
+%  recognised fields:
 %
 %   'UseParallel' - If true, compute bootstrap iterations in parallel.
 %                   Default is false for serial computation. In MATLAB,
@@ -719,6 +717,9 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       if ~isempty(strata)
         % Sort strata and data vectors so that strata components are grouped
         [strata,I] = sort(strata);
+        if ~all(diff(I)==1)
+          warning('rows of strata/clusters and data were sorted and have changed order')
+        end
         for v = 1:nvar
           data{v} = data{v}(I);
         end
