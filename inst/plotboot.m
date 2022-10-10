@@ -1,10 +1,11 @@
 %  Function File: plotboot
 %
-%  Plot bootstrap results
+%  Plot bootstrap kernel density estimate and histogram from a vector of 
+%  bootstrap statistics
 %
-%   plotboot(bootstat)
-%   plotboot(bootstat,ci)
-%   plotboot(bootstat,ci,S)
+%   plotboot (BOOTSTAT)
+%   plotboot (BOOTSTAT, CI)
+%   plotboot (BOOTSTAT, CI, S)
 %
 %  plotboot v1.0.0.0 (07/06/2020)
 %  Author: Andrew Charles Penn

@@ -2,15 +2,18 @@
 %
 %  Bootstrap p-value: One sample test
 %
-%   p = ibootp(m,bootstat,S,calcurve)
+%   P = ibootp (M, BOOTSTAT)
+%   P = ibootp (M, BOOTSTAT, S)
+%   P = ibootp (M, BOOTSTAT, S, CALCURVE)
 %
 %  Performs a two-tailed bootstrap test for the hypothesis that
-%  the data used to generate the bootstrap statistics bootstat
-%  comes from a distribution with statistic m. m must be a scalar.
+%  the data used to generate the bootstrap statistics BOOTSTAT
+%  comes from a distribution of a statistic with value M. 
+%  M must be a scalar.
 %
 %  This functon requires the output bootstrap replicate statistics
-%  (bootstat) and the output structure (S) from ibootci. Provision
-%  of the calibration curve (calcurve) is optional but highly
+%  (BOOTSTAT) and the output structure (S) from ibootci. Provision
+%  of the calibration curve (CALCURVE) is optional but highly
 %  recommended for accurate p-values if the bootstrap method used
 %  was the percentile method.
 %

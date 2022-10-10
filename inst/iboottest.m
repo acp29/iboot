@@ -2,21 +2,21 @@
 %
 %  One-sample and paired-sample bootstrap test
 %
-%   p = iboottest(m,nboot,{bootfun,x})
-%   p = iboottest(m,nboot,{bootfun,x},Name,Value)
-%   p = iboottest(nboot,{bootfun,x,y},...)
-%   [p,ci] = iboottest(...)
-%   [p,ci,bootstat] = iboottest(...)
-%   [p,ci,bootstat,S] = iboottest(...)
+%   P = iboottest (M, NBOOT,{BOOTFUN, X})
+%   P = iboottest (M, NBOOT,{BOOTFUN, X}, Name, Value)
+%   P = iboottest (NBOOT,{BOOTFUN, X, Y},...)
+%   [P, CI] = iboottest (...)
+%   [P, CI, BOOTSTAT] = iboottest (...)
+%   [P, CI, BOOTSTAT, S] = iboottest (...)
 %
 %  One-sample or paired-sample bootstrap test for univariate data.
 %  The null hypothesis for the paired-sample test is that the
-%  bootfun statistic calculated for the difference between x and
-%  y is equal to zero. The null hypothesis for the one-sample
-%  test is that the bootfun statistic calculated for x is equal
-%  to zero. All tests are two-tailed.
+%  BOOTFUN statistic calculated for the difference between X and
+%  Y is equal to zero. The null hypothesis for the one-sample
+%  test is that the BOOTFUN statistic calculated for X is equal
+%  to M. All tests are two-tailed.
 %
-%  Note that this function resamples the rows of the data x.
+%  Note that this function resamples the rows of the data X.
 %
 %  See ibootci documentation for input argument definitions and
 %  for Name-Value pairs

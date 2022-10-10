@@ -2,22 +2,21 @@
 %
 %  Two-sample bootstrap test
 %
-%   p = iboottest2(nboot,{bootfun,x,y})
-%   p = iboottest2(nboot,{bootfun,x,y},Name,Value)
-%   [p,ci] = iboottest2(...)
-%   [p,ci,bootstat] = iboottest2(...)
-%   [p,ci,bootstat,S] = iboottest2(...)
+%   P = iboottest2 (NBOOT,{BOOTFUN, X, Y})
+%   P = iboottest2 (NBOOT,{BOOTFUN, X, Y}, Name, Value)
+%   [P, CI] = iboottest2 (...)
+%   [P, CI, BOOTSTAT] = iboottest2 (...)
+%   [P, CI, BOOTSTAT,S] = iboottest2 (...)
 %
 %  Two sample bootstrap test for unpaired data. The null hypothesis
-%  is that the difference between the bootfun statistic calculated
-%  for independent samples x and y is equal to zero. The test is
+%  is that the difference between the BOOTFUN statistic calculated
+%  for independent samples X and Y is equal to zero. The test is
 %  two-tailed.
 %
-%  Note that this function resamples the rows of data x and y.
+%  Note that this function resamples (independently) the rows of data X and Y.
 %
-%  See ibootci documentation for input argument definitions and
-%  for Name-Value pairs. The following input arguments differ in
-%  their format:
+%  See ibootci documentation for input argument definitions and for Name-Value
+%  pairs. The following optional input arguments differ in their format:
 %
 %  'Weights': The 'Weights' option must be provided as a cell array:
 %  the first cell should contain weights for x and the second cell

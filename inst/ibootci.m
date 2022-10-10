@@ -3,54 +3,55 @@
 %  Two-sided nonparametric bootstrap confidence intervals and standard 
 %  errors for small samples and samples with complex dependence structures
 %
-%  ci = ibootci(nboot,bootfun,d)
-%  ci = ibootci(nboot,{bootfun,d1,...,dN},...,'alpha',alpha)
-%  ci = ibootci(nboot,{bootfun,...},...,'type',type)
-%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
-%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr)
-%  ci = ibootci(nboot,{bootfun,...},...,'weights',weights)
-%  ci = ibootci(nboot,{bootfun,...},...,'strata',strata)
-%  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters)
-%  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize)
-%  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth)
-%  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam)
-%  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state)
-%  ci = ibootci(nboot,{bootfun,...},...,'Options',paropt)
-%  [ci,bootstat] = ibootci(...)
-%  [ci,bootstat,S] = ibootci(...)
-%  [ci,bootstat,S,calcurve] = ibootci(...)
-%  [ci,bootstat,S,calcurve,bootsam] = ibootci(...)
+%  CI = ibootci (NBOOT,BOOTFUN,D)
+%  CI = ibootci (NBOOT,{BOOTFUN,D1,...,DN},...,'alpha',ALPHA)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'type',TYPE)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'type','stud','nbootstd',NBOOTSTD)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'type','stud','stderr',STDERR)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'weights',WEIGHTS)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'strata',STRATA)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'cluster',CLUSTERS)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'block',BLOCKSIZE)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'smooth',BANDWIDTH)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'bootsam',BOOTSAM)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'DEFF',STATE)
+%  CI = ibootci (NBOOT,{BOOTFUN,...},...,'Options',PAROPT)
+%  [CI,BOOTSTAT] = ibootci (...)
+%  [CI,BOOTSTAT,S] = ibootci (...)
+%  [CI,BOOTSTAT,S,CALCURVE] = ibootci (...)
+%  [CI,BOOTSTAT,S,CALCURVE,BOOTSAM] = ibootci (...)
 %
-%  ci = ibootci(nboot,bootfun,...) computes the 95% iterated (double)
-%  bootstrap confidence interval of the statistic computed by bootfun.
-%  nboot is a scalar, or vector of upto two positive integers indicating
+%  CI = ibootci (NBOOT, BOOTFUN, ...) computes the 95% iterated (double)
+%  bootstrap confidence interval of the statistic computed by BOOTFUN.
+%  NBOOT is a scalar, or vector of upto two positive integers indicating
 %  the number of replicate samples for the first and second bootstraps.
-%  bootfun is a function handle (e.g. specified with @), or a string
+%  BOOTFUN is a function handle (e.g. specified with @), or a string
 %  indicating the function name. The third and later input arguments are
 %  data (column vectors, or a matrix), that are used to create inputs for
-%  bootfun. ibootci creates each first level bootstrap by block resampling
+%  BOOTFUN. ibootci creates each first level bootstrap by block resampling
 %  from the rows of the data argument(s) (which must be the same size) [1].
 %  If a positive integer is provided for the number of second bootstrap
 %  replicates, then nominal central coverage of two-sided intervals is
 %  calibrated to achieve second order accurate coverage by bootstrap
 %  iteration and interpolation [2]. Linear interpolation of the empirical
-%  cumulative distribution function of bootstat is then used to construct
+%  cumulative distribution function of BOOTSTAT is then used to construct
 %  two-sided confidence intervals [3]. The resampling method used
 %  throughout is balanced resampling [4]. Default values for the number of
-%  first and second bootstrap replicate sample sets in nboot are 5000 and
+%  first and second bootstrap replicate sample sets in NBOOT are 5000 and
 %  200 respectively. Note that this calibration procedure does not apply
 %  to Studentized-type intervals or Cluster or Weights bootstrap options.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'alpha',alpha) computes the
+%  CI = ibootci (NBOOT, {BOOTFUN,...},..., 'alpha', ALPHA) computes the
 %  iterated bootstrap confidence interval of the statistic defined by the
-%  function bootfun with coverage 100*(1-alpha)%, where alpha is a scalar
-%  value between 0 and 1. bootfun and the data that ibootci passes to it
-%  are contained in a single cell array. The default value of alpha is
+%  function BOOTFUN with coverage 100*(1-ALPHA)%, where ALPHA is a scalar
+%  value between 0 and 1. BOOTFUN and the data that ibootci passes to it
+%  are contained in a single cell array. The default value of ALPHA is
 %  0.05 corresponding to intervals with a coverage of 95% confidence.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'type',type) computes the bootstrap
-%  confidence interval of the statistic defined by the function bootfun.
-%  type is the confidence interval type, chosen from among the following:
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'type', TYPE) computes the
+%  bootstrap confidence interval of the statistic defined by the function
+%  BOOTFUN. TYPE is the method used to construct the confidence interval,
+%  chosen from among the following:
 %    'per' or 'percentile': Percentile method. (Default)
 %    'bca': Bias-corrected and accelerated method.
 %    'cper': Bias-corrected percentile method.
@@ -58,70 +59,70 @@
 %    The bootstrap-t method includes an additive correction to stabilize
 %    the variance when the sample size is small [6].
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','nbootstd',nbootstd)
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'type', 'stud', 'nbootstd', NBOOTSTD)
 %  computes the Studentized bootstrap confidence interval of the statistic
-%  defined by the function bootfun. The standard error of the bootstrap
-%  statistics is estimated using bootstrap, with nbootstd bootstrap data
-%  samples. nbootstd is a positive integer value. The default value of
-%  nbootstd is 200. Setting nbootstd overides the second element in nboot.
-%  The nbootstd argument is ignored when the interval type is set to
+%  defined by the function BOOTFUN. The standard error of the bootstrap
+%  statistics is estimated using bootstrap, with NBOOTSTD bootstrap data
+%  samples. NBOOTSTD is a positive integer value. The default value of
+%  NBOOTSTD is 200. Setting NBOOTSTD overides the second element in NBOOT.
+%  The NBOOTSTD argument is ignored when the interval TYPE is set to
 %  anything other than Studentized (bootstrap-t) intervals.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'type','stud','stderr',stderr)
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'type', 'stud', 'stderr', STDERR)
 %  computes the studentized bootstrap confidence interval of statistics
-%  defined by the function bootfun. The standard error of the bootstrap
-%  statistics is evaluated by the function stderr. stderr is a function
-%  handle. stderr takes the same arguments as bootfun and returns the
-%  standard error of the statistic computed by bootfun.
+%  defined by the function BOOTFUN. The standard error of the bootstrap
+%  statistics is evaluated by the function STDERR. STDERR is a function
+%  handle. STDERR takes the same arguments as BOOTFUN and returns the
+%  standard error of the statistic computed by BOOTFUN.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'weights',weights) specifies
-%  observation weights. weights must be a vector of non-negative numbers.
-%  The length of weights must be equal to first dimension of the non-
-%  scalar input argument(s) to bootfun. Balanced resampling is extended
-%  to resampling with weights [7], which are used as bootstrap sampling
-%  probabilities. Note that weights are not implemented for Studentized-
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'weights', WEIGHTS) specifies
+%  observation WEIGHTS. WEIGHTS must be a vector of non-negative numbers.
+%  The length of WEIGHTS must be equal to first dimension of the non-
+%  scalar input argument(s) to BOOTFUN. Balanced resampling is extended
+%  to resampling with WEIGHTS [7], which are used as bootstrap sampling
+%  probabilities. Note that WEIGHTS are not implemented for Studentized-
 %  type intervals or bootstrap iteration.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'strata',strata) specifies a
-%  vector containing numeric identifiers of strata. The dimensions of
-%  strata must be equal to that of the non-scalar input arguments to
-%  bootfun. Bootstrap resampling is stratified so that every stratum is
-%  represented in each bootstrap test statistic [5]. If weights are also
-%  provided then they are within-stratum weights; the weighting of
-%  individual strata depends on their respective sample size. Note that 
-%  bootfun must not rely on strata in it's calculations since the rows of 
-%  strata and the data are sorted before bootstrap.
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'strata', STRATA) specifies a
+%  vector containing numeric identifiers of STRATA. The dimensions of
+%  STRATA must be equal to that of the non-scalar input arguments to
+%  BOOTFUN. Bootstrap resampling is stratified so that every stratum is
+%  represented in each bootstrap test statistic [5]. If WEIGHTS are also
+%  provided then they are within-stratum WEIGHTS; the weighting of
+%  individual STRATA depends on their respective sample size. Note that 
+%  BOOTFUN must not rely on STRATA in it's calculations since the rows of 
+%  STRATA and the data are sorted before bootstrap.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'cluster',clusters) specifies 
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'cluster', CLUSTERS) specifies 
 %  a column vector (or matrix) of numeric identifiers with the same 
 %  number of rows as the data. The identifiers should indicate cluster 
-%  membership of the data rows. Whereas strata are fixed, clusters are 
+%  membership of the data rows. Whereas STRATA are fixed, CLUSTERS are 
 %  resampled. This is achieved by two-stage bootstrap resampling of 
 %  residuals with shrinkage correction [5,8,9]. If a matrix is provided 
 %  defining additional levels of subsampling in a hierarchical data  
 %  model, then level two cluster means are computed and resampled. This 
 %  option is not compatible with bootstrap iteration or bootstrap-t 
 %  intervals. Coverage was only confirmed for intervals of the mean of 
-%  clustered univariate data. Note that bootfun must not rely on clusters
-%  in it's calculations since the rows of clusters and the data are sorted
+%  clustered univariate data. Note that BOOTFUN must not rely on CLUSTERS
+%  in it's calculations since the rows of CLUSTERS and the data are sorted
 %  before bootstrap.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'block',blocksize) specifies
+%  CI = ibootci (NBOOT, {BOOTFUN,...}, ..., 'block', BLOCKSIZE) specifies
 %  a positive integer defining the block length for block bootstrapping
 %  data with serial dependence (e.g. stationary time series). The
 %  algorithm uses circular, overlapping blocks. Intervals are constructed
 %  without standardization making them equivariant under monotone
 %  transformations [10]. The double bootstrap resampling and calibration
 %  procedure makes interval coverage less sensitive to the choice of block 
-%  length [11]. If the blocksize is set to 'auto' (recommended), the block 
+%  length [11]. If the BLOCKSIZE is set to 'auto' (recommended), the block 
 %  length is calculated automatically. Block bootstrap can also be used for 
 %  regression of time series data by combining it with pairs bootstrap (i.e. 
 %  by providing x and y vectors as data variables).
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'smooth',bandwidth) applies
-%  additive random Gaussian noise of the specified bandwidth (or
+%  CI = ibootci (NBOOT, {BOOTFUN,...}, ..., 'smooth', BANDWIDTH) applies
+%  additive random Gaussian noise of the specified BANDWIDTH (or
 %  covariance matrix) to the bootstrap sample sets before evaluating
-%  bootfun [12]. If bandwidth is set to 'auto', it will be estimated
+%  BOOTFUN [12]. If BANDWIDTH is set to 'auto', it will be estimated
 %  from the data: to the standard error of the mean for univariate
 %  data, or the covariance matrix divided by the sample size for
 %  multivariate data [13]. Inflation of the variance is prevented by
@@ -129,11 +130,11 @@
 %  instead of using this option we recommend calculating intervals 
 %  using the smoothmedian function (in /iboot/param/).
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'bootsam',bootsam) performs
-%  bootstrap computations using the indices from bootsam for the first
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'bootsam', BOOTSAM) performs
+%  bootstrap computations using the indices from BOOTSAM for the first
 %  bootstrap.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'DEFF',state) estimates the
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'DEFF', STATE) estimates the
 %  design effect (DEFF) by resampling. The bootstrap option appropriate 
 %  for the data structure must be set in the call to ibootci for this  
 %  result to be meaningful. For example: 1) block bootstrap should be 
@@ -144,7 +145,7 @@
 %  the DEFF value returned in the output structure S (see below). 
 %  State can be 'on' or 'off'. Default is 'off'.
 %
-%  ci = ibootci(nboot,{bootfun,...},...,'Options',paropt) specifies
+%  CI = ibootci (NBOOT, {BOOTFUN, ...}, ..., 'Options', PAROPT) specifies
 %  options that govern if and how to perform bootstrap iterations using
 %  multiple processors (if the Parallel Computing Toolbox or Octave
 %  Forge parallel package is available). This argument is a structure 
@@ -161,21 +162,21 @@
 %                   a parallel pool, else it will use the preferred number
 %                   of workers.
 %
-%  [ci,bootstat] = ibootci(...) also returns the bootstrapped statistic
+%  [CI, BOOTSTAT] = ibootci (...) also returns the bootstrapped statistic
 %  computed for each of the bootstrap replicate samples sets. If only
-%  a single bootstrap is requested, bootstat will return a vector: each
-%  column of bootstat contains the result of applying bootfun to one
+%  a single bootstrap is requested, BOOTSTAT will return a vector: each
+%  column of BOOTSTAT contains the result of applying BOOTFUN to one
 %  replicate sample from the first bootstrap. If a function handle is
-%  passed to stderr for Studentised bootstrap intervals, bootstat will
-%  return a cell array containing the statistics computed using bootfun
-%  and stderr in the first and second cells respectively. If bootstrap
-%  iteration is requested, bootstat will return a cell array containing
-%  the statistics computed by bootfun in the first and second bootstrap.
-%  For the second boostrap, each column of bootstat contains the
-%  results of applying bootfun to each replicate sample from the second
+%  passed to STDERR for Studentised bootstrap intervals, BOOTSTAT will
+%  return a cell array containing the statistics computed using BOOTFUN
+%  and STDERR in the first and second cells respectively. If bootstrap
+%  iteration is requested, BOOTSTAT will return a cell array containing
+%  the statistics computed by BOOTFUN in the first and second bootstrap.
+%  For the second boostrap, each column of BOOTSTAT contains the
+%  results of applying BOOTFUN to each replicate sample from the second
 %  bootstrap for one replicate sample from the first bootstrap.
 %
-%  [ci,bootstat,S] = ibootci(...) also returns a structure containing
+%  [CI, BOOTSTAT, S] = ibootci (...) also returns a structure containing
 %  the settings used in the bootstrap and the resulting statistics
 %  including the (double) bootstrap bias and standard error.
 %
@@ -183,18 +184,18 @@
 %    bootfun: Function name or handle used to calculate the test statistic
 %    nboot: The number of first (and second) bootstrap replicate samples
 %    nvar: Number of data variables
-%    n: The length of data variable(s) (and no. of clusters if applicable)
+%    n: The length of data variable(s) (and no. of CLUSTERS if applicable)
 %    type: Type of confidence interval (per or stud)
-%    alpha: Desired alpha level
+%    alpha: Desired ALPHA level
 %    coverage: Central coverage of the confidence interval
-%    cal: Nominal alpha level from calibration
-%    z0: Bias used for correction (0 if type is not 'cper' or 'bca')
-%    a: Acceleration constant (0 if type is not 'bca')
+%    cal: Nominal ALPHA level from calibration
+%    z0: Bias used for correction (0 if TYPE is not 'cper' or 'bca')
+%    a: Acceleration constant (0 if TYPE is not 'bca')
 %    bandwidth: Bandwidth for smooth bootstrap (Gaussian kernel)
 %    xcorr: Autocorrelation coefficients (maximum 99 lags)
 %    ICC: Intraclass correlation coefficient - one-way random, ICC(1,1)
 %    DEFF: Design effect estimated by resampling (if requested)
-%    stat: Sample test statistic calculated by bootfun
+%    stat: Sample test statistic calculated by BOOTFUN
 %    bias: Bias of the test statistic
 %    bc_stat: Bias-corrected test statistic
 %    SE: Bootstrap standard error of the test statistic
@@ -208,21 +209,19 @@
 %    warnflag: Warning flag (0 = no warning; 1 = warning during operation)
 %    warnmsg: Last warning message
 %
-%  [ci,bootstat,S,calcurve] = ibootci(...) also returns the calibration
+%  [CI, BOOTSTAT, S, CALCURVE] = ibootci (...) also returns the calibration
 %  curve for central coverage. The first column is nominal coverage and
 %  the second column is actual coverage.
 %
-%  [ci,bootstat,S,calcurve,bootsam] = ibootci(...) also returns bootsam,
-%  a matrix of indices from the first bootstrap. Each column in bootsam
+%  [CI, BOOTSTAT, S, CALCURVE, BOOTSAM] = ibootci (...) also returns BOOTSAM,
+%  a matrix of indices from the first bootstrap. Each column in BOOTSAM
 %  corresponds to one bootstrap sample and contains the row indices of
 %  the values drawn from the nonscalar data to create that sample.
 %
-%  If the Parallel Computing MATLAB Toolbox or OCTAVE forge parallel
-%  package is installed, bootstrap resampling can be accelerated by 
-%  parallel processing. This is particularly useful for the calculation 
-%  of p-values using the ibootci wrapper functions. Note that bootstrap
-%  resampling is not balanced in the first bootstrap when operating
-%  ibootci in parallel.
+%  If the Parallel Computing MATLAB Toolbox or OCTAVE parallel package is
+%  installed, bootstrap resampling can be accelerated by parallel processing. 
+%  Note that bootstrap resampling is not balanced in the first bootstrap when
+%  operating ibootci in parallel.
 %
 %  Bibliography:
 %  [1] Efron, and Tibshirani (1993) An Introduction to the
