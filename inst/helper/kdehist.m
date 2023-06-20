@@ -13,7 +13,7 @@
 %     Author: Andrew Charles Penn
 %     https://www.researchgate.net/profile/Andrew_Penn/
 
-function [h0, h1] = kdehist(x, kernel, h0, h1)
+function [h0, h1, u, z] = kdehist(x, kernel, h0, h1)
 
   % Helper function file for plotboot
 
