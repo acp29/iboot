@@ -1,4 +1,4 @@
-function [mu, Z, K, g] = clustmean (x, clusters, nvar)
+function [mu_shrunk, Z, K, g] = clustmean (x, clusters, nvar)
 
   % Helper function file required for ibootci
 
@@ -22,8 +22,9 @@ function [mu, Z, K, g] = clustmean (x, clusters, nvar)
   nk = sum(g).';
   dk = mean(nk) - sum((sum(g)-mean(nk)).^2)/((K-1)*sum(g(:)));
   c = 1 - sqrt(max(0,(K/(K-1)) - (SSw./(dk.*(dk-1).*SSb))));
+  mu_shrunk = cell(1,nvar);
   for v = 1:nvar
-    mu{v} = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v});
+    mu_shrunk{v} = bsxfun(@plus, c*mean(mu{v}),(1-c)*mu{v});
   end
 
   % Calculate residuals from the sample and cluster means
