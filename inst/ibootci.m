@@ -913,7 +913,7 @@ function [ci,bootstat,S,calcurve,idx] = ibootci(argin1,argin2,varargin)
       [mu,Z,K,g] = clustmean(data,clusters,nvar);
       data = Z;
       S.n(2) = K; % S.n is [number of observations, number of clusters]
-      bootfun = @(varargin) bootclust(bootfun,K,g,runmode,mu,varargin);
+      bootfun = @(varargin) bootclust2(bootfun,K,g,runmode,mu,varargin);
     end
 
     % Prepare for block resampling (if applicable)
