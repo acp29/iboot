@@ -1,4 +1,4 @@
-function T = bootclust (bootfun, K, g, runmode, mu, varargin)
+function T = bootclust2 (bootfun, K, g, runmode, mu, varargin)
 
   % Helper function required for cluster bootstrap in ibootci
 
