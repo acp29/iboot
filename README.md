@@ -1,5 +1,5 @@
 # iboot package
-(iboot is no longer being developed; consider using the newer Octave [statistics-bootstrap package](https://github.com/gnu-octave/statistics-bootstrap) for Octave/MATLAB)
+(iboot is no longer being developed; consider using the newer Octave [statistics-resampling package](https://github.com/gnu-octave/statistics-resampling) for Octave/MATLAB)
 
 ## Package maintainer
 Andrew Penn (andy.c.penn@gmail.com)
